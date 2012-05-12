@@ -35,7 +35,7 @@ if [ $OK = '1' ]; then
     echo "That's good.  We'll proceed."
     echo
 
-    DEFAULT_TOOLSHELF="$HOME/checkout"
+    DEFAULT_TOOLSHELF="$HOME/toolshelf"
     echo "Please specify the directory in which toolshelf will"
     echo "store its source trees.  (If it does not yet exist,"
     echo "it will be created.)"
@@ -55,15 +55,15 @@ if [ $OK = '1' ]; then
     cd $ORIGDIR
 
     # make changes to .bashrc here
-    BASHRCADD=<<"EOV"
-export TOOLSHELF="$TOOLSHELF" # added-by-bootstrap-toolshelf
-alias toolshelf="source \$TOOLSHELF/toolshelf/toolshelf.sh # added-by-bootstrap-toolshelf
-zero rebuild path # added-by-bootstrap-toolshelf
-EOV
+    BASHRC1="export TOOLSHELF=\"$TOOLSHELF\" # added-by-bootstrap-toolshelf"
+    BASHRC2="alias toolshelf=\"source \$TOOLSHELF/toolshelf/toolshelf.sh\" # added-by-bootstrap-toolshelf"
+    BASHRC3="toolshelf path rebuild # added-by-bootstrap-toolshelf"
 
     echo "Now we'd like to add the following lines to your .bashrc file:"
     echo
-    echo $BASHRCADD
+    echo "  $BASHRC1"
+    echo "  $BASHRC2"
+    echo "  $BASHRC3"
     echo
     echo "Your current .bashrc will be backed up first (to .bashrc.orig),"
     echo "and any lines currently containing 'added-by-bootstrap-toolshelf'"
@@ -78,6 +78,10 @@ EOV
         RESPONSE=N
     fi
     if [ $RESPONSE = 'y' -o $RESPONSE = 'Y' ]; then
-        echo >>$HOME/.bashrc "$BASHRCADD"
+        echo "Backing up .bashrc and modifying it..."
+        cp -p $HOME/.bashrc $HOME/.bashrc.orig
+        echo >>$HOME/.bashrc "$BASHRC1"
+        echo >>$HOME/.bashrc "$BASHRC2"
+        echo >>$HOME/.bashrc "$BASHRC3"
     fi
 fi
