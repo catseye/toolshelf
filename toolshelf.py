@@ -52,7 +52,7 @@ def path(result, args):
     if args[0] == 'rebuild':
         result.write('echo Rebuild path')
         return 0
-    else
+    else:
         sys.stderr.write("Unrecognized 'path' subcommand '%s'\n" % args[0])
         return 1
 
