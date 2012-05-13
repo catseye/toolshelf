@@ -8,6 +8,7 @@
 
 import os
 import sys
+from optparse import OptionParser
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -35,12 +36,31 @@ class Path(object):
     def __init__(self, value=None):
         if value is None:
             value = os.environ['PATH']
-        self.components = value.split(':')
+        self.components = [dir.strip() for dir in value.split(':')]
+
+    def write(self, result):
+        value = ':'.join(self.components)
+        result.write("export PATH='%s'\n" % value)
+
+    def remove_toolshelf_components(self):
+        self.components = [dir for dir in self.components
+                           if not dir.startswith(TOOLSHELF)]
+
+    def add_toolshelf_components(self):
+        for name in os.listdir(TOOLSHELF):
+            subdir_name = os.path.join(TOOLSHELF, name)
+            if not os.path.isdir(subdir_name):
+                continue
+            for candidate in ('bin', 'script', 'scripts'):
+                bindir_name = os.path.join(subdir_name, candidate)
+                if os.path.isdir(bindir_name):
+                    print bindir_name
+                    self.components.append(bindir_name)
 
 
 ### Subcommands
 
-def dock(result, args):
+def dock_cmd(result, args):
     project_name = args[0]
     print 'Dock: ', project_name
     # TODO: look up project_name in database
@@ -51,13 +71,16 @@ def dock(result, args):
     # TODO: perhaps use subprocess instead
     exit_code = os.system('git clone %s' % url)
     if exit_code == 0:
-        path(result, ['rebuild'])
+        path_cmd(result, ['rebuild'])
     return exit_code
 
 
-def path(result, args):
+def path_cmd(result, args):
     if args[0] == 'rebuild':
-        result.write('echo Rebuild path')
+        p = Path()
+        p.remove_toolshelf_components()
+        p.add_toolshelf_components()
+        p.write(result)
         return 0
     else:
         sys.stderr.write("Unrecognized 'path' subcommand '%s'\n" % args[0])
@@ -65,12 +88,22 @@ def path(result, args):
 
 
 SUBCOMMANDS = {
-    'dock': dock,
-    'path': path,
+    'dock': dock_cmd,
+    'path': path_cmd,
 }
 
 
 if __name__ == '__main__':
+    parser = OptionParser()
+    parser.add_option("-v", "--verbose",
+                      dest="verbose",
+                      default=False,
+                      action="store_true")
+
+    (options, args) = parser.parse_args()
+    if len(args) == 0:
+        print "Usage: toolshelf <subcommand>"
+
     exit_code = 0
     os.chdir(TOOLSHELF)
     result = ResultShellFile()
