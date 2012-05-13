@@ -116,7 +116,7 @@ The Python script `toolshelf.py` is the workhorse:
   path.
 - It checks its arguments for `path rebuild`, and if that was the subcommand,
   it rebuilds the `PATH` environment variable, and outputs the command
-  `export PATH={{path}}`.  (`zero.sh` `sources` this to make the new path
+  `export PATH={{path}}`.  (`toolshelf.sh` `sources` this to make the new path
   available to your shell immediately.)
 - It checks for other arguments as needed.  Since it's trivial to remove a
   package that has been docked, there might not be a `undock` subcommand.

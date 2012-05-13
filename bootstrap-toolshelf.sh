@@ -1,4 +1,5 @@
 # be careful not to call `exit` here -- this script is being `source`d.
+# TODO: rewrite as a bash function (should alleviate this)
 
 echo
 echo "Welcome to the bootstrap script for toolshelf!"
@@ -20,7 +21,7 @@ if [ -z `which python` ]; then
     OK='0'
 fi
 
-# in the future, check for/allow hg too
+# TODO: in the future, check for/allow hg too
 if [ -z `which git` ]; then
     echo "***NOTE: You do not appear to have git installed."
     echo "Please install git (version 1.7 or later) using "
@@ -29,6 +30,8 @@ if [ -z `which git` ]; then
     echo
     OK='0'
 fi
+
+# TODO: check for existence of $HOME/.bashrc here too
 
 if [ $OK = '1' ]; then
     echo "You appear to have both 'python' and 'git' installed."
@@ -80,8 +83,10 @@ if [ $OK = '1' ]; then
     if [ $RESPONSE = 'y' -o $RESPONSE = 'Y' ]; then
         echo "Backing up .bashrc and modifying it..."
         cp -p $HOME/.bashrc $HOME/.bashrc.orig
-        echo >>$HOME/.bashrc "$BASHRC1"
-        echo >>$HOME/.bashrc "$BASHRC2"
-        echo >>$HOME/.bashrc "$BASHRC3"
+        grep -v 'added-by-bootstrap-toolshelf' <$HOME/.bashrc > $HOME/.new_bashrc
+        echo >>$HOME/.new_bashrc "$BASHRC1"
+        echo >>$HOME/.new_bashrc "$BASHRC2"
+        echo >>$HOME/.new_bashrc "$BASHRC3"
+        mv $HOME/.new_bashrc $HOME/.bashrc
     fi
 fi
