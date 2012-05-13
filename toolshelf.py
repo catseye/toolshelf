@@ -54,7 +54,8 @@ TOOLSHELF = os.environ.get('TOOLSHELF', os.path.join(SCRIPT_DIR, '..'))
 RESULT_SH_FILENAME = os.path.join(SCRIPT_DIR, 'tmp-toolshelf-result.sh')
 
 UNINTERESTING_EXECUTABLES = (
-    'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh'
+    'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
+    'build.pl', 'make.pl',
 )
 
 OPTIONS = None
@@ -149,30 +150,7 @@ class Source(object):
         self.subdir = self.user or self.host
 
     @classmethod
-    def load_docked(name, exists=False):
-        """Return a list of Source objects representing all sources
-        currently docked.
-        """
-        # TODO: should divine whether a docked project is a git
-        # repo, a mercurial repo, or whatnot.  Should probably
-        # call parse_spec with exists=True for this, and that should
-        # be responsible for it.
-
-        sources = []
-        for user in os.listdir(TOOLSHELF):
-            if user == 'toolshelf':
-                # skip the toolshelf dir itself
-                continue
-            sub_dirname = os.path.join(TOOLSHELF, user)
-            for project in os.listdir(sub_dirname):
-                project_dirname = os.path.join(sub_dirname, project)
-                if not os.path.isdir(project_dirname):
-                    continue
-                sources.append(Source(user=user, project=project, type='unknown'))
-        return sources
-
-    @classmethod
-    def parse_spec(klass, name, exists=False):
+    def from_spec(klass, name, exists=False):
         """Parse a source specifier and return a list of Source objects.
 
         A source specifier may take any of the following forms:
@@ -182,17 +160,22 @@ class Source(object):
           http[s]://host.dom/.../user/repo       Mercurial
           http[s]://host.dom/.../distfile.tgz    (or .tar.gz) tarball
           http[s]://host.dom/.../distfile.zip    zipball
-          user/repo                  use Preferences to guess
+          user/project               use Preferences to guess
           @local/file/name           read list of sources from file
           @@foo                      read list in toolshelf/catalog/foo
-          repo                       unambiguous repo in toolshelf (exists=True only)
+
+        If exists is `True`, the following forms are also allowed:
+
+          *                          all docked projects
+          user/*                     all docked projects for this user
+          project                    unambiguous project in toolshelf
 
         """
         # TODO: should report warnings and errors
 
         # TODO: look up specifier in database, to obtain "cookies"
 
-        match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?).git$', name)
+        match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
@@ -201,13 +184,21 @@ class Source(object):
                 Source(url=name, host=host, user=user, project=project, type='git')
             ]
 
-        match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?).git$', name)
+        match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
             return [
                 Source(url=name, host=host, user=user, project=project, type='git')
+            ]
+
+        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.zip$', name)
+        if match:
+            host = match.group(1)
+            project = match.group(2)
+            return [
+                Source(url=name, host=host, project=project, type='distfile')
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
@@ -236,6 +227,22 @@ class Source(object):
             for line in file:
                sources += parse_source_spec(line, exists=exists)
             file.close()
+            return sources
+
+        if name == '*' and exists:
+            # TODO: should divine whether a docked project is a git
+            # repo, a mercurial repo, or whatnot.
+            sources = []
+            for user in os.listdir(TOOLSHELF):
+                if user == 'toolshelf':
+                    # skip the toolshelf dir itself
+                    continue
+                sub_dirname = os.path.join(TOOLSHELF, user)
+                for project in os.listdir(sub_dirname):
+                    project_dirname = os.path.join(sub_dirname, project)
+                    if not os.path.isdir(project_dirname):
+                        continue
+                    sources.append(Source(user=user, project=project, type='unknown'))
             return sources
 
         return []
@@ -287,6 +294,9 @@ class Source(object):
         os.chdir(self.dir)
         if os.path.isfile('Makefile'):
             os.system('make')
+        elif os.path.isfile('src/Makefile'):
+            os.chdir('src')
+            os.system('make')
         elif os.path.isfile('build.sh'):
             os.system('./build.sh')
         return 0  # TODO: only for now
@@ -295,7 +305,7 @@ class Source(object):
 
 def dock_cmd(result, args):
     exit_code = 0
-    sources = Source.parse_spec(args[0])
+    sources = Source.from_spec(args[0])
     for source in sources:
         exit_code = source.checkout()
         if exit_code != 0:
@@ -312,7 +322,7 @@ def path_cmd(result, args):
     if args[0] == 'rebuild':
         p = Path()
         p.remove_toolshelf_components()
-        sources = Source.load_docked()
+        sources = Source.from_spec('*', exists=True)
         p.add_toolshelf_components(sources)
         p.write(result)
         return 0
