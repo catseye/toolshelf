@@ -28,6 +28,17 @@
 
 # Still largely under construction.
 
+"""\
+toolshelf {options} <subcommand>
+
+Manage projects, sources, and paths maintained by the toolshelf environment.
+
+<subcommand> is one of:
+
+    dock <prj>    - obtain project sources from a website and place on path
+    path rebuild  - update your PATH env var to reflect all docked projects
+"""
+
 import os
 import sys
 from optparse import OptionParser
@@ -96,7 +107,7 @@ def dock_cmd(result, args):
     # if not found, assume it is a user/repo on github:
     url = 'git://github.com/%s.git' % project_name
     userdir_name = os.path.join(TOOLSHELF, user_name)
-    if not os.isdir(userdir_name):
+    if not os.path.isdir(userdir_name):
         os.mkdir(userdir_name)
     os.chdir(userdir_name)
     # TODO: perhaps use subprocess instead
@@ -125,15 +136,16 @@ SUBCOMMANDS = {
 
 
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option("-v", "--verbose",
-                      dest="verbose",
-                      default=False,
-                      action="store_true")
+    parser = OptionParser(__doc__)
+
+    parser.add_option("-v", "--verbose", dest="verbose",
+                      default=False, action="store_true",
+                      help="report steps taken to standard output")
 
     (options, args) = parser.parse_args()
     if len(args) == 0:
-        print "Usage: toolshelf <subcommand>"
+        print "Usage: " + __doc__
+        sys.exit(2)
 
     exit_code = 0
     os.chdir(TOOLSHELF)
@@ -143,6 +155,7 @@ if __name__ == '__main__':
         exit_code = SUBCOMMANDS[subcommand](result, sys.argv[2:])
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
-        exit_code = 1
+        print "Usage: " + __doc__
+        sys.exit(2)
     result.close()
     sys.exit(exit_code)
