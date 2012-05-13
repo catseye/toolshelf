@@ -79,12 +79,13 @@ if [ $OK = '1' ]; then
     git clone git://github.com/catseye/toolshelf.git
     cd $ORIGDIR
 
-    BASHRC0="################################################### added-by-bootstrap-toolshelf"
+    BASHRC0="##################### added-by-bootstrap-toolshelf #####################"
     BASHRC1="if [ -f $TOOLSHELF/toolshelf/toolshelf.sh ]; then # added-by-bootstrap-toolshelf"
     BASHRC2="  export TOOLSHELF=\"$TOOLSHELF\" # added-by-bootstrap-toolshelf"
     BASHRC3="  alias toolshelf=\"source \$TOOLSHELF/toolshelf/toolshelf.sh\" # added-by-bootstrap-toolshelf"
     BASHRC4="  source \$TOOLSHELF/toolshelf/toolshelf.sh path rebuild # added-by-bootstrap-toolshelf"
     BASHRC5="fi # added-by-bootstrap-toolshelf"
+    BASHRC6="##################### added-by-bootstrap-toolshelf #####################"
 
     echo "Now we'd like to add the following lines to your .bashrc file:"
     echo
@@ -94,6 +95,7 @@ if [ $OK = '1' ]; then
     echo "  $BASHRC3"
     echo "  $BASHRC4"
     echo "  $BASHRC5"
+    echo "  $BASHRC6"
     echo
     echo "Your current .bashrc will be backed up first (to .bashrc.orig),"
     echo "and any lines currently containing 'added-by-bootstrap-toolshelf'"
@@ -117,10 +119,11 @@ if [ $OK = '1' ]; then
         echo >>$HOME/.new_bashrc "$BASHRC3"
         echo >>$HOME/.new_bashrc "$BASHRC4"
         echo >>$HOME/.new_bashrc "$BASHRC5"
+        echo >>$HOME/.new_bashrc "$BASHRC6"
         mv $HOME/.new_bashrc $HOME/.bashrc
         echo "Done."
         echo
-        echo "For your convenience, we'll also apply these three lines"
+        echo "For your convenience, we'll also apply these startup commands"
         echo "right now.  If you 'source'd this script like the instructions"
         echo "told you to, you'll be able to start using toolshelf right"
         echo "away.  If, instead, you started it using 'bash', you'll have"

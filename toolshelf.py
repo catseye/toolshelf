@@ -28,7 +28,7 @@ class ResultShellFile(object):
 
     def close(self):
         if self.file is not None:
-            self.close()
+            self.file.close()
 
 
 ### Subcommands
