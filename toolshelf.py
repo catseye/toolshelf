@@ -93,7 +93,7 @@ def compute_toolshelf_path(dirnames):
     components = []
     for dirname in index:
         if OPTIONS.verbose:
-            print "%d:" % dirname
+            print "%s:" % dirname
             for filename in index[dirname]:
                 print "  %s" % filename
         components.append(dirname)
@@ -198,7 +198,7 @@ class Source(object):
                 specs.add(Source(user=user, project=project, type='unknown'))
 
     @classmethod
-    def parse_spec(name, exists=False):
+    def parse_spec(klass, name, exists=False):
         """Parse a source specifier and return a list of Source objects.
 
         A source specifier may take any of the following forms:
@@ -215,6 +215,8 @@ class Source(object):
 
         """
         # TODO: should report warnings and errors
+
+        # TODO: look up specifier in database, to obtain "cookies"
 
         specs = []
 
@@ -263,23 +265,36 @@ class Source(object):
         return os.path.isdir(self.dir)
 
     def checkout(self):
+        if OPTIONS.verbose:
+            print "Checking out %s/%s..." % (self.subdir, self.project)
+
         os.chdir(TOOLSHELF)
-        if not os.isdir(self.subdir):
+        if not os.path.isdir(self.subdir):
             os.mkdir(self.subdir)
         os.chdir(self.subdir)
 
         if self.type == 'git':
-            os.system('git clone %s' % self.url)
+            exit_code = os.system('git clone %s' % self.url)
+            if exit_code != 0:
+                sys.stderr.write('git failed\n')
+                return exit_code
         elif self.type == 'hg':
-            os.system('hg clone %s' % self.url)
+            exit_code = os.system('hg clone %s' % self.url)
+            if exit_code != 0:
+                sys.stderr.write('hg failed\n')
+                return exit_code
         elif self.type == 'distfile':
             # TODO: make this actually work
             os.system('wget %s' % self.url)
             os.system('unzip %s' % self.project)
         elif self.type == 'guess':
             # TODO: don't just assume it's on github
-            os.system('git clone git://github.com/%s/%s.git' %
-                      (self.user, self.project))
+            exit_code = os.system('git clone git://github.com/%s/%s.git' %
+                (self.user, self.project))
+            if exit_code != 0:
+                sys.stderr.write('git failed\n')
+                return exit_code
+        return 0
 
     def build(self):
         os.chdir(self.dir)
@@ -287,40 +302,30 @@ class Source(object):
             os.system('make')
         elif os.path.isfile('build.sh'):
             os.system('./build.sh')
-
+        return 0  # TODO: only for now
 
 ### Subcommands
 
 def dock_cmd(result, args):
-    project_name = args[0]
-    (user_name, repo_name) = project_name.split('/')
-    # TODO: look up project_name in database
-    # if found, use details from there to know where to fetch it
-    # and so forth.
-    # if not found, assume it is a user/repo on github:
-    url = 'git://github.com/%s.git' % project_name
-    userdir_name = os.path.join(TOOLSHELF, user_name)
-    if not os.path.isdir(userdir_name):
-        os.mkdir(userdir_name)
-    os.chdir(userdir_name)
-    # TODO: perhaps use subprocess instead
-    exit_code = os.system('git clone %s' % url)
-    if exit_code != 0:
-        sys.stderr.write('git failed\n')
-        return exit_code
-    os.chdir(os.path.join(userdir_name, repo_name))
-    if os.path.isfile('Makefile'):
-        os.system('make')
-    elif os.path.isfile('build.sh'):
-        os.system('./build.sh')
-    path_cmd(result, ['rebuild'])
-    return 0
+    exit_code = 0
+    sources = Source.parse_spec(args[0])
+    for source in sources:
+        exit_code = source.checkout()
+        if exit_code != 0:
+            break
+        exit_code = source.build()
+        if exit_code != 0:
+            break
+    if exit_code == 0:
+        path_cmd(result, ['rebuild'])
+    return exit_code
 
 
 def path_cmd(result, args):
     if args[0] == 'rebuild':
         p = Path()
         p.remove_toolshelf_components()
+        #sources = Source.load_docked()
         p.add_toolshelf_components()
         p.write(result)
         return 0
