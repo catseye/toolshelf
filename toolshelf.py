@@ -54,7 +54,7 @@ TOOLSHELF = os.environ.get('TOOLSHELF', os.path.join(SCRIPT_DIR, '..'))
 RESULT_SH_FILENAME = os.path.join(SCRIPT_DIR, 'tmp-toolshelf-result.sh')
 
 UNINTERESTING_EXECUTABLES = (
-    'build.sh', 'make.sh', 'clean.sh', 'install.sh'
+    'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh'
 )
 
 OPTIONS = None
@@ -79,14 +79,18 @@ def list_executables(dirname):
 
 def find_executables(dirname, index):
     for name in os.listdir(dirname):
+        if name in ('.git', '.hg'):
+            continue
         filename = os.path.join(dirname, name)
         if is_executable(filename):
-            index.setdetfault(dirname, []).append(name)
+            index.setdefault(dirname, []).append(name)
         elif os.path.isdir(filename):
             find_executables(filename, index)
 
 
 def compute_toolshelf_path(dirnames):
+    if OPTIONS.verbose:
+        print "* Adding the following executables to your PATH..."
     index = {}
     for dirname in dirnames:
         find_executables(dirname, index)
@@ -131,38 +135,7 @@ class Path(object):
         self.components = [dir for dir in self.components
                            if not dir.startswith(TOOLSHELF)]
 
-    def add_toolshelf_components(self):
-        # TODO: this is the old way, remove it
-        for name in os.listdir(TOOLSHELF):
-            if name == 'toolshelf':
-                # skip the toolshelf dir itself
-                continue
-            user_dir_name = os.path.join(TOOLSHELF, name)
-            for name in os.listdir(user_dir_name):
-                project_dir_name = os.path.join(user_dir_name, name)
-                if not os.path.isdir(project_dir_name):
-                    continue
-                for candidate in ('bin', 'script', 'scripts'):
-                    bin_dir_name = os.path.join(project_dir_name, candidate)
-                    if os.path.isdir(bin_dir_name):
-                        print bin_dir_name
-                        self.components.append(bin_dir_name)
-                # If there are any executable files in the project's root
-                # directory, add it to the path, too.  Note, this does
-                # generate some false positives; maybe we should be a
-                # little less cavalier (or more clever) about this.
-                add_project_root_to_path = False
-                for name in os.listdir(project_dir_name):
-                    project_filename = os.path.join(project_dir_name, name)
-                    if (os.path.isfile(project_filename) and
-                        os.access(project_filename, os.X_OK)):
-                        add_project_root_to_path = True
-                        break
-                if add_project_root_to_path:
-                    print project_dir_name
-                    self.components.append(project_dir_name)
-
-    def add_components_from_sources(self, sources):
+    def add_toolshelf_components(self, sources):
         self.components += compute_toolshelf_path([s.dir for s in sources])
 
 
@@ -185,7 +158,7 @@ class Source(object):
         # call parse_spec with exists=True for this, and that should
         # be responsible for it.
 
-        specs = []
+        sources = []
         for user in os.listdir(TOOLSHELF):
             if user == 'toolshelf':
                 # skip the toolshelf dir itself
@@ -195,7 +168,8 @@ class Source(object):
                 project_dirname = os.path.join(sub_dirname, project)
                 if not os.path.isdir(project_dirname):
                     continue
-                specs.add(Source(user=user, project=project, type='unknown'))
+                sources.append(Source(user=user, project=project, type='unknown'))
+        return sources
 
     @classmethod
     def parse_spec(klass, name, exists=False):
@@ -209,7 +183,7 @@ class Source(object):
           http[s]://host.dom/.../distfile.tgz    (or .tar.gz) tarball
           http[s]://host.dom/.../distfile.zip    zipball
           user/repo                  use Preferences to guess
-          @local/file/name           read list of specs from file
+          @local/file/name           read list of sources from file
           @@foo                      read list in toolshelf/catalog/foo
           repo                       unambiguous repo in toolshelf (exists=True only)
 
@@ -218,43 +192,43 @@ class Source(object):
 
         # TODO: look up specifier in database, to obtain "cookies"
 
-        specs = []
+        sources = []
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?).git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            specs.append(Source(url=name, host=host, user=user, project=project, type='git'))
+            sources.append(Source(url=name, host=host, user=user, project=project, type='git'))
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?).git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            specs.append(Source(url=name, host=host, user=user, project=project, type='git'))
+            sources.append(Source(url=name, host=host, user=user, project=project, type='git'))
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            specs.append(Source(url=name, host=host, user=user, project=project, type='hg'))
+            sources.append(Source(url=name, host=host, user=user, project=project, type='hg'))
 
         match = re.match(r'^(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
             project = match.group(2)
-            specs.append(Source(user=user, project=project, type='guess'))
+            sources.append(Source(user=user, project=project, type='guess'))
 
         match = re.match(r'^\@(.*?)$', name)
         if match:
             filename = match.group(1)
             file = open(filename)
             for line in file:
-               specs += parse_source_spec(line, exists=exists)
+               sources += parse_source_spec(line, exists=exists)
             file.close()
 
-        return specs
+        return sources
 
     @property
     def dir(self):
@@ -266,7 +240,7 @@ class Source(object):
 
     def checkout(self):
         if OPTIONS.verbose:
-            print "Checking out %s/%s..." % (self.subdir, self.project)
+            print "* Checking out %s/%s..." % (self.subdir, self.project)
 
         os.chdir(TOOLSHELF)
         if not os.path.isdir(self.subdir):
@@ -297,6 +271,9 @@ class Source(object):
         return 0
 
     def build(self):
+        if OPTIONS.verbose:
+            print "* Building %s/%s..." % (self.subdir, self.project)
+
         os.chdir(self.dir)
         if os.path.isfile('Makefile'):
             os.system('make')
@@ -325,8 +302,8 @@ def path_cmd(result, args):
     if args[0] == 'rebuild':
         p = Path()
         p.remove_toolshelf_components()
-        #sources = Source.load_docked()
-        p.add_toolshelf_components()
+        sources = Source.load_docked()
+        p.add_toolshelf_components(sources)
         p.write(result)
         return 0
     else:
@@ -355,9 +332,9 @@ if __name__ == '__main__':
     exit_code = 0
     os.chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
-    subcommand = sys.argv[1]
+    subcommand = args[0]
     if subcommand in SUBCOMMANDS:
-        exit_code = SUBCOMMANDS[subcommand](result, sys.argv[2:])
+        exit_code = SUBCOMMANDS[subcommand](result, args[1:])
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
