@@ -210,6 +210,16 @@ class Source(object):
                 Source(url=name, host=host, user=user, project=project, type='hg')
             ]
 
+        match = re.match(r'^\@(.*?)$', name)
+        if match:
+            sources = []
+            filename = match.group(1)
+            file = open(filename)
+            for line in file:
+               sources += Source.from_spec(line, exists=exists)
+            file.close()
+            return sources
+
         match = re.match(r'^(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
@@ -218,16 +228,6 @@ class Source(object):
             return [
                 Source(user=user, project=project, type='guess')
             ]
-
-        match = re.match(r'^\@(.*?)$', name)
-        if match:
-            sources = []
-            filename = match.group(1)
-            file = open(filename)
-            for line in file:
-               sources += parse_source_spec(line, exists=exists)
-            file.close()
-            return sources
 
         if name == '*' and exists:
             # TODO: should divine whether a docked project is a git
