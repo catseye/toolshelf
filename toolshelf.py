@@ -1,5 +1,27 @@
 #!/usr/bin/env python
 
+# Copyright (c)2012 Chris Pressey, Cat's Eye Technologies
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+# toolshelf.py:
+
 # Invoked by `toolshelf.sh` (for which `toolshelf` is an alias) to do the
 # heavy lifting involved in docking packages and placing their relevant
 # directories on the search path.
@@ -48,26 +70,35 @@ class Path(object):
 
     def add_toolshelf_components(self):
         for name in os.listdir(TOOLSHELF):
-            subdir_name = os.path.join(TOOLSHELF, name)
-            if not os.path.isdir(subdir_name):
+            if name == 'toolshelf':
+                # skip the toolshelf dir itself
                 continue
-            for candidate in ('bin', 'script', 'scripts'):
-                bindir_name = os.path.join(subdir_name, candidate)
-                if os.path.isdir(bindir_name):
-                    print bindir_name
-                    self.components.append(bindir_name)
+            user_dir_name = os.path.join(TOOLSHELF, name)
+            for name in os.listdir(user_dir_name):
+                project_dir_name = os.path.join(user_dir_name, name)
+                if not os.path.isdir(project_dir_name):
+                    continue
+                for candidate in ('bin', 'script', 'scripts'):
+                    bin_dir_name = os.path.join(project_dir_name, candidate)
+                    if os.path.isdir(bin_dir_name):
+                        print bin_dir_name
+                        self.components.append(bin_dir_name)
 
 
 ### Subcommands
 
 def dock_cmd(result, args):
     project_name = args[0]
-    print 'Dock: ', project_name
+    (user_name, repo_name) = project_name.split('/')
     # TODO: look up project_name in database
     # if found, use details from there to know where to fetch it
     # and so forth.
     # if not found, assume it is a user/repo on github:
     url = 'git://github.com/%s.git' % project_name
+    userdir_name = os.path.join(TOOLSHELF, user_name)
+    if not os.isdir(userdir_name):
+        os.mkdir(userdir_name)
+    os.chdir(userdir_name)
     # TODO: perhaps use subprocess instead
     exit_code = os.system('git clone %s' % url)
     if exit_code == 0:
