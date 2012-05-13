@@ -128,6 +128,7 @@ if [ $OK = '1' ]; then
         echo "told you to, you'll be able to start using toolshelf right"
         echo "away.  If, instead, you started it using 'bash', you'll have"
         echo "to start a new bash shell to start using toolshelf."
+        echo
 
         export TOOLSHELF
         alias toolshelf="source $TOOLSHELF/toolshelf/toolshelf.sh"

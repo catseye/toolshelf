@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Invoked by `toolshelf.py` (for which `toolshelf` is an alias) to do the
+# Invoked by `toolshelf.sh` (for which `toolshelf` is an alias) to do the
 # heavy lifting involved in docking packages and placing their relevant
 # directories on the search path.
 
@@ -11,8 +11,8 @@ import sys
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-# TODO: perhaps we should get this from the env var instead?
-TOOLSHELF = os.path.join(SCRIPT_DIR, '..')
+# TODO: maybe this should not default to the .. of the script dir if env var isn't there?
+TOOLSHELF = os.environ.get('TOOLSHELF', os.path.join(SCRIPT_DIR, '..'))
 RESULT_SH_FILENAME = os.path.join(SCRIPT_DIR, 'tmp-toolshelf-result.sh')
 
 
@@ -29,6 +29,13 @@ class ResultShellFile(object):
     def close(self):
         if self.file is not None:
             self.file.close()
+
+
+class Path(object):
+    def __init__(self, value=None):
+        if value is None:
+            value = os.environ['PATH']
+        self.components = value.split(':')
 
 
 ### Subcommands
