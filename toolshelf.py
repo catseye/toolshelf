@@ -192,43 +192,53 @@ class Source(object):
 
         # TODO: look up specifier in database, to obtain "cookies"
 
-        sources = []
-
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?).git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            sources.append(Source(url=name, host=host, user=user, project=project, type='git'))
+            return [
+                Source(url=name, host=host, user=user, project=project, type='git')
+            ]
+
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?).git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            sources.append(Source(url=name, host=host, user=user, project=project, type='git'))
+            return [
+                Source(url=name, host=host, user=user, project=project, type='git')
+            ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            sources.append(Source(url=name, host=host, user=user, project=project, type='hg'))
+            return [
+                Source(url=name, host=host, user=user, project=project, type='hg')
+            ]
 
         match = re.match(r'^(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
             project = match.group(2)
-            sources.append(Source(user=user, project=project, type='guess'))
+            # TODO: do we resolve this here, or upon checkout?
+            return [
+                Source(user=user, project=project, type='guess')
+            ]
 
         match = re.match(r'^\@(.*?)$', name)
         if match:
+            sources = []
             filename = match.group(1)
             file = open(filename)
             for line in file:
                sources += parse_source_spec(line, exists=exists)
             file.close()
+            return sources
 
-        return sources
+        return []
 
     @property
     def dir(self):
