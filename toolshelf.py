@@ -94,6 +94,20 @@ class Path(object):
                     if os.path.isdir(bin_dir_name):
                         print bin_dir_name
                         self.components.append(bin_dir_name)
+                # If there are any executable files in the project's root
+                # directory, add it to the path, too.  Note, this does
+                # generate some false positives; maybe we should be a
+                # little less cavalier (or more clever) about this.
+                add_project_root_to_path = False
+                for name in os.listdir(project_dir_name):
+                    project_filename = os.path.join(project_dir_name, name)
+                    if (os.path.isfile(project_filename) and
+                        os.access(project_filename, os.X_OK)):
+                        add_project_root_to_path = True
+                        break
+                if add_project_root_to_path:
+                    print project_dir_name
+                    self.components.append(project_dir_name)
 
 
 ### Subcommands
@@ -112,9 +126,16 @@ def dock_cmd(result, args):
     os.chdir(userdir_name)
     # TODO: perhaps use subprocess instead
     exit_code = os.system('git clone %s' % url)
-    if exit_code == 0:
-        path_cmd(result, ['rebuild'])
-    return exit_code
+    if exit_code != 0:
+        sys.stderr.write('git failed\n')
+        return exit_code
+    os.chdir(os.path.join(userdir_name, repo_name))
+    if os.path.isfile('Makefile'):
+        os.system('make')
+    elif os.path.isfile('build.sh'):
+        os.system('./build.sh')
+    path_cmd(result, ['rebuild'])
+    return 0
 
 
 def path_cmd(result, args):

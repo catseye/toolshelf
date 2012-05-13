@@ -34,7 +34,7 @@ example `catseye/yucca`, you simply type
 
 ...and if you ever want to get rid of `yucca` from your system, simply
 
-    rm -rf ${TOOLSHELF}/yucca
+    rm -rf ${TOOLSHELF}/catseye/yucca
 
 ...and if you want to get rid of (almost) all trace of `toolshelf` and all of
 the packages you've docked using it, simply
@@ -88,7 +88,7 @@ The bootstrap script does a few things:
 - It asks you where you want to store source trees for the packages you dock
   using toolshelf; it calls this `$TOOLSHELF`.  The default is
   `$HOME/toolshelf`.
-- It then clones the `toolshelf` git repo into `$ZERODIR/toolshelf`.
+- It then clones the `toolshelf` git repo into `$TOOLSHELF/toolshelf`.
 - It then asks permission to modify your `.bashrc` (if you decline, you are
   asked to make these changes manually.)  It adds a command sequence to it
   that:
