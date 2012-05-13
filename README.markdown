@@ -3,12 +3,15 @@ toolshelf
 
 (**NOTE**: `toolshelf` is still very much a WIP; don't expect it to work yet)
 
-`toolshelf` is a `bash`- and Python-based "package manager" which doesn't
-actually install any files.  Instead, it stores the source trees of various
-and sundry packages in a single directory, and manages your search paths to
-include the relevant subdirectories of those trees.  The source trees are
-typically the working directories of local `git` clones, but other DVCS's
-could be accommodated, as could source distributions from tarballs.
+`toolshelf` is a "package manager" which doesn't actually install any files.
+Instead, it stores the source trees of sundry packages in a single directory,
+and manages your search paths to include the relevant subdirectories of those
+trees.  The source trees are typically the working directories of local `git`
+clones, but other DVCS's could be accommodated, as could source distributions
+from tarballs.
+
+`toolshelf` requires that you use `bash` as your shell.  It also requires
+Python to run the workhorse script.
 
 Quick Start
 -----------
@@ -20,7 +23,7 @@ Quick Start
 3. Run `source bootstrap-toolshelf.sh`.
 4. Follow the instructions given to you by the script.
 
-Now, when you want to "install" a package that `toolshelf` knows about, for
+Now, when you want to "install" a package that `toolshelf` can handle, for
 example `catseye/yucca`, you simply type
 
     toolshelf dock catseye/yucca
@@ -33,8 +36,8 @@ example `catseye/yucca`, you simply type
 
     rm -rf ${TOOLSHELF}/yucca
 
-...and if you want to get rid of all trace of `toolshelf` and all of the
-packages you've docked using it, simply
+...and if you want to get rid of (almost) all trace of `toolshelf` and all of
+the packages you've docked using it, simply
 
     rm -rf ${TOOLSHELF}
 
@@ -83,8 +86,8 @@ The bootstrap script does a few things:
 - It checks that you have `git` and `python` installed.  If you don't, it asks
   you to install them, and stops.
 - It asks you where you want to store source trees for the packages you dock
-  using toolshelf; it calls this `$TOOLSHELF`.  The default (for personal
-  historical reasons) is `$HOME/checkout`.
+  using toolshelf; it calls this `$TOOLSHELF`.  The default is
+  `$HOME/toolshelf`.
 - It then clones the `toolshelf` git repo into `$ZERODIR/toolshelf`.
 - It then asks permission to modify your `.bashrc` (if you decline, you are
   asked to make these changes manually.)  It adds a command sequence to it
@@ -100,8 +103,8 @@ The bootstrap script does a few things:
 The script `toolshelf.sh` does one thing, and does it well:
 
 - It runs `$TOOLSHELF/toolshelf/toolshelf.py`, with the arguments that were
-  passed to `toolshelf.sh`, redirecting the output to a temporary file -- then
-  it `source`s the temporary file.
+  passed to `toolshelf.sh`, expecting it to output a temporary file -- then
+  it `source`s that temporary file and deletes it.
 
 The Python script `toolshelf.py` is the workhorse:
 
@@ -116,4 +119,4 @@ The Python script `toolshelf.py` is the workhorse:
   `export PATH={{path}}`.  (`zero.sh` `sources` this to make the new path
   available to your shell immediately.)
 - It checks for other arguments as needed.  Since it's trivial to remove a
-  package that has been docked, there might not be a `remove` subcommand.
+  package that has been docked, there might not be a `undock` subcommand.

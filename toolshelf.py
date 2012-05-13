@@ -6,15 +6,25 @@
 
 # Woefully incomplete; just a stub for now.
 
+import os
 import sys
+
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+RESULT_SH_FILENAME = os.path.join(SCRIPT_DIR, 'tmp-toolshelf-result.sh')
+
 
 if __name__ == '__main__':
     if sys.argv[1] == 'dock':
-        print 'echo Dock: ' + ','.join(sys.argv[2:])
+        print 'Dock: ', ','.join(sys.argv[2:])
     elif sys.argv[1] == 'path':
         if sys.argv[2] == 'rebuild':
-            print 'echo Rebuild path'
+            result = open(RESULT_SH_FILENAME, 'w')
+            result.write('echo Rebuild path')
+            result.close()
         else
-            print 'echo Unrecognized path command'
+            print 'Unrecognized path command'
+            sys.exit(1)
     else
-        print 'echo Unrecognized command'
+        print 'Unrecognized command'
+        sys.exit(1)
