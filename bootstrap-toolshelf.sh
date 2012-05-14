@@ -39,7 +39,7 @@ OK='1'
 
 if [ ! -e $HOME/.bashrc ]; then
     echo "***NOTE: You do not appear to have a ~/.bashrc file."
-    echo "toolshelf assuming you are using bash as your shell."
+    echo "toolshelf assumes you are using bash as your shell."
     echo "Please rectify this situation if you wish to use"
     echo "toolshelf, then re-source this script."
     echo

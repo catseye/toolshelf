@@ -50,6 +50,9 @@ of it may be somewhat chaotic for now -- you may have to wipe out your
 `$TOOLSHELF` directory, if a disruptive change is made in how source trees and
 their metadata are organized.
 
+`toolshelf` has been used successfully on Ubuntu 11.10 and cygwin.  It should
+probably work on Mac OS X; if you have a Mac, please try it and let me know.
+
 Further Reading
 ---------------
 
