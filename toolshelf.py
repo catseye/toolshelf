@@ -43,7 +43,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Update your $PATH to contain the executables for all currently
         docked source.
 
-    path disable                               (:not yet implemented:)
+    path disable
         Temporarily remove the executables in all currently docked projects
         from your $PATH.  A subsequent `path rebuild` will restore them.
 
@@ -369,6 +369,11 @@ def path_cmd(result, args):
         p.remove_toolshelf_components()
         sources = Source.from_spec('*', exists=True)
         p.add_toolshelf_components(sources)
+        p.write(result)
+        return 0
+    elif args[0] == 'disable':
+        p = Path()
+        p.remove_toolshelf_components()
         p.write(result)
         return 0
     else:
