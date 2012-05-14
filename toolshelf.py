@@ -141,7 +141,8 @@ class Path(object):
 
 
 class Source(object):
-    def __init__(self, url=None, host=None, user=None, project=None, type=None):
+    def __init__(self, url=None, host=None, user=None, project=None,
+                       type=None):
         self.url = url
         self.host = host
         self.user = user
@@ -158,8 +159,9 @@ class Source(object):
           git://host.dom/.../user/repo.git       git
           http[s]://host.dom/.../user/repo.git   git
           http[s]://host.dom/.../user/repo       Mercurial
-          http[s]://host.dom/.../distfile.tgz    (or .tar.gz) tarball
-          http[s]://host.dom/.../distfile.zip    zipball
+          http[s]://host.dom/.../distfile.tgz    |
+          http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
+          http[s]://host.dom/.../distfile.zip    |
           user/project               use Preferences to guess
           @local/file/name           read list of sources from file
           @@foo                      read list in toolshelf/catalog/foo
@@ -193,12 +195,13 @@ class Source(object):
                 Source(url=name, host=host, user=user, project=project, type='git')
             ]
 
-        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.zip$', name)
+        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.(zip|tgz|tar\.gz)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
+            ext = match.group(3)
             return [
-                Source(url=name, host=host, project=project, type='distfile')
+                Source(url=name, host=host, project=project, type=ext)
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
@@ -248,6 +251,14 @@ class Source(object):
         return []
 
     @property
+    def distfile(self):
+        if self.type in ('zip', 'tgz', 'tar.gz'):
+            return os.path.join(TOOLSHELF, self.subdir,
+                                '%s.%s' % (self.project, self.type))
+        else:
+            return None
+
+    @property
     def dir(self):
         return os.path.join(TOOLSHELF, self.subdir, self.project)
 
@@ -274,10 +285,14 @@ class Source(object):
             if exit_code != 0:
                 sys.stderr.write('hg failed\n')
                 return exit_code
-        elif self.type == 'distfile':
+        elif self.distfile is not None:
             # TODO: make this actually work
-            os.system('wget %s' % self.url)
-            os.system('unzip %s' % self.project)
+            os.system('rm -f %s' % self.distfile)
+            os.system('wget -nc -O %s %s' % (self.distfile, self.url))
+            if self.type == 'zip':
+                os.system('unzip %s' % self.distfile)
+            elif self.type in ('tgz', 'tar.gz'):
+                os.system('tar zxvf %s' % self.distfile)
         elif self.type == 'guess':
             # TODO: don't just assume it's on github
             exit_code = os.system('git clone git://github.com/%s/%s.git' %
