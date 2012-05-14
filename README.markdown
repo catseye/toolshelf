@@ -14,7 +14,8 @@ Quick Start
 -----------
 
 1. Download this file and save it somewhere:
-   `https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh`
+   `[https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh]
+   (https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh)`
 2. Start a `bash` shell (if you haven't already) and change to the directory
    where you downloaded `bootstrap-toolshelf.sh`.
 3. Run `source bootstrap-toolshelf.sh`.
@@ -56,18 +57,25 @@ Further Reading
 For the closest thing we have to a reference manual right now, just run
 `toolshelf` without arguments.
 
-See doc/Heuristics.markdown for how `toolshelf` goes about figuring out where
-it should grab the source from, how it should build it, and what it should put
-on your search paths.
+See [doc/Heuristics.markdown]
+(https://github.com/catseye/toolshelf/blob/master/doc/Heuristics.markdown)
+for how `toolshelf` goes about figuring out where it should grab the source
+from, how it should build it, and what it should put on your search paths.
 
-See doc/Motivation_and_Tradeoffs.markdown for why I wrote `toolshelf`, and what
-it's aptitude's good at and not so good at.
+See [doc/Motivation_and_Tradeoffs.markdown]
+(https://github.com/catseye/toolshelf/blob/master/doc/Motivation_and_Tradeoffs.markdown)
+for why I wrote `toolshelf`, and what it's aptitude's good at and not so good
+at.
 
-See doc/Theory_of_Operation.markdown for how it works -- specifically, how typing
-`toolshelf` can seemingly magically alter your search paths.
+See [doc/Theory_of_Operation.markdown]
+(https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown)
+for how it works -- specifically, how typing `toolshelf` can seemingly
+magically alter your search paths.
 
-See doc/Success_Stories.markdown for some sources which have turned out to work
-remarkably well with `toolshelf`.
+See [doc/Success_Stories.markdown]
+(https://github.com/catseye/toolshelf/blob/master/doc/doc/Success_Stories.markdown)
+for some sources which have turned out to work remarkably well with
+`toolshelf`.
 
 License
 -------
