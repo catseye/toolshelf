@@ -316,7 +316,6 @@ class Source(object):
                 sys.stderr.write('hg failed\n')
                 return exit_code
         elif self.distfile is not None:
-            # TODO: make this actually work
             os.system('rm -f %s' % self.distfile)
             os.system('wget -nc -O %s %s' % (self.distfile, self.url))
             if self.type == 'zip':
@@ -337,6 +336,8 @@ class Source(object):
             print "* Building %s/%s..." % (self.subdir, self.project)
 
         os.chdir(self.dir)
+        if os.path.isfile('configure'):
+            os.system('./configure')
         if os.path.isfile('Makefile'):
             os.system('make')
         elif os.path.isfile('src/Makefile'):
