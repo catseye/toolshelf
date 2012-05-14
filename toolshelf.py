@@ -31,12 +31,42 @@
 """\
 toolshelf {options} <subcommand>
 
-Manage projects, sources, and paths maintained by the toolshelf environment.
+Manage sources and paths maintained by the toolshelf environment.
+Each <subcommand> has its own syntax.  <subcommand> is one of:
 
-<subcommand> is one of:
+    dock <source-spec>
+        Obtain a source tree from a remote source, build executables for
+        it if needed, and place the executables on your $PATH.  Triggers
+        a `path rebuild`.
 
-    dock <prj>    - obtain project sources from a website and place on path
-    path rebuild  - update your PATH env var to reflect all docked projects
+    path rebuild
+        Update your $PATH to contain the executables for all currently
+        docked source.
+
+    path disable                               (:not yet implemented:)
+        Temporarily remove the executables in all currently docked projects
+        from your $PATH.  A subsequent `path rebuild` will restore them.
+
+    path check                                 (:not yet implemented:)
+        Analyze the current $PATH and report any directories in it which are
+        missing from the filesystem, and any executables on it which are
+        shadowed by prior entries with the same name.
+
+    path restrict <source-spec> {dir-prefix}   (:not yet implemented:)
+        Prevent all directories in the given docked source with any of
+        the given dir-prefixes from being placed on the $PATH.  Triggers
+        a `path rebuild`.
+
+    path allow <source-spec> {dir-prefix}      (:not yet implemented:)
+        Opposite of `path restrict`; remove the restrictions on being
+        placed on the $PATH for all directories in the given docked
+        source with any of the given dir-prefixes.  Triggers a `path
+        rebuild`.
+
+    consult <source-spec>                      (:not yet implemented:)
+        Display a menu containing all files in the given docked source
+        which are likely to be documentation; when one is selected,
+        display its contents with $PAGER.
 """
 
 import os
