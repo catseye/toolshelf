@@ -14,7 +14,7 @@ Quick Start
 -----------
 
 1. Download this file and save it somewhere:
-   `[https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh](https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh)`
+   [`https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh`](https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh)
 2. Start a `bash` shell (if you haven't already) and change to the directory
    where you downloaded `bootstrap-toolshelf.sh`.
 3. Run `source bootstrap-toolshelf.sh`.
@@ -68,7 +68,7 @@ See [doc/Theory_of_Operation.markdown](https://github.com/catseye/toolshelf/blob
 for how it works -- specifically, how typing `toolshelf` can seemingly
 magically alter your search paths.
 
-See [doc/Success_Stories.markdown](https://github.com/catseye/toolshelf/blob/master/doc/doc/Success_Stories.markdown)
+See [doc/Success_Stories.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Success_Stories.markdown)
 for some sources which have turned out to work remarkably well with
 `toolshelf`.
 
