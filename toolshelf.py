@@ -70,9 +70,10 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
 """
 
 import os
+import optparse
 import re
+import subprocess
 import sys
-from optparse import OptionParser
 
 
 ### Constants (per each run)
@@ -319,8 +320,11 @@ class Source(object):
             os.system('rm -f %s' % self.distfile)
             os.system('wget -nc -O %s %s' % (self.distfile, self.url))
             if self.type == 'zip':
+                # TODO: analyze zipfile for tarbomb-ness first
                 os.system('unzip %s' % self.distfile)
+                self.rectify_executable_permissions()
             elif self.type in ('tgz', 'tar.gz'):
+                # TODO: analyze tarfile for tarbomb-ness first
                 os.system('tar zxvf %s' % self.distfile)
         elif self.type == 'guess':
             # TODO: don't just assume it's on github
@@ -335,17 +339,46 @@ class Source(object):
         if OPTIONS.verbose:
             print "* Building %s/%s..." % (self.subdir, self.project)
 
+        exit_code = 0
         os.chdir(self.dir)
         if os.path.isfile('configure'):
-            os.system('./configure')
+            exit_code = os.system('./configure')
+        if exit_code != 0:
+            return exit_code
         if os.path.isfile('Makefile'):
-            os.system('make')
+            exit_code = os.system('make')
         elif os.path.isfile('src/Makefile'):
             os.chdir('src')
-            os.system('make')
+            exit_code = os.system('make')
         elif os.path.isfile('build.sh'):
-            os.system('./build.sh')
-        return 0  # TODO: only for now
+            exit_code = os.system('./build.sh')
+        return exit_code
+
+    def rectify_executable_permissions(self):
+        def traverse(dirname):
+            for name in os.listdir(dirname):
+                if name in ('.git', '.hg'):
+                    continue
+                filename = os.path.join(dirname, name)
+                if os.path.isdir(filename):
+                    traverse(filename)
+                else:
+                    make_it_executable = False
+                    pipe = subprocess.Popen(["file", filename],
+                                            stdout=subprocess.PIPE)
+                    output = pipe.communicate()[0]
+                    if 'executable' in output:
+                        make_it_executable = True
+                    if make_it_executable:
+                        if OPTIONS.verbose:
+                            print "* Making %s executable" % name
+                        subprocess.check_call(["chmod", "u+x", filename])
+                    else:
+                        if OPTIONS.verbose:
+                            print "* Making %s NON-executable" % name
+                        subprocess.check_call(["chmod", "u-x", filename])
+
+        traverse(self.dir)
 
 ### Subcommands
 
@@ -389,7 +422,7 @@ SUBCOMMANDS = {
 
 
 if __name__ == '__main__':
-    parser = OptionParser(__doc__)
+    parser = optparse.OptionParser(__doc__)
 
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
