@@ -34,7 +34,7 @@ toolshelf {options} <subcommand>
 Manage sources and paths maintained by the toolshelf environment.
 Each <subcommand> has its own syntax.  <subcommand> is one of:
 
-    dock <source-spec>
+    dock <external-source-spec>
         Obtain a source tree from a remote source, build executables for
         it if needed, and place the executables on your $PATH.  Triggers
         a `path rebuild`.
@@ -52,18 +52,14 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         missing from the filesystem, and any executables on it which are
         shadowed by prior entries with the same name.
 
-    path restrict <source-spec> {dir-prefix}   (:not yet implemented:)
-        Prevent all directories in the given docked source with any of
-        the given dir-prefixes from being placed on the $PATH.  Triggers
-        a `path rebuild`.
+    path config <docked-source-spec>           (:not yet implemented:)
+        Change the hints for a docked source.
 
-    path allow <source-spec> {dir-prefix}      (:not yet implemented:)
-        Opposite of `path restrict`; remove the restrictions on being
-        placed on the $PATH for all directories in the given docked
-        source with any of the given dir-prefixes.  Triggers a `path
-        rebuild`.
+    cd <docked-source-spec>                    (:not yet implemented:)
+        Change the current working directory to the directory of the
+        given docked source.
 
-    consult <source-spec>                      (:not yet implemented:)
+    consult <docked-source-spec>               (:not yet implemented:)
         Display a menu containing all files in the given docked source
         which are likely to be documentation; when one is selected,
         display its contents with $PAGER.
@@ -155,7 +151,7 @@ class Path(object):
                            if not dir.startswith(TOOLSHELF)]
 
     def add_component(self, dir):
-        self.components.append(dir)
+        self.components.insert(0, dir)
 
 
 class Source(object):
