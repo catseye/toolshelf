@@ -69,6 +69,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         display its contents with $PAGER.
 """
 
+import ConfigParser as configparser
 import os
 import optparse
 import re
@@ -159,13 +160,13 @@ class Path(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                       type=None, hints=None):
+                       type=None, hints=''):
         self.url = url
         self.host = host
         self.user = user
         self.project = project
         self.type = type
-        self.hints = hints or []
+        self.hints = hints
         self.subdir = self.user or self.host
 
     @classmethod
@@ -201,11 +202,11 @@ class Source(object):
 
         # TODO: look up specifier in database, to obtain "cookies"
 
-        hints = []
+        hints = ''
         match = re.match(r'^(.*?)\{(.*?)\}$', name)
         if match:
             name = match.group(1)
-            hints = match.group(2).split(':')
+            hints = match.group(2)
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -271,7 +272,7 @@ class Source(object):
             # repo, a mercurial repo, or whatnot.
             sources = []
             for user in os.listdir(TOOLSHELF):
-                if user == 'toolshelf':
+                if user in ('toolshelf', '.toolshelfrc'):
                     # skip the toolshelf dir itself
                     continue
                 sub_dirname = os.path.join(TOOLSHELF, user)
@@ -296,15 +297,37 @@ class Source(object):
             return None
 
     @property
-    def dir(self):
-        return os.path.join(TOOLSHELF, self.subdir, self.project)
+    def name(self):
+        return os.path.join(self.subdir, self.project)
 
-    # TODO: implement
+    @property
+    def dir(self):
+        return os.path.join(TOOLSHELF, self.name)
+
     def save_hints(self):
-        pass
+        filename = os.path.join(TOOLSHELF, '.toolshelfrc')
+        config = configparser.RawConfigParser()
+        config.read([filename])
+        if not config.has_section('hints'):
+            config.add_section('hints')
+        config.set('hints', self.name, self.hints)
+        f = open(filename, 'w')
+        config.write(f)
+        f.close()
 
     def load_hints(self):
-        pass
+        # TODO: it is inefficient to read this file every time
+        filename = os.path.join(TOOLSHELF, '.toolshelfrc')
+        config = configparser.RawConfigParser()
+        config.read([filename])
+        if not config.has_section('hints'):
+            return
+        try:
+            self.hints = config.get('hints', self.name)
+        except configparser.NoSectionError as e:
+            return
+        except configparser.NoOptionError as e:
+            return            
 
     @property
     def docked(self):
@@ -363,17 +386,15 @@ class Source(object):
         for dirname in sorted(index):
             # TODO: rewrite this more elegantly
             add_it = True
-            print "my hints", self.hints
-            for hint in self.hints:
+            for hint in self.hints.split(':'):
                 if hint.startswith('%'):
                     verboten = os.path.join(self.dir, hint[1:])
-                    print "verboten:", verboten
                     if dirname.startswith(verboten):
                         add_it = False
                         break
             if not add_it:
                 if OPTIONS.verbose:
-                    print "(SKIPPING %s)"
+                    print "(SKIPPING %s)" % dirname
                 continue
             if OPTIONS.verbose:
                 print "%s:" % dirname
