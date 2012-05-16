@@ -48,6 +48,11 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         from your $PATH.  A subsequent `path rebuild` will restore them.
         If no source specs are given, all docked sources will apply.
 
+    path show {<docked-source-spec>}           (:not yet implemented:)
+        Display the directories that are (or would be) put on your $PATH
+        by the given docked sources.  Also show the executables in those
+        directories.
+
     path check                                 (:not yet implemented:)
         Analyze the current $PATH and report any directories in it which are
         missing from the filesystem, and any executables on it which are
@@ -473,19 +478,18 @@ def dock_cmd(result, args):
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
-def clean_path(path, sources, all=False):
-    # special case to handle total rebuilds/disables:
-    if all:
-        note("* Removing from your PATH all toolshelf directories")
-        path.remove_components_by_prefix(TOOLSHELF)
-    else:
-        note("* Removing from your PATH all directories that start with one of the following...")
-        for source in sources:
-            note("  " + source.dir)
-            path.remove_components_by_prefix(source.dir)
-
-
 def path_cmd(result, args):
+    def clean_path(path, sources, all=False):
+        # special case to handle total rebuilds/disables:
+        if all:
+            note("* Removing from your PATH all toolshelf directories")
+            path.remove_components_by_prefix(TOOLSHELF)
+        else:
+            note("* Removing from your PATH all directories that start with one of the following...")
+            for source in sources:
+                note("  " + source.dir)
+                path.remove_components_by_prefix(source.dir)
+
     if args[0] == 'rebuild':
         specs = args[1:]
         if not specs:
@@ -506,6 +510,15 @@ def path_cmd(result, args):
         p = Path()
         clean_path(p, sources, all=(specs == ['*']))
         p.write(result)
+    elif args[0] == 'show':
+        # TODO: have this be meaningful even without --verbose
+        specs = args[1:]
+        if not specs:
+            specs = ['*']
+        sources = Source.docked_from_specs(specs)
+        for source in sources:
+            for component in source.find_path_components():
+                pass
     else:
         raise CommandLineSyntaxError(
             "Unrecognized 'path' subcommand '%s'\n" % args[0]
