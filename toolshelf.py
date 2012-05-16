@@ -113,6 +113,10 @@ def find_executables(dirname, index):
 def run(*args):
     subprocess.check_call(args)
 
+def note(msg):
+    if OPTIONS.verbose:
+        print msg
+
 
 ### Exceptions
 
@@ -147,9 +151,9 @@ class Path(object):
         value = ':'.join(self.components)
         result.write("export PATH='%s'\n" % value)
 
-    def remove_toolshelf_components(self):
+    def remove_components_by_prefix(self, prefix):
         self.components = [dir for dir in self.components
-                           if not dir.startswith(TOOLSHELF)]
+                           if not dir.startswith(prefix)]
 
     def add_component(self, dir):
         self.components.insert(0, dir)
@@ -370,8 +374,7 @@ class Source(object):
         return os.path.isdir(self.dir)
 
     def checkout(self):
-        if OPTIONS.verbose:
-            print "* Checking out %s/%s..." % (self.subdir, self.project)
+        note("* Checking out %s/%s..." % (self.subdir, self.project))
 
         os.chdir(TOOLSHELF)
         if not os.path.isdir(self.subdir):
@@ -401,8 +404,7 @@ class Source(object):
         self.save_hints()
 
     def build(self):
-        if OPTIONS.verbose:
-            print "* Building %s/%s..." % (self.subdir, self.project)
+        note("* Building %s/%s..." % (self.subdir, self.project))
 
         os.chdir(self.dir)
         if os.path.isfile('configure'):
@@ -429,13 +431,11 @@ class Source(object):
                         add_it = False
                         break
             if not add_it:
-                if OPTIONS.verbose:
-                    print "(SKIPPING %s)" % dirname
+                note("(SKIPPING %s)" % dirname)
                 continue
-            if OPTIONS.verbose:
-                print "%s:" % dirname
-                for filename in index[dirname]:
-                    print "  %s" % filename
+            note("  %s:" % dirname)
+            for filename in index[dirname]:
+                note("    %s" % filename)
             components.append(dirname)
         return components
 
@@ -455,12 +455,10 @@ class Source(object):
                     if 'executable' in output:
                         make_it_executable = True
                     if make_it_executable:
-                        if OPTIONS.verbose:
-                            print "* Making %s executable" % name
+                        note("* Making %s executable" % name)
                         subprocess.check_call(["chmod", "u+x", filename])
                     else:
-                        if OPTIONS.verbose:
-                            print "* Making %s NON-executable" % name
+                        note("* Making %s NON-executable" % name)
                         subprocess.check_call(["chmod", "u-x", filename])
 
         traverse(self.dir)
@@ -475,21 +473,38 @@ def dock_cmd(result, args):
     path_cmd(result, ['rebuild'])
 
 
+def clean_path(path, sources, all=False):
+    # special case to handle total rebuilds/disables:
+    if all:
+        note("* Removing from your PATH all toolshelf directories")
+        path.remove_components_by_prefix(TOOLSHELF)
+    else:
+        note("* Removing from your PATH all directories that start with one of the following...")
+        for source in sources:
+            note("  " + source.dir)
+            path.remove_components_by_prefix(source.dir)
+
+
 def path_cmd(result, args):
     if args[0] == 'rebuild':
+        specs = args[1:]
+        if not specs:
+            specs = ['*']
+        sources = Source.docked_from_specs(specs)
         p = Path()
-        # TODO: only remove components for each source
-        p.remove_toolshelf_components()
-        sources = Source.docked_from_spec('*')
-        if OPTIONS.verbose:
-            print "* Adding the following executables to your PATH..."
+        clean_path(p, sources, all=(specs == ['*']))
+        note("* Adding the following executables to your PATH...")
         for source in sources:
             for component in source.find_path_components():
                 p.add_component(component)
         p.write(result)
     elif args[0] == 'disable':
+        specs = args[1:]
+        if not specs:
+            specs = ['*']
+        sources = Source.docked_from_specs(specs)
         p = Path()
-        p.remove_toolshelf_components()
+        clean_path(p, sources, all=(specs == ['*']))
         p.write(result)
     else:
         raise CommandLineSyntaxError(
