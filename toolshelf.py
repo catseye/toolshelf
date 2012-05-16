@@ -101,15 +101,6 @@ def is_executable(filename):
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
 
 
-def list_executables(dirname):
-    executables = []
-    for name in os.listdir(dirname):
-        filename = os.path.join(dirname, name)
-        if is_executable(filename):
-            executables.append(filename)
-    return executables
-
-
 def find_executables(dirname, index):
     for name in os.listdir(dirname):
         if name in ('.git', '.hg'):
@@ -120,21 +111,6 @@ def find_executables(dirname, index):
         elif os.path.isdir(filename):
             find_executables(filename, index)
 
-
-def compute_toolshelf_path(dirnames):
-    if OPTIONS.verbose:
-        print "* Adding the following executables to your PATH..."
-    index = {}
-    for dirname in dirnames:
-        find_executables(dirname, index)
-    components = []
-    for dirname in sorted(index):
-        if OPTIONS.verbose:
-            print "%s:" % dirname
-            for filename in index[dirname]:
-                print "  %s" % filename
-        components.append(dirname)
-    return components
 
 def run(*args):
     subprocess.check_call(args)
@@ -177,18 +153,19 @@ class Path(object):
         self.components = [dir for dir in self.components
                            if not dir.startswith(TOOLSHELF)]
 
-    def add_toolshelf_components(self, sources):
-        self.components += compute_toolshelf_path([s.dir for s in sources])
+    def add_component(self, dir):
+        self.components.append(dir)
 
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                       type=None):
+                       type=None, hints=None):
         self.url = url
         self.host = host
         self.user = user
         self.project = project
         self.type = type
+        self.hints = hints or []
         self.subdir = self.user or self.host
 
     @classmethod
@@ -213,10 +190,22 @@ class Source(object):
           user/*                     all docked projects for this user
           project                    unambiguous project in toolshelf
 
+        A source specifier may also be followed by a hint set.
+        A hint set is a colon-seperated list of hints enclosed in curly
+        braces.  Example:
+
+          user/project{^tests:-T:*perl}
+
         """
         # TODO: should report warnings and errors
 
         # TODO: look up specifier in database, to obtain "cookies"
+
+        hints = []
+        match = re.match(r'^(.*?)\{(.*?)\}$', name)
+        if match:
+            name = match.group(1)
+            hints = match.group(2).split(':')
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -224,7 +213,8 @@ class Source(object):
             user = match.group(2)
             project = match.group(3)
             return [
-                Source(url=name, host=host, user=user, project=project, type='git')
+                Source(url=name, host=host, user=user, project=project,
+                       type='git', hints=hints)
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
@@ -233,7 +223,8 @@ class Source(object):
             user = match.group(2)
             project = match.group(3)
             return [
-                Source(url=name, host=host, user=user, project=project, type='git')
+                Source(url=name, host=host, user=user, project=project,
+                       type='git', hints=hints)
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.(zip|tgz|tar\.gz)$', name)
@@ -242,7 +233,8 @@ class Source(object):
             project = match.group(2)
             ext = match.group(3)
             return [
-                Source(url=name, host=host, project=project, type=ext)
+                Source(url=name, host=host, project=project, type=ext,
+                       hints=hints)
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
@@ -251,7 +243,8 @@ class Source(object):
             user = match.group(2)
             project = match.group(3)
             return [
-                Source(url=name, host=host, user=user, project=project, type='hg')
+                Source(url=name, host=host, user=user, project=project,
+                       type='hg', hints=hints)
             ]
 
         match = re.match(r'^\@(.*?)$', name)
@@ -260,7 +253,7 @@ class Source(object):
             filename = match.group(1)
             file = open(filename)
             for line in file:
-               sources += Source.from_spec(line, exists=exists)
+                sources += Source.from_spec(line, exists=exists)
             file.close()
             return sources
 
@@ -270,7 +263,7 @@ class Source(object):
             project = match.group(2)
             # TODO: do we resolve this here, or upon checkout?
             return [
-                Source(user=user, project=project, type='guess')
+                Source(user=user, project=project, type='guess', hints=hints)
             ]
 
         if name == '*' and exists:
@@ -286,7 +279,10 @@ class Source(object):
                     project_dirname = os.path.join(sub_dirname, project)
                     if not os.path.isdir(project_dirname):
                         continue
-                    sources.append(Source(user=user, project=project, type='unknown'))
+                    # TODO: do we apply the given hints here?  (depends)
+                    s = Source(user=user, project=project, type='unknown')
+                    s.load_hints()
+                    sources.append(s)
             return sources
 
         return []
@@ -302,6 +298,13 @@ class Source(object):
     @property
     def dir(self):
         return os.path.join(TOOLSHELF, self.subdir, self.project)
+
+    # TODO: implement
+    def save_hints(self):
+        pass
+
+    def load_hints(self):
+        pass
 
     @property
     def docked(self):
@@ -336,6 +339,8 @@ class Source(object):
             run('git', 'clone', 'git://github.com/%s/%s.git' %
                 (self.user, self.project))
 
+        self.save_hints()
+
     def build(self):
         if OPTIONS.verbose:
             print "* Building %s/%s..." % (self.subdir, self.project)
@@ -350,6 +355,32 @@ class Source(object):
             run('make')
         elif os.path.isfile('build.sh'):
             run('./build.sh')
+
+    def find_path_components(self):
+        index = {}
+        find_executables(self.dir, index)
+        components = []
+        for dirname in sorted(index):
+            # TODO: rewrite this more elegantly
+            add_it = True
+            print "my hints", self.hints
+            for hint in self.hints:
+                if hint.startswith('%'):
+                    verboten = os.path.join(self.dir, hint[1:])
+                    print "verboten:", verboten
+                    if dirname.startswith(verboten):
+                        add_it = False
+                        break
+            if not add_it:
+                if OPTIONS.verbose:
+                    print "(SKIPPING %s)"
+                continue
+            if OPTIONS.verbose:
+                print "%s:" % dirname
+                for filename in index[dirname]:
+                    print "  %s" % filename
+            components.append(dirname)
+        return components
 
     def rectify_executable_permissions(self):
         def traverse(dirname):
@@ -392,7 +423,11 @@ def path_cmd(result, args):
         p = Path()
         p.remove_toolshelf_components()
         sources = Source.from_spec('*', exists=True)
-        p.add_toolshelf_components(sources)
+        if OPTIONS.verbose:
+            print "* Adding the following executables to your PATH..."
+        for source in sources:
+            for component in source.find_path_components():
+                p.add_component(component)
         p.write(result)
     elif args[0] == 'disable':
         p = Path()
