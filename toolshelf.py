@@ -470,7 +470,7 @@ def dock_cmd(result, args):
     for source in sources:
         source.checkout()
         source.build()
-    path_cmd(result, ['rebuild'])
+    path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def clean_path(path, sources, all=False):
