@@ -13,12 +13,13 @@ Python to run the workhorse script.
 Quick Start
 -----------
 
-1. Download this file and save it somewhere:
-   [`https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh`](https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh)
+1. Download [`bootstrap-toolshelf.sh`][].
 2. Start a `bash` shell (if you haven't already) and change to the directory
    where you downloaded `bootstrap-toolshelf.sh`.
 3. Run `source bootstrap-toolshelf.sh`.
 4. Follow the instructions given to you by the script.
+
+[`bootstrap-toolshelf.sh`]: https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
 
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,
@@ -59,21 +60,24 @@ Further Reading
 For the closest thing we have to a reference manual right now, just run
 `toolshelf` without arguments.
 
-See [doc/Heuristics.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Heuristics.markdown)
-for how `toolshelf` goes about figuring out where it should grab the source
-from, how it should build it, and what it should put on your search paths.
+See [Heuristics and Cookies][] for how `toolshelf` goes about figuring out
+where it should grab the source from, how it should build it, and what it
+should put on your search paths; and how you can influence it when it's not
+clever enough to figure these things out by itself.
 
-See [doc/Motivation_and_Tradeoffs.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Motivation_and_Tradeoffs.markdown)
-for why I wrote `toolshelf`, and what it's aptitude's good at and not so good
-at.
+See [Motivation and Tradeoffs][] for why I wrote `toolshelf`, and what it's
+aptitude's good at and not so good at.
 
-See [doc/Theory_of_Operation.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown)
-for how it works -- specifically, how typing `toolshelf` can seemingly
-magically alter your search paths.
+See [Theory of Operation][] for how it works -- specifically, how typing
+`toolshelf` can seemingly magically alter your search paths.
 
 See [doc/Success_Stories.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Success_Stories.markdown)
 for some sources which have turned out to work remarkably well with
 `toolshelf`.
+
+[Heuristics and Cookies]: https://github.com/catseye/toolshelf/blob/master/doc/Heuristics_and_Cookies.markdown
+[Motivation and Tradeoffs]: https://github.com/catseye/toolshelf/blob/master/doc/Motivation_and_Tradeoffs.markdown
+[Theory of Operation]: https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown
 
 License
 -------
@@ -86,3 +90,6 @@ Related Work
 * `sources`
 
 * `zero-install`/`0launch`
+
+* `checkoutmanager`
+

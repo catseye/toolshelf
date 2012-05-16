@@ -127,7 +127,7 @@ def compute_toolshelf_path(dirnames):
     for dirname in dirnames:
         find_executables(dirname, index)
     components = []
-    for dirname in index:
+    for dirname in sorted(index):
         if OPTIONS.verbose:
             print "%s:" % dirname
             for filename in index[dirname]:
