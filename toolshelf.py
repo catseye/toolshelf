@@ -91,6 +91,7 @@ UNINTERESTING_EXECUTABLES = (
 
 OPTIONS = None
 
+
 ### Helper Functions
 
 def is_executable(filename):
@@ -134,6 +135,15 @@ def compute_toolshelf_path(dirnames):
                 print "  %s" % filename
         components.append(dirname)
     return components
+
+def run(*args):
+    subprocess.check_call(args)
+
+
+### Exceptions
+
+class CommandLineSyntaxError(ValueError):
+    pass
 
 
 ### Classes
@@ -307,52 +317,39 @@ class Source(object):
         os.chdir(self.subdir)
 
         if self.type == 'git':
-            exit_code = os.system('git clone %s' % self.url)
-            if exit_code != 0:
-                sys.stderr.write('git failed\n')
-                return exit_code
+            run('git', 'clone', self.url)
         elif self.type == 'hg':
-            exit_code = os.system('hg clone %s' % self.url)
-            if exit_code != 0:
-                sys.stderr.write('hg failed\n')
-                return exit_code
+            run('hg', 'clone', self.url)
         elif self.distfile is not None:
-            os.system('rm -f %s' % self.distfile)
-            os.system('wget -nc -O %s %s' % (self.distfile, self.url))
+            run('rm', '-f', self.distfile)
+            run('wget', '-nc', '-O', self.distfile, self.url)
             if self.type == 'zip':
                 # TODO: analyze zipfile for tarbomb-ness first
-                os.system('unzip %s' % self.distfile)
+                run('unzip', self.distfile)
                 self.rectify_executable_permissions()
             elif self.type in ('tgz', 'tar.gz'):
                 # TODO: analyze tarfile for tarbomb-ness first
-                os.system('tar zxvf %s' % self.distfile)
+                # TODO: use modern command line arguments to tar
+                run('tar', 'zxvf', self.distfile)
         elif self.type == 'guess':
             # TODO: don't just assume it's on github
-            exit_code = os.system('git clone git://github.com/%s/%s.git' %
+            run('git', 'clone', 'git://github.com/%s/%s.git' %
                 (self.user, self.project))
-            if exit_code != 0:
-                sys.stderr.write('git failed\n')
-                return exit_code
-        return 0
 
     def build(self):
         if OPTIONS.verbose:
             print "* Building %s/%s..." % (self.subdir, self.project)
 
-        exit_code = 0
         os.chdir(self.dir)
         if os.path.isfile('configure'):
-            exit_code = os.system('./configure')
-        if exit_code != 0:
-            return exit_code
+            run('./configure')
         if os.path.isfile('Makefile'):
-            exit_code = os.system('make')
+            run('make')
         elif os.path.isfile('src/Makefile'):
             os.chdir('src')
-            exit_code = os.system('make')
+            run('make')
         elif os.path.isfile('build.sh'):
-            exit_code = os.system('./build.sh')
-        return exit_code
+            run('./build.sh')
 
     def rectify_executable_permissions(self):
         def traverse(dirname):
@@ -383,18 +380,11 @@ class Source(object):
 ### Subcommands
 
 def dock_cmd(result, args):
-    exit_code = 0
     sources = Source.from_spec(args[0])
     for source in sources:
-        exit_code = source.checkout()
-        if exit_code != 0:
-            break
-        exit_code = source.build()
-        if exit_code != 0:
-            break
-    if exit_code == 0:
-        path_cmd(result, ['rebuild'])
-    return exit_code
+        source.checkout()
+        source.build()
+    path_cmd(result, ['rebuild'])
 
 
 def path_cmd(result, args):
@@ -404,15 +394,14 @@ def path_cmd(result, args):
         sources = Source.from_spec('*', exists=True)
         p.add_toolshelf_components(sources)
         p.write(result)
-        return 0
     elif args[0] == 'disable':
         p = Path()
         p.remove_toolshelf_components()
         p.write(result)
-        return 0
     else:
-        sys.stderr.write("Unrecognized 'path' subcommand '%s'\n" % args[0])
-        return 1
+        raise CommandLineSyntaxError(
+            "Unrecognized 'path' subcommand '%s'\n" % args[0]
+        )
 
 
 SUBCOMMANDS = {
@@ -433,15 +422,21 @@ if __name__ == '__main__':
         print "Usage: " + __doc__
         sys.exit(2)
 
-    exit_code = 0
     os.chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
-        exit_code = SUBCOMMANDS[subcommand](result, args[1:])
+        try:
+            SUBCOMMANDS[subcommand](result, args[1:])
+        except CommandLineSyntaxError as e:
+            sys.stderr.write(str(e) + '\n')
+            print "Usage: " + __doc__
+            sys.exit(2)
+        except subprocess.CalledProcessError as e:
+            sys.stderr.write(str(e) + '\n')
+            sys.exit(e.returncode)
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
         sys.exit(2)
     result.close()
-    sys.exit(exit_code)
