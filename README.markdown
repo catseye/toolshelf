@@ -71,13 +71,13 @@ aptitude's good at and not so good at.
 See [Theory of Operation][] for how it works -- specifically, how typing
 `toolshelf` can seemingly magically alter your search paths.
 
-See [doc/Success_Stories.markdown](https://github.com/catseye/toolshelf/blob/master/doc/Success_Stories.markdown)
-for some sources which have turned out to work remarkably well with
-`toolshelf`.
+See [Case Studies][] for some sources which have turned out to work remarkably
+well with `toolshelf`, and some that haven't.
 
 [Heuristics and Cookies]: https://github.com/catseye/toolshelf/blob/master/doc/Heuristics_and_Cookies.markdown
 [Motivation and Tradeoffs]: https://github.com/catseye/toolshelf/blob/master/doc/Motivation_and_Tradeoffs.markdown
 [Theory of Operation]: https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown
+[Case Studies]: https://github.com/catseye/toolshelf/blob/master/doc/Case_Studies.markdown
 
 License
 -------

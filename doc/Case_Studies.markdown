@@ -1,7 +1,8 @@
-Success Stories
-===============
+Case Studies
+============
 
-This is just a sampling of sources that work well with the `toolshelf` model.
+This is just a sampling of sources I've tried with `toolshelf` so far, and
+description of how well they work with the `toolshelf` model, and why.
 
 * [`nelhage/reptyr`](https://github.com/nelhage/reptyr)
 
