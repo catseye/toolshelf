@@ -34,18 +34,19 @@ toolshelf {options} <subcommand>
 Manage sources and paths maintained by the toolshelf environment.
 Each <subcommand> has its own syntax.  <subcommand> is one of:
 
-    dock <external-source-spec>
-        Obtain a source tree from a remote source, build executables for
-        it if needed, and place the executables on your $PATH.  Triggers
-        a `path rebuild`.
+    dock {<external-source-spec>}
+        Obtain source trees from a remote source, build executables for
+        them as needed, and place those executables on your $PATH.
+        Triggers a `path rebuild`.
 
-    path rebuild
-        Update your $PATH to contain the executables for all currently
-        docked source.
+    path rebuild {<docked-source-spec>}
+        Update your $PATH to contain the executables for the given
+        docked sources.  If none are given, all docked sources will apply.
 
-    path disable
-        Temporarily remove the executables in all currently docked projects
+    path disable {<docked-source-spec>}
+        Temporarily remove the executables in the given docked projects
         from your $PATH.  A subsequent `path rebuild` will restore them.
+        If no source specs are given, all docked sources will apply.
 
     path check                                 (:not yet implemented:)
         Analyze the current $PATH and report any directories in it which are
@@ -166,6 +167,13 @@ class Source(object):
         self.subdir = self.user or self.host
 
     @classmethod
+    def external_from_specs(klass, names):
+        sources = []
+        for name in names:
+            sources += klass.external_from_spec(name)
+        return sources
+
+    @classmethod
     def external_from_spec(klass, name):
         """Parse an external source specifier and return a list of
         Source objects.
@@ -259,6 +267,13 @@ class Source(object):
             ]
 
         return []
+
+    @classmethod
+    def docked_from_specs(klass, names):
+        sources = []
+        for name in names:
+            sources += klass.docked_from_spec(name)
+        return sources
 
     @classmethod
     def docked_from_spec(klass, name):
@@ -453,7 +468,7 @@ class Source(object):
 ### Subcommands
 
 def dock_cmd(result, args):
-    sources = Source.external_from_spec(args[0])
+    sources = Source.external_from_specs(args)
     for source in sources:
         source.checkout()
         source.build()
@@ -463,6 +478,7 @@ def dock_cmd(result, args):
 def path_cmd(result, args):
     if args[0] == 'rebuild':
         p = Path()
+        # TODO: only remove components for each source
         p.remove_toolshelf_components()
         sources = Source.docked_from_spec('*')
         if OPTIONS.verbose:
@@ -482,7 +498,7 @@ def path_cmd(result, args):
 
 
 def cd_cmd(result, args):
-    sources = Source.docked_from_spec(args[0])
+    sources = Source.docked_from_specs(args)
     if len(sources) != 1:
         raise CommandLineSyntaxError(
             "'cd' subcommand requires exactly one source\n"
