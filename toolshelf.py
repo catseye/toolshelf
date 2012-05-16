@@ -55,7 +55,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     path config <docked-source-spec>           (:not yet implemented:)
         Change the hints for a docked source.
 
-    cd <docked-source-spec>                    (:not yet implemented:)
+    cd <docked-source-spec>
         Change the current working directory to the directory of the
         given docked source.
 
@@ -166,10 +166,11 @@ class Source(object):
         self.subdir = self.user or self.host
 
     @classmethod
-    def from_spec(klass, name, exists=False):
-        """Parse a source specifier and return a list of Source objects.
+    def external_from_spec(klass, name):
+        """Parse an external source specifier and return a list of
+        Source objects.
 
-        A source specifier may take any of the following forms:
+        An external source specifier may take any of the following forms:
 
           git://host.dom/.../user/repo.git       git
           http[s]://host.dom/.../user/repo.git   git
@@ -177,15 +178,9 @@ class Source(object):
           http[s]://host.dom/.../distfile.tgz    |
           http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
           http[s]://host.dom/.../distfile.zip    |
-          user/project               use Preferences to guess
+          user/project           NYI use Preferences to guess
           @local/file/name           read list of sources from file
-          @@foo                      read list in toolshelf/catalog/foo
-
-        If exists is `True`, the following forms are also allowed:
-
-          *                          all docked projects
-          user/*                     all docked projects for this user
-          project                    unambiguous project in toolshelf
+          @@foo                  NYI read list in toolshelf/catalog/foo
 
         A source specifier may also be followed by a hint set.
         A hint set is a colon-seperated list of hints enclosed in curly
@@ -250,7 +245,7 @@ class Source(object):
             filename = match.group(1)
             file = open(filename)
             for line in file:
-                sources += Source.from_spec(line, exists=exists)
+                sources += Source.external_from_spec(line)
             file.close()
             return sources
 
@@ -263,7 +258,27 @@ class Source(object):
                 Source(user=user, project=project, type='guess', hints=hints)
             ]
 
-        if name == '*' and exists:
+        return []
+
+    @classmethod
+    def docked_from_spec(klass, name):
+        """Parse a docked source specifier and return a list of Source
+        objects.
+
+        A docked source specifier may take any of the following forms:
+
+          user/project               the source docked under this name
+          user/*                 NYI all docked projects for this user
+          *                          all docked projects
+          project                NYI unambiguous project in toolshelf
+          @local/file/name       NYI read list of sources from file
+          @@foo                  NYI read list in toolshelf/catalog/foo
+
+        """
+        # TODO: should report warnings and errors
+        # TODO: look up specifier in database, to obtain "cookies"
+
+        if name == '*':
             # TODO: should divine whether a docked project is a git
             # repo, a mercurial repo, or whatnot.
             sources = []
@@ -281,6 +296,16 @@ class Source(object):
                     s.load_hints()
                     sources.append(s)
             return sources
+
+        match = re.match(r'^(.*?)\/(.*?)$', name)
+        if match:
+            user = match.group(1)
+            project = match.group(2)
+            if os.path.isdir(os.path.join(TOOLSHELF, user, project)):
+                s = Source(user=user, project=project, type='unknown')
+                s.load_hints()
+                return [s]
+            return []
 
         return []
 
@@ -428,7 +453,7 @@ class Source(object):
 ### Subcommands
 
 def dock_cmd(result, args):
-    sources = Source.from_spec(args[0])
+    sources = Source.external_from_spec(args[0])
     for source in sources:
         source.checkout()
         source.build()
@@ -439,7 +464,7 @@ def path_cmd(result, args):
     if args[0] == 'rebuild':
         p = Path()
         p.remove_toolshelf_components()
-        sources = Source.from_spec('*', exists=True)
+        sources = Source.docked_from_spec('*')
         if OPTIONS.verbose:
             print "* Adding the following executables to your PATH..."
         for source in sources:
@@ -456,9 +481,19 @@ def path_cmd(result, args):
         )
 
 
+def cd_cmd(result, args):
+    sources = Source.docked_from_spec(args[0])
+    if len(sources) != 1:
+        raise CommandLineSyntaxError(
+            "'cd' subcommand requires exactly one source\n"
+        )
+    result.write('cd %s\n' % sources[0].dir)
+
+
 SUBCOMMANDS = {
     'dock': dock_cmd,
     'path': path_cmd,
+    'cd': cd_cmd,
 }
 
 
