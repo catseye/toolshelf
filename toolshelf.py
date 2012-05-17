@@ -309,7 +309,7 @@ class Source(object):
             # repo, a mercurial repo, or whatnot.
             sources = []
             for user in os.listdir(TOOLSHELF):
-                if user in ('toolshelf', '.toolshelfrc'):
+                if user in ('.toolshelf', '.toolshelfrc'):
                     # skip the toolshelf dir itself
                     continue
                 sub_dirname = os.path.join(TOOLSHELF, user)
