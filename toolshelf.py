@@ -116,6 +116,8 @@ def find_executables(dirname, index):
 
 
 def run(*args):
+    if OPTIONS.verbose:
+        print "* Runnning `%s`..." % ' '.join(args)
     subprocess.check_call(args)
 
 def note(msg):
@@ -393,14 +395,29 @@ class Source(object):
         elif self.distfile is not None:
             run('rm', '-f', self.distfile)
             run('wget', '-nc', '-O', self.distfile, self.url)
+            extract_dir = os.path.join(
+                TOOLSHELF, self.subdir, '.extract_' + self.project
+            )
+            run('mkdir', '-p', extract_dir)
+            os.chdir(extract_dir)
             if self.type == 'zip':
-                # TODO: analyze zipfile for tarbomb-ness first
                 run('unzip', self.distfile)
-                self.rectify_executable_permissions()
             elif self.type in ('tgz', 'tar.gz'):
-                # TODO: analyze tarfile for tarbomb-ness first
                 # TODO: use modern command line arguments to tar
                 run('tar', 'zxvf', self.distfile)
+
+            files = os.listdir(extract_dir)
+            if len(files) == 1:
+                extracted_dir = os.path.join(extract_dir, files[0])
+                if not os.path.isdir(extracted_dir):
+                    extracted_dir = extract_dir
+            else:
+                extracted_dir = extract_dir
+            run('mv', extracted_dir, self.dir)
+            run('rm', '-rf', extract_dir)
+
+            if self.type == 'zip':
+                self.rectify_executable_permissions()
         elif self.type == 'guess':
             # TODO: don't just assume it's on github
             run('git', 'clone', 'git://github.com/%s/%s.git' %
