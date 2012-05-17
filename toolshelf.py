@@ -93,6 +93,7 @@ UNINTERESTING_EXECUTABLES = (
 )
 
 OPTIONS = None
+CWD = os.getcwd()
 
 
 ### Helper Functions
@@ -261,10 +262,10 @@ class Source(object):
         match = re.match(r'^\@(.*?)$', name)
         if match:
             sources = []
-            filename = match.group(1)
+            filename = os.path.join(CWD, match.group(1))
             file = open(filename)
             for line in file:
-                sources += Source.external_from_spec(line)
+                sources += Source.external_from_spec(line.strip())
             file.close()
             return sources
 
