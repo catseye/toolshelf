@@ -85,7 +85,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 # TODO: maybe this should not default to the .. of the script dir if env var isn't there?
 TOOLSHELF = os.environ.get('TOOLSHELF', os.path.join(SCRIPT_DIR, '..'))
 
-RESULT_SH_FILENAME = os.path.join(SCRIPT_DIR, 'tmp-toolshelf-result.sh')
+RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
