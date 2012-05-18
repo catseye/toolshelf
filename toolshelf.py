@@ -48,7 +48,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         from your $PATH.  A subsequent `path rebuild` will restore them.
         If no source specs are given, all docked sources will apply.
 
-    path show {<docked-source-spec>}           (:not yet implemented:)
+    path show {<docked-source-spec>}
         Display the directories that are (or would be) put on your $PATH
         by the given docked sources.  Also show the executables in those
         directories.
@@ -82,11 +82,11 @@ import sys
 ### Constants (per each run)
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-# TODO: maybe this should not default to the .. of the script dir if env var isn't there?
-TOOLSHELF = os.environ.get('TOOLSHELF', os.path.join(SCRIPT_DIR, '..'))
+TOOLSHELF = os.environ.get('TOOLSHELF')
 
 RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 
+# TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
     'build.pl', 'make.pl',
@@ -117,9 +117,9 @@ def find_executables(dirname, index):
 
 
 def run(*args):
-    if OPTIONS.verbose:
-        print "* Runnning `%s`..." % ' '.join(args)
+    note("* Runnning `%s`..." % ' '.join(args))
     subprocess.check_call(args)
+
 
 def note(msg):
     if OPTIONS.verbose:
@@ -200,13 +200,13 @@ class Source(object):
           http[s]://host.dom/.../distfile.zip    |
           user/project           NYI use Preferences to guess
           @local/file/name           read list of sources from file
-          @@foo                  NYI read list in toolshelf/catalog/foo
+          @@foo                      read list in .toolshelf/catalog/foo
 
         A source specifier may also be followed by a hint set.
         A hint set is a colon-seperated list of hints enclosed in curly
         braces.  Example:
 
-          user/project{^tests:-T:*perl}
+          user/project{x=tests:r=perl}
 
         """
         # TODO: should report warnings and errors
@@ -259,13 +259,22 @@ class Source(object):
                        type='hg', hints=hints)
             ]
 
+        match = re.match(r'^\@\@(.*?)$', name)
+        if match:
+            name = '@' + os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name + '.catalog'
+            )
+
         match = re.match(r'^\@(.*?)$', name)
         if match:
             sources = []
             filename = os.path.join(CWD, match.group(1))
             file = open(filename)
             for line in file:
-                sources += Source.external_from_spec(line.strip())
+                line = line.strip()
+                if line == '' or line.startswith('#'):
+                    continue
+                sources += Source.external_from_spec(line)
             file.close()
             return sources
 
