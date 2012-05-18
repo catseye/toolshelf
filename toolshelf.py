@@ -457,8 +457,13 @@ class Source(object):
             # TODO: rewrite this more elegantly
             add_it = True
             for hint in self.hints.split(':'):
-                if hint.startswith('%'):
-                    verboten = os.path.join(self.dir, hint[1:])
+                # TODO: better hint parsing
+                try:
+                    (name, value) = hint.split('=')
+                except ValueError as e:
+                    continue
+                if name == 'x':
+                    verboten = os.path.join(self.dir, value)
                     if dirname.startswith(verboten):
                         add_it = False
                         break

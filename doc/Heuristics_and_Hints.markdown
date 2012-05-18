@@ -6,10 +6,10 @@ about what source you mean, how to build it, and how to put its executables
 on your search path.  It also allows you to supply explicit hints to help it
 along in this process.
 
+Sections marked ♦ are not yet implemented.
+
 Heuristics
 ----------
-
-Sections marked ♦ are not yet implemented.
 
 ### How does it know where to grab a source from? ###
 
@@ -140,7 +140,7 @@ are as follows.
   specification, docked; if you do not, it will try to dock that source first.
   Example: `d=Scriptor/Pharen`.
 
-* ♦ `x` indicates a directory subtree that you should not be added to the
+* `x` indicates a directory subtree that you should not be added to the
   executable search path.  This could be useful if there are executables
   included in a source tree that you don't want put on your path, but
   `toolshelf` itself isn't clever enough to figure out that you don't want
@@ -151,6 +151,13 @@ are as follows.
 
 * ♦ `o` indicates that *only* these subdirectories should be added to the
   executable search path.  Example: `o=bin`.
+
+* ♦ `b` specifies a command to run to build the source.  Not sure if it will
+  be passed to a shell for execution, or just split into words at the spaces.
+  The command will be run with the root of the source tree as the working
+  directory.  Note that if the command contains spaces, and the source spec
+  is given on the command line, it will need to be quoted.
+  Example: `b=tools/make-it`.
 
 * ♦ `E` indicates an environment variable to set to the name of the source
   tree directory.  (mnemonic: set.)  Many source distributions come with
@@ -179,4 +186,3 @@ The "cookies" file for `toolshelf` consists of a list of source specifications
 with hints.  When `toolshelf` is given a source specification which matches
 one in the "cookies" file, it automatically applies those hints.  You can
 probably override them with hints in the given source specification.
-
