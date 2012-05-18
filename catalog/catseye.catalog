@@ -1,0 +1,56 @@
+# This is a catalog of all software projects that
+# Cat's Eye Technologies has ever released -- for some
+# value of "all", i.e., it's quite incomplete.
+
+# Note that this doesn't include forks of other folks'
+# projects or anything.
+
+# Note that some of these don't have anything resembling
+# an executable that can be put on your path.  But you
+# can still check them out, of course, and the sources
+# will be put on your toolshelf, where you can view them,
+# hack at them, run them in emulators, etc.
+
+# The projects that are in repos (i.e. not the distfiles
+# hosted on catseye.tc) are generally mirrored on both
+# Github (git) and Bitbucket (hg).  TODO: toolshelf should
+# figure out which to check out based on your preferences.
+# It should lower-case the name when trying Bitbucket.
+
+# There might be hints in here to begin with, but
+# they should eventually be moved to cookies.conf.
+
+catseye/Apple-Befunge
+catseye/Bubble-Escape
+catseye/Deturgenchry
+catseye/Dieter
+catseye/Dipple
+catseye/Eightebed
+catseye/Falderal
+catseye/FBBI
+catseye/Flobnar
+catseye/Hev
+catseye/Mascarpone
+catseye/Pail
+catseye/Pixley
+catseye/Quylthulg
+# on Bitbucket, this is catseye/pl-goto-.net ... unfortunately:
+catseye/PL-GOTO.NET
+catseye/Robin
+catseye/Super-Wumpus-Land
+catseye/Unlikely
+# errr... no, the world isn't ready for this yet:
+# catseye/toolshelf
+catseye/yoob
+catseye/yucca
+catseye/ZOWIE
+
+# Only a few distfiles for now.
+
+# broken:
+# http://catseye.tc/distfiles/2iota-1.0-2011.1214.zip
+# no makefile:
+# http://catseye.tc/distfiles/bef-2.22-2011.0318.zip
+http://catseye.tc/distfiles/sally-1.0-2010.0721.zip
+# bad interpreter:
+# http://catseye.tc/distfiles/strelnokoff-2001.0324.zip
