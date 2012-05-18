@@ -35,7 +35,7 @@ description of how well they work with the `toolshelf` model, and why.
   (because they have rather generic names, and are probably not things that
   you would use frequently.)
 
-* `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]
+* `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]`{x=tests:x=etc:x=examples:x=build-aux}`
 
   Is your system `bison` version 2.4, but you need version 2.5 installed
   temporarily in order to build `kulp/tenyr`?  No problem; just put it on

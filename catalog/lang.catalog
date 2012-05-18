@@ -1,0 +1,9 @@
+# A few interesting, experimental programming languages.
+# Main intended as an example of a catalog file.
+
+darius/awklisp
+darius/ichbins{x=tests}
+munificent/magpie
+Scriptor/pharen
+# whymirror/potion
+darius/wren

@@ -90,6 +90,7 @@ RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
     'build.pl', 'make.pl',
+    'configure', 'config.status',
 )
 
 OPTIONS = None
@@ -262,7 +263,8 @@ class Source(object):
         match = re.match(r'^\@\@(.*?)$', name)
         if match:
             name = '@' + os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name + '.catalog'
+                TOOLSHELF, '.toolshelf', 'catalog',
+                match.group(1) + '.catalog'
             )
 
         match = re.match(r'^\@(.*?)$', name)
