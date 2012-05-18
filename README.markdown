@@ -60,7 +60,7 @@ Further Reading
 For the closest thing we have to a reference manual right now, just run
 `toolshelf` without arguments.
 
-See [Heuristics and Cookies][] for how `toolshelf` goes about figuring out
+See [Heuristics and Hints][] for how `toolshelf` goes about figuring out
 where it should grab the source from, how it should build it, and what it
 should put on your search paths; and how you can influence it when it's not
 clever enough to figure these things out by itself.
@@ -74,7 +74,7 @@ See [Theory of Operation][] for how it works -- specifically, how typing
 See [Case Studies][] for some sources which have turned out to work remarkably
 well with `toolshelf`, and some that haven't.
 
-[Heuristics and Cookies]: https://github.com/catseye/toolshelf/blob/master/doc/Heuristics_and_Cookies.markdown
+[Heuristics and Hints]: https://github.com/catseye/toolshelf/blob/master/doc/Heuristics_and_Hints.markdown
 [Motivation and Tradeoffs]: https://github.com/catseye/toolshelf/blob/master/doc/Motivation_and_Tradeoffs.markdown
 [Theory of Operation]: https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown
 [Case Studies]: https://github.com/catseye/toolshelf/blob/master/doc/Case_Studies.markdown
