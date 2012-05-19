@@ -93,8 +93,14 @@ UNINTERESTING_EXECUTABLES = (
     'configure', 'config.status',
 )
 
-OPTIONS = None
 CWD = os.getcwd()
+
+
+### Globals
+
+OPTIONS = None
+CONFIG = None
+COOKIES = None
 
 
 ### Helper Functions
@@ -154,6 +160,63 @@ class LazyFile(object):
             self.file.close()
 
 
+class Config(object):
+    def __init__(self):
+        self.filename = os.path.join(TOOLSHELF, '.toolshelfrc')
+        self._config = None
+
+    @property
+    def config(self):
+        if self._config is None:
+            self._config = configparser.RawConfigParser()
+            self._config.read([self.filename])
+            if not self._config.has_section('hints'):
+                self._config.add_section('hints')
+        return self._config
+
+    def get_hints(self, source):
+        try:
+            hints = self.config.get('hints', source.name)
+        except configparser.NoOptionError as e:
+            return None
+        return hints
+
+    def set_hints(self, source):
+        self.config.set('hints', source.name, source.hints)
+
+    def save(self):
+        if self._config is not None:
+            f = open(self.filename, 'w')
+            self.config.write(f)
+            f.close()
+
+
+class Cookies(object):
+    def __init__(self):
+        self.filename = os.path.join(TOOLSHELF, 'cookies.catalog')
+        self._source_map = None
+
+    @property
+    def source_map(self):
+        if self._source_map is None:
+            problems = []
+            sources = Source.from_spec('external', self.filename, problems)
+            if problems:
+                raise ValueError(problems)
+            self._source_map = {}
+            for source in sources:
+                self._source_map[source.name] = source
+        return self._source_map
+
+    def apply_hints(self, sources):
+        for source in sources:
+            if source.hints:
+                # already specified; they override what we think we know
+                continue
+            if source.name in self.source_map:
+                source.hints = self.source_map[source.name].hints
+
+
 class Path(object):
     def __init__(self, value=None):
         if value is None:
@@ -170,6 +233,16 @@ class Path(object):
 
     def add_component(self, dir):
         self.components.insert(0, dir)
+
+    def which(self, filename):
+        found = []
+        for component in self.components:
+            full_filename = os.path.join(component, filename)
+            # TODO: this only looks for "interesting" executables...
+            # should look for any
+            if is_executable(full_filename):
+                found.append(full_filename)
+        return found
 
 
 class Source(object):
@@ -196,19 +269,32 @@ class Source(object):
             line = line.strip()
             if line == '' or line.startswith('#'):
                 continue
-            if type == 'external':
-                sources += Source.external_from_spec(line, problems)
-            else:
-                sources += Source.docked_from_spec(line, problems)
+            sources += Source.from_spec(type, line, problems)
         file.close()
         return sources
 
     @classmethod
-    def external_from_specs(klass, names, problems):
+    def from_specs(klass, type, names, problems):
         sources = []
         for name in names:
-            sources += klass.external_from_spec(name)
+            sources += klass.from_spec(type, name, problems)
         return sources
+
+    @classmethod
+    def from_spec(klass, type, name, problems):
+        if name.startswith('@@'):
+            filename = os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+            )
+            return klass.from_catalog(type, filename, problems)
+        if name.startswith('@'):
+            return klass.from_catalog(type, name[1:], problems)
+        if type == 'external':
+            return klass.external_from_spec(name, problems)
+        elif type == 'docked':
+            return klass.docked_from_spec(name, problems)
+        else:
+            raise KeyError("type must be 'external' or 'docked'")
 
     @classmethod
     def external_from_spec(klass, name, problems):
@@ -239,18 +325,6 @@ class Source(object):
 
         """
         # TODO: look up specifier in database, to obtain "cookies"
-
-        if name.startswith('@@'):
-            filename = os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
-            )
-            return klass.from_catalog(
-                'external', filename, problems
-            )
-        if name.startswith('@'):
-            return klass.from_catalog(
-                'external', name[1:], problems
-            )
 
         hints = ''
         match = re.match(r'^(.*?)\{(.*?)\}$', name)
@@ -310,13 +384,6 @@ class Source(object):
 
         problems.append("Couldn't parse source spec '%s'" % name)
         return []
-
-    @classmethod
-    def docked_from_specs(klass, names, problems):
-        sources = []
-        for name in names:
-            sources += klass.docked_from_spec(name, problems)
-        return sources
 
     @classmethod
     def docked_from_spec(klass, name, problems):
@@ -401,29 +468,12 @@ class Source(object):
         return os.path.join(TOOLSHELF, self.name)
 
     def save_hints(self):
-        filename = os.path.join(TOOLSHELF, '.toolshelfrc')
-        config = configparser.RawConfigParser()
-        config.read([filename])
-        if not config.has_section('hints'):
-            config.add_section('hints')
-        config.set('hints', self.name, self.hints)
-        f = open(filename, 'w')
-        config.write(f)
-        f.close()
+        CONFIG.set_hints(self)
 
     def load_hints(self):
-        # TODO: it is inefficient to read this file every time
-        filename = os.path.join(TOOLSHELF, '.toolshelfrc')
-        config = configparser.RawConfigParser()
-        config.read([filename])
-        if not config.has_section('hints'):
-            return
-        try:
-            self.hints = config.get('hints', self.name)
-        except configparser.NoSectionError as e:
-            return
-        except configparser.NoOptionError as e:
-            return            
+        hints = CONFIG.get_hints(self)
+        if hints is not None:
+            self.hints = hints
 
     @property
     def docked(self):
@@ -543,7 +593,7 @@ class Source(object):
 
 def dock_cmd(result, args):
     problems = []
-    sources = Source.external_from_specs(args, problems)
+    sources = Source.from_specs('external', args, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
@@ -570,7 +620,7 @@ def path_cmd(result, args):
         if not specs:
             specs = ['*']
         problems = []
-        sources = Source.docked_from_specs(specs, problems)
+        sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -586,7 +636,7 @@ def path_cmd(result, args):
         if not specs:
             specs = ['*']
         problems = []
-        sources = Source.docked_from_specs(specs, problems)
+        sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -598,7 +648,7 @@ def path_cmd(result, args):
         if not specs:
             specs = ['*']
         problems = []
-        sources = Source.docked_from_specs(specs, problems)
+        sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -618,7 +668,7 @@ def path_cmd(result, args):
 
 def cd_cmd(result, args):
     problems = []
-    sources = Source.docked_from_specs(args, problems)
+    sources = Source.from_specs('docked', args, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
@@ -636,7 +686,9 @@ SUBCOMMANDS = {
 }
 
 
-if __name__ == '__main__':
+def main():
+    global OPTIONS, CONFIG, COOKIES
+
     parser = optparse.OptionParser(__doc__)
 
     parser.add_option("-v", "--verbose", dest="verbose",
@@ -650,6 +702,9 @@ if __name__ == '__main__':
 
     os.chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
+    CONFIG = Config()
+    COOKIES = Cookies()
+
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
         try:
@@ -668,4 +723,10 @@ if __name__ == '__main__':
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
         sys.exit(2)
+
     result.close()
+    CONFIG.save()
+
+
+if __name__ == '__main__':
+    main()
