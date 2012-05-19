@@ -184,6 +184,26 @@ class Source(object):
         self.subdir = self.user or self.host
 
     @classmethod
+    def from_catalog(klass, type, filename, problems):
+        filename = os.path.join(CWD, filename)
+        try:
+            file = open(filename)
+        except IOError as e:
+            problems.append(e)
+            return []
+        sources = []
+        for line in file:
+            line = line.strip()
+            if line == '' or line.startswith('#'):
+                continue
+            if type == 'external':
+                sources += Source.external_from_spec(line, problems)
+            else:
+                sources += Source.docked_from_spec(line, problems)
+        file.close()
+        return sources
+
+    @classmethod
     def external_from_specs(klass, names, problems):
         sources = []
         for name in names:
@@ -220,11 +240,24 @@ class Source(object):
         """
         # TODO: look up specifier in database, to obtain "cookies"
 
+        if name.startswith('@@'):
+            filename = os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+            )
+            return klass.from_catalog(
+                'external', filename, problems
+            )
+        if name.startswith('@'):
+            return klass.from_catalog(
+                'external', name[1:], problems
+            )
+
         hints = ''
         match = re.match(r'^(.*?)\{(.*?)\}$', name)
         if match:
             name = match.group(1)
             hints = match.group(2)
+            # TODO: parse hints into Hints object here
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -266,32 +299,6 @@ class Source(object):
                        type='hg', hints=hints)
             ]
 
-        # TODO: this should be common to external_- and docked_-from_spec
-        match = re.match(r'^\@\@(.*?)$', name)
-        if match:
-            name = '@' + os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog',
-                match.group(1) + '.catalog'
-            )
-
-        # TODO: this should be common to external_- and docked_-from_spec
-        match = re.match(r'^\@(.*?)$', name)
-        if match:
-            sources = []
-            filename = os.path.join(CWD, match.group(1))
-            try:
-                file = open(filename)
-            except IOError as e:
-                problems.append(e)
-                return []
-            for line in file:
-                line = line.strip()
-                if line == '' or line.startswith('#'):
-                    continue
-                sources += Source.external_from_spec(line, problems)
-            file.close()
-            return sources
-
         match = re.match(r'^(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
@@ -330,8 +337,19 @@ class Source(object):
         a list-like object.
 
         """
-        # TODO: should report warnings and errors
         # TODO: look up specifier in database, to obtain "cookies"
+
+        if name.startswith('@@'):
+            filename = os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+            )
+            return klass.from_catalog(
+                'docked', filename, problems
+            )
+        if name.startswith('@'):
+            return klass.from_catalog(
+                'docked', name[1:], problems
+            )
 
         if name == '*':
             # TODO: should divine whether a docked project is a git
