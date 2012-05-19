@@ -49,8 +49,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         If no source specs are given, all docked sources will apply.
 
     path show {<docked-source-spec>}
-        Display the directories that are (or would be) put on your $PATH
-        by the given docked sources.  Also show the executables in those
+        Display the directories that have been put on your $PATH by the
+        given docked sources.  Also show the executables in those
         directories.
 
     path check                                 (:not yet implemented:)
@@ -545,14 +545,18 @@ def path_cmd(result, args):
         clean_path(p, sources, all=(specs == ['*']))
         p.write(result)
     elif args[0] == 'show':
-        # TODO: have this be meaningful even without --verbose
         specs = args[1:]
         if not specs:
             specs = ['*']
         sources = Source.docked_from_specs(specs)
-        for source in sources:
-            for component in source.find_path_components():
-                pass
+        p = Path()
+        for component in p.components:
+            for source in sources:
+                if component.startswith(source.dir):
+                    print component
+                    for filename in os.listdir(component):
+                        if is_executable(os.path.join(component, filename)):
+                            print "  ", filename
     else:
         raise CommandLineSyntaxError(
             "Unrecognized 'path' subcommand '%s'\n" % args[0]
