@@ -193,14 +193,16 @@ class Config(object):
 
 class Cookies(object):
     def __init__(self):
-        self.filename = os.path.join(TOOLSHELF, 'cookies.catalog')
+        self.filename = os.path.join(
+            TOOLSHELF, '.toolshelf', 'cookies.catalog'
+        )
         self._source_map = None
 
     @property
     def source_map(self):
         if self._source_map is None:
             problems = []
-            sources = Source.from_spec('external', self.filename, problems)
+            sources = Source.from_catalog('external', self.filename, problems)
             if problems:
                 raise ValueError(problems)
             self._source_map = {}
@@ -597,6 +599,7 @@ def dock_cmd(result, args):
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
+    COOKIES.apply_hints(sources)
     for source in sources:
         source.checkout()
         source.build()
