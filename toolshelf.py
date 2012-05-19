@@ -133,6 +133,10 @@ class CommandLineSyntaxError(ValueError):
     pass
 
 
+class SourceSpecSyntaxError(ValueError):
+    pass
+
+
 ### Classes
 
 class LazyFile(object):
@@ -180,14 +184,14 @@ class Source(object):
         self.subdir = self.user or self.host
 
     @classmethod
-    def external_from_specs(klass, names):
+    def external_from_specs(klass, names, problems):
         sources = []
         for name in names:
             sources += klass.external_from_spec(name)
         return sources
 
     @classmethod
-    def external_from_spec(klass, name):
+    def external_from_spec(klass, name, problems):
         """Parse an external source specifier and return a list of
         Source objects.
 
@@ -209,9 +213,11 @@ class Source(object):
 
           user/project{x=tests:r=perl}
 
-        """
-        # TODO: should report warnings and errors
+        If problems are encountered while parsing the source spec,
+        they will be added to the problems parameter, assumed to be
+        a list-like object.
 
+        """
         # TODO: look up specifier in database, to obtain "cookies"
 
         hints = ''
@@ -260,6 +266,7 @@ class Source(object):
                        type='hg', hints=hints)
             ]
 
+        # TODO: this should be common to external_- and docked_-from_spec
         match = re.match(r'^\@\@(.*?)$', name)
         if match:
             name = '@' + os.path.join(
@@ -267,16 +274,21 @@ class Source(object):
                 match.group(1) + '.catalog'
             )
 
+        # TODO: this should be common to external_- and docked_-from_spec
         match = re.match(r'^\@(.*?)$', name)
         if match:
             sources = []
             filename = os.path.join(CWD, match.group(1))
-            file = open(filename)
+            try:
+                file = open(filename)
+            except IOError as e:
+                problems.append(e)
+                return []
             for line in file:
                 line = line.strip()
                 if line == '' or line.startswith('#'):
                     continue
-                sources += Source.external_from_spec(line)
+                sources += Source.external_from_spec(line, problems)
             file.close()
             return sources
 
@@ -289,17 +301,18 @@ class Source(object):
                 Source(user=user, project=project, type='guess', hints=hints)
             ]
 
+        problems.append("Couldn't parse source spec '%s'" % name)
         return []
 
     @classmethod
-    def docked_from_specs(klass, names):
+    def docked_from_specs(klass, names, problems):
         sources = []
         for name in names:
-            sources += klass.docked_from_spec(name)
+            sources += klass.docked_from_spec(name, problems)
         return sources
 
     @classmethod
-    def docked_from_spec(klass, name):
+    def docked_from_spec(klass, name, problems):
         """Parse a docked source specifier and return a list of Source
         objects.
 
@@ -311,6 +324,10 @@ class Source(object):
           project                NYI unambiguous project in toolshelf
           @local/file/name       NYI read list of sources from file
           @@foo                  NYI read list in toolshelf/catalog/foo
+
+        If problems are encountered while parsing the source spec,
+        they will be added to the problems parameter, assumed to be
+        a list-like object.
 
         """
         # TODO: should report warnings and errors
@@ -343,8 +360,10 @@ class Source(object):
                 s = Source(user=user, project=project, type='unknown')
                 s.load_hints()
                 return [s]
+            problems.append("Source '%s' not docked" % name)
             return []
 
+        problems.append("Couldn't parse source spec '%s'" % name)
         return []
 
     @property
@@ -505,7 +524,11 @@ class Source(object):
 ### Subcommands
 
 def dock_cmd(result, args):
-    sources = Source.external_from_specs(args)
+    problems = []
+    sources = Source.external_from_specs(args, problems)
+    # TODO: improve this
+    if problems:
+        raise SourceSpecSyntaxError(repr(problems))
     for source in sources:
         source.checkout()
         source.build()
@@ -528,7 +551,11 @@ def path_cmd(result, args):
         specs = args[1:]
         if not specs:
             specs = ['*']
-        sources = Source.docked_from_specs(specs)
+        problems = []
+        sources = Source.docked_from_specs(specs, problems)
+        # TODO: improve this
+        if problems:
+            raise SourceSpecSyntaxError(repr(problems))
         p = Path()
         clean_path(p, sources, all=(specs == ['*']))
         note("* Adding the following executables to your PATH...")
@@ -540,7 +567,11 @@ def path_cmd(result, args):
         specs = args[1:]
         if not specs:
             specs = ['*']
-        sources = Source.docked_from_specs(specs)
+        problems = []
+        sources = Source.docked_from_specs(specs, problems)
+        # TODO: improve this
+        if problems:
+            raise SourceSpecSyntaxError(repr(problems))
         p = Path()
         clean_path(p, sources, all=(specs == ['*']))
         p.write(result)
@@ -548,15 +579,19 @@ def path_cmd(result, args):
         specs = args[1:]
         if not specs:
             specs = ['*']
-        sources = Source.docked_from_specs(specs)
+        problems = []
+        sources = Source.docked_from_specs(specs, problems)
+        # TODO: improve this
+        if problems:
+            raise SourceSpecSyntaxError(repr(problems))
         p = Path()
         for component in p.components:
             for source in sources:
                 if component.startswith(source.dir):
                     print component
-                    for filename in os.listdir(component):
+                    for filename in sorted(os.listdir(component)):
                         if is_executable(os.path.join(component, filename)):
-                            print "  ", filename
+                            print "  %s" % filename
     else:
         raise CommandLineSyntaxError(
             "Unrecognized 'path' subcommand '%s'\n" % args[0]
@@ -564,7 +599,11 @@ def path_cmd(result, args):
 
 
 def cd_cmd(result, args):
-    sources = Source.docked_from_specs(args)
+    problems = []
+    sources = Source.docked_from_specs(args, problems)
+    # TODO: improve this
+    if problems:
+        raise SourceSpecSyntaxError(repr(problems))
     if len(sources) != 1:
         raise CommandLineSyntaxError(
             "'cd' subcommand requires exactly one source\n"
@@ -601,6 +640,9 @@ if __name__ == '__main__':
             sys.stderr.write(str(e) + '\n')
             print "Usage: " + __doc__
             sys.exit(2)
+        except SourceSpecSyntaxError as e:
+            sys.stderr.write(repr(e) + '\n')
+            sys.exit(1)
         except subprocess.CalledProcessError as e:
             sys.stderr.write(str(e) + '\n')
             sys.exit(e.returncode)
