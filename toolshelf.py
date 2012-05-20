@@ -89,7 +89,8 @@ RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 # TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
-    'build.pl', 'make.pl',
+    'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
+    'build.pl', 'make.pl', 'install.pl',
     'configure', 'config.status',
 )
 
@@ -527,7 +528,10 @@ class Source(object):
         self.save_hints()
 
     def build(self):
-        note("* Building %s/%s..." % (self.subdir, self.project))
+        if not OPTIONS.build:
+            note("* SKIPPING build of %s" % self.name)
+            return
+        note("* Building %s..." % self.name)
 
         os.chdir(self.dir)
         if os.path.isfile('configure'):
@@ -694,6 +698,9 @@ def main():
 
     parser = optparse.OptionParser(__doc__)
 
+    parser.add_option("-B", "--no-build", dest="build",
+                      default=True, action="store_false",
+                      help="don't try to build sources during docking")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
