@@ -178,7 +178,7 @@ class Config(object):
     def get_hints(self, source):
         try:
             hints = self.config.get('hints', source.name)
-        except configparser.NoOptionError as e:
+        except configparser.NoOptionError:
             return None
         return hints
 
@@ -250,7 +250,7 @@ class Path(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                       type=None, hints=''):
+                 type=None, hints=''):
         self.url = url
         self.host = host
         self.user = user
@@ -356,7 +356,8 @@ class Source(object):
                        type='git', hints=hints)
             ]
 
-        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.(zip|tgz|tar\.gz)$', name)
+        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
+                         r'\.(zip|tgz|tar\.gz)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
@@ -555,7 +556,7 @@ class Source(object):
                 # TODO: better hint parsing
                 try:
                     (name, value) = hint.split('=')
-                except ValueError as e:
+                except ValueError:
                     continue
                 if name == 'x':
                     verboten = os.path.join(self.dir, value)
@@ -595,7 +596,9 @@ class Source(object):
 
         traverse(self.dir)
 
+
 ### Subcommands
+
 
 def dock_cmd(result, args):
     problems = []
@@ -617,7 +620,8 @@ def path_cmd(result, args):
             note("* Removing from your PATH all toolshelf directories")
             path.remove_components_by_prefix(TOOLSHELF)
         else:
-            note("* Removing from your PATH all directories that start with one of the following...")
+            note("* Removing from your PATH all directories that "
+                 "start with one of the following...")
             for source in sources:
                 note("  " + source.dir)
                 path.remove_components_by_prefix(source.dir)
