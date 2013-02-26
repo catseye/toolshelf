@@ -72,6 +72,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
 """
 
 import ConfigParser as configparser
+import errno
 import os
 import optparse
 import re
@@ -175,7 +176,9 @@ class Config(object):
                 self._config.add_section('hints')
         return self._config
 
+    # XXX disabled until we rewrite this
     def get_hints(self, source):
+        return ''
         try:
             hints = self.config.get('hints', source.name)
         except configparser.NoOptionError:
@@ -253,12 +256,13 @@ class Source(object):
                  type=None, hints=''):
         # TODO: look up specifier in database, to obtain "cookies"
         self.url = url
+        if not host:
+            raise ValueError('no host supplied')
         self.host = host
-        self.user = user
+        self.user = user or 'distfile'
         self.project = project
         self.type = type
         self.hints = hints
-        self.subdir = self.user or self.host
 
     @classmethod
     def from_catalog(klass, type, filename, problems):
@@ -430,7 +434,7 @@ class Source(object):
                         if not os.path.isdir(project_dirname):
                             continue
                         # TODO: do we apply the given hints here?  (depends)
-                        s = Source(user=user, project=project, type='unknown')
+                        s = Source(host=host, user=user, project=project, type='unknown')
                         s.load_hints()
                         sources.append(s)
             return sources
@@ -459,11 +463,15 @@ class Source(object):
 
     @property
     def name(self):
-        return os.path.join(self.host, self.subdir, self.project)
+        return os.path.join(self.host, self.user, self.project)
+
+    @property
+    def user_dir(self):
+        return os.path.join(TOOLSHELF, self.host, self.user)
 
     @property
     def dir(self):
-        return os.path.join(TOOLSHELF, self.name)
+        return os.path.join(self.user_dir, self.project)
 
     def save_hints(self):
         CONFIG.set_hints(self)
@@ -478,22 +486,23 @@ class Source(object):
         return os.path.isdir(self.dir)
 
     def checkout(self):
-        note("* Checking out %s/%s..." % (self.subdir, self.project))
+        note("* Checking out %s..." % self.name)
 
         try:
-            os.makedirs(self.dir)
+            os.makedirs(self.user_dir)
         except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(self.dir):
+            if exc.errno == errno.EEXIST and os.path.isdir(self.user_dir):
                 pass
             else:
                 raise
-        os.chdir(self.dir)
+        os.chdir(self.user_dir)
 
         if self.type == 'git':
             run('git', 'clone', self.url)
         elif self.type == 'hg':
             run('hg', 'clone', self.url)
         elif self.distfile is not None:
+            # XXX might not work anymore
             run('rm', '-f', self.distfile)
             run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
@@ -528,7 +537,7 @@ class Source(object):
         if not OPTIONS.build:
             note("* SKIPPING build of %s" % self.name)
             return
-        note("* Building %s..." % self.name)
+        note("* Building %s..." % self.dir)
 
         os.chdir(self.dir)
         if os.path.isfile('configure'):
@@ -606,7 +615,10 @@ def dock_cmd(result, args):
     for source in sources:
         source.checkout()
         source.build()
-    path_cmd(result, ['rebuild'] + [s.name for s in sources])
+    # XXX overkill for now.  should be like
+    # + [s.name for s in sources]
+    # except s.spec, or make s.name parseable as a spec
+    path_cmd(result, ['rebuild', '*'])
 
 
 def path_cmd(result, args):
