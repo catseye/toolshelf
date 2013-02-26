@@ -1,9 +1,9 @@
 # A few interesting, experimental programming languages.
 # This is mainly intended as an example of a catalog file.
 
-darius/awklisp
-darius/ichbins{x=tests}
-munificent/magpie
-Scriptor/pharen
-fogus/potion
-darius/wren
+gh:darius/awklisp
+gh:darius/ichbins
+gh:munificent/magpie
+gh:Scriptor/pharen
+gh:fogus/potion
+gh:darius/wren
