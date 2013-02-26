@@ -71,8 +71,6 @@ bootstrap_toolshelf() {
         OK=0
     fi
 
-    # TODO: check for existence of $HOME/.bashrc here too
-
     if [ "$OK" = "0" ]; then
         return 1
     fi

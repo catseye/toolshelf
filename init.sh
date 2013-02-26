@@ -3,5 +3,13 @@
 # the `toolshelf` directory is expected to be passed as the first argument.
 
 export TOOLSHELF=$1
-alias toolshelf="source $TOOLSHELF/.toolshelf/toolshelf.sh"
+toolshelf() {
+    F=$TOOLSHELF/.tmp-toolshelf-result.sh
+    python $TOOLSHELF/.toolshelf/toolshelf.py $*
+    if [ -e $F ]; then
+        source $F
+        rm -f $F
+    fi
+}
+#alias toolshelf="source $TOOLSHELF/.toolshelf/toolshelf.sh"
 source $TOOLSHELF/.toolshelf/toolshelf.sh path rebuild
