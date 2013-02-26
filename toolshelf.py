@@ -251,6 +251,7 @@ class Path(object):
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
                  type=None, hints=''):
+        # TODO: look up specifier in database, to obtain "cookies"
         self.url = url
         self.host = host
         self.user = user
@@ -312,29 +313,27 @@ class Source(object):
           http[s]://host.dom/.../distfile.tgz    |
           http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
           http[s]://host.dom/.../distfile.zip    |
-          user/project           NYI use Preferences to guess
+          gh:user/project            short for git://github.com/...
+          bb:user/project            short for https://bitbucket.org/...
           @local/file/name           read list of sources from file
           @@foo                      read list in .toolshelf/catalog/foo
-
-        A source specifier may also be followed by a hint set.
-        A hint set is a colon-seperated list of hints enclosed in curly
-        braces.  Example:
-
-          user/project{x=tests:r=perl}
 
         If problems are encountered while parsing the source spec,
         they will be added to the problems parameter, assumed to be
         a list-like object.
 
         """
-        # TODO: look up specifier in database, to obtain "cookies"
 
-        hints = ''
-        match = re.match(r'^(.*?)\{(.*?)\}$', name)
+        # resolve name shorthands
+        # TODO: make these configurable
+        match = re.match(r'^gh:(.*?)\/(.*?)$', name)
         if match:
-            name = match.group(1)
-            hints = match.group(2)
-            # TODO: parse hints into Hints object here
+            # TODO: allow different styles (https, git, ssh+git...)
+            name = 'git://github.com/%s/%s.git' % (match.group(1), match.group(2))
+        match = re.match(r'^bb:(.*?)\/(.*?)$', name)
+        if match:
+            # TODO: allow different styles (https, git, ssh+git...)
+            name = 'https://bitbucket.org/%s/%s' % (match.group(1), match.group(2))
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -375,15 +374,6 @@ class Source(object):
             return [
                 Source(url=name, host=host, user=user, project=project,
                        type='hg', hints=hints)
-            ]
-
-        match = re.match(r'^(.*?)\/(.*?)$', name)
-        if match:
-            user = match.group(1)
-            project = match.group(2)
-            # TODO: do we resolve this here, or upon checkout?
-            return [
-                Source(user=user, project=project, type='guess', hints=hints)
             ]
 
         problems.append("Couldn't parse source spec '%s'" % name)
@@ -521,10 +511,8 @@ class Source(object):
 
             if self.type == 'zip':
                 self.rectify_executable_permissions()
-        elif self.type == 'guess':
-            # TODO: don't just assume it's on github
-            run('git', 'clone', 'git://github.com/%s/%s.git' %
-                (self.user, self.project))
+        else:
+            raise NotImplementedError(self.type)
 
         self.save_hints()
 

@@ -11,5 +11,5 @@ toolshelf() {
         rm -f $F
     fi
 }
-#alias toolshelf="source $TOOLSHELF/.toolshelf/toolshelf.sh"
-source $TOOLSHELF/.toolshelf/toolshelf.sh path rebuild
+echo "running toolshelf path rebuild"
+toolshelf path rebuild

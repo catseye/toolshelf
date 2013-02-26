@@ -61,8 +61,8 @@ probably work on Mac OS X; if you have a Mac, please try it and let me know.
 Why `toolshelf`?
 ----------------
 
-See [Motivation and Tradeoffs][] for why I wrote `toolshelf`, and what it's
-aptitude's good at and not so good at.
+This section describes why I wrote `toolshelf`, and what it's aptitude's good
+at and not so good at.
 
 I've always been a little disturbed by the practice of running something like
 `sudo make install` and having it write files into a whole bunch of places
@@ -123,7 +123,7 @@ So I decided I should write `toolshelf`.
 Heuristics
 ----------
 
-See [Heuristics and Hints][] for how `toolshelf` goes about figuring out
+This section describes how `toolshelf` goes about figuring out
 where it should grab the source from, how it should build it, and what it
 should put on your search paths; and how you can influence it when it's not
 clever enough to figure these things out by itself.
@@ -154,13 +154,10 @@ vanilla, non-version-controlled tarball by saying
 (It will place the source tree in a directory called `example.com/foo-1.0`
 under `$TOOLSHELF`.)
 
-The guesswork comes in when you just say
+♦ `toolshelf` understands a few shortcuts for Github and Bitbucket:
 
-    toolshelf dock user/project
-
-For now, it assumes that is a project on github.  ♦ But ideally, it should
-consult preferences that you have configured, and try several servers in turn
-until it finds one which matches the given user and project.
+    toolshelf dock gh:alincoln/Gettysburg-Address.git
+    toolshelf dock bb:plato/the-republic
 
 This syntax is called a _source specification_.  There are a few other source
 specifications you can use.  For example,
@@ -226,6 +223,8 @@ If there's none of this, but there is a script called `build.sh`, it'll run
 that.  ♦ Or, if there's a `make.sh`, it'll run that.
 
 ### Hints ###
+
+**THIS IS TOTALLY GOING TO BE REWRITTEN**
 
 `toolshelf` allows _hints_ to be supplied as part of a source
 specification.  A hint specification is enclosed in curly brackets,
