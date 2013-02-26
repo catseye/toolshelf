@@ -37,13 +37,18 @@ catseye/Quylthulg
 # on Bitbucket, this is catseye/pl-goto-.net ... unfortunately:
 catseye/PL-GOTO.NET
 catseye/Robin
+catseye/Sally
+catseye/SMITH
+catseye/Strelnokoff
 catseye/Super-Wumpus-Land
-catseye/Unlikely
 # errr... no, the world isn't ready for this yet:
 # catseye/toolshelf
+catseye/Unlikely
+catseye/Version
 catseye/yoob
 catseye/yucca
 catseye/ZOWIE
+catseye/Zzrk
 
 # Only a few distfiles for now.
 
@@ -51,6 +56,3 @@ catseye/ZOWIE
 # http://catseye.tc/distfiles/2iota-1.0-2011.1214.zip
 # no makefile:
 # http://catseye.tc/distfiles/bef-2.22-2011.0318.zip
-http://catseye.tc/distfiles/sally-1.0-2010.0721.zip
-# bad interpreter:
-# http://catseye.tc/distfiles/strelnokoff-2001.0324.zip

@@ -89,7 +89,8 @@ RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 # TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
-    'build.pl', 'make.pl',
+    'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
+    'build.pl', 'make.pl', 'install.pl',
     'configure', 'config.status',
 )
 
@@ -177,7 +178,7 @@ class Config(object):
     def get_hints(self, source):
         try:
             hints = self.config.get('hints', source.name)
-        except configparser.NoOptionError as e:
+        except configparser.NoOptionError:
             return None
         return hints
 
@@ -249,7 +250,7 @@ class Path(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                       type=None, hints=''):
+                 type=None, hints=''):
         self.url = url
         self.host = host
         self.user = user
@@ -355,7 +356,8 @@ class Source(object):
                        type='git', hints=hints)
             ]
 
-        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)\.(zip|tgz|tar\.gz)$', name)
+        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
+                         r'\.(zip|tgz|tar\.gz)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
@@ -527,7 +529,10 @@ class Source(object):
         self.save_hints()
 
     def build(self):
-        note("* Building %s/%s..." % (self.subdir, self.project))
+        if not OPTIONS.build:
+            note("* SKIPPING build of %s" % self.name)
+            return
+        note("* Building %s..." % self.name)
 
         os.chdir(self.dir)
         if os.path.isfile('configure'):
@@ -551,7 +556,7 @@ class Source(object):
                 # TODO: better hint parsing
                 try:
                     (name, value) = hint.split('=')
-                except ValueError as e:
+                except ValueError:
                     continue
                 if name == 'x':
                     verboten = os.path.join(self.dir, value)
@@ -591,7 +596,9 @@ class Source(object):
 
         traverse(self.dir)
 
+
 ### Subcommands
+
 
 def dock_cmd(result, args):
     problems = []
@@ -613,7 +620,8 @@ def path_cmd(result, args):
             note("* Removing from your PATH all toolshelf directories")
             path.remove_components_by_prefix(TOOLSHELF)
         else:
-            note("* Removing from your PATH all directories that start with one of the following...")
+            note("* Removing from your PATH all directories that "
+                 "start with one of the following...")
             for source in sources:
                 note("  " + source.dir)
                 path.remove_components_by_prefix(source.dir)
@@ -694,6 +702,9 @@ def main():
 
     parser = optparse.OptionParser(__doc__)
 
+    parser.add_option("-B", "--no-build", dest="build",
+                      default=True, action="store_false",
+                      help="don't try to build sources during docking")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
