@@ -418,21 +418,24 @@ class Source(object):
             # TODO: should divine whether a docked project is a git
             # repo, a mercurial repo, or whatnot.
             sources = []
-            for user in os.listdir(TOOLSHELF):
-                if user in ('.toolshelf', '.toolshelfrc'):
+            for host in os.listdir(TOOLSHELF):
+                if host in ('.toolshelf', '.toolshelfrc'):
                     # skip the toolshelf dir itself
                     continue
-                sub_dirname = os.path.join(TOOLSHELF, user)
-                for project in os.listdir(sub_dirname):
-                    project_dirname = os.path.join(sub_dirname, project)
-                    if not os.path.isdir(project_dirname):
-                        continue
-                    # TODO: do we apply the given hints here?  (depends)
-                    s = Source(user=user, project=project, type='unknown')
-                    s.load_hints()
-                    sources.append(s)
+                host_dirname = os.path.join(TOOLSHELF, host)
+                for user in os.listdir(host_dirname):
+                    sub_dirname = os.path.join(host_dirname, user)
+                    for project in os.listdir(sub_dirname):
+                        project_dirname = os.path.join(sub_dirname, project)
+                        if not os.path.isdir(project_dirname):
+                            continue
+                        # TODO: do we apply the given hints here?  (depends)
+                        s = Source(user=user, project=project, type='unknown')
+                        s.load_hints()
+                        sources.append(s)
             return sources
 
+        # XXX wrong now.  but we should rewrite all this anyway
         match = re.match(r'^(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
@@ -450,8 +453,7 @@ class Source(object):
     @property
     def distfile(self):
         if self.type in ('zip', 'tgz', 'tar.gz'):
-            return os.path.join(TOOLSHELF, self.subdir,
-                                '%s.%s' % (self.project, self.type))
+            return os.path.join(self.dir, '%s.%s' % (self.project, self.type))
         else:
             return None
 
@@ -478,10 +480,14 @@ class Source(object):
     def checkout(self):
         note("* Checking out %s/%s..." % (self.subdir, self.project))
 
-        os.chdir(TOOLSHELF)
-        if not os.path.isdir(self.subdir):
-            os.mkdir(self.subdir)
-        os.chdir(self.subdir)
+        try:
+            os.makedirs(self.dir)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(self.dir):
+                pass
+            else:
+                raise
+        os.chdir(self.dir)
 
         if self.type == 'git':
             run('git', 'clone', self.url)
@@ -491,7 +497,7 @@ class Source(object):
             run('rm', '-f', self.distfile)
             run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
-                TOOLSHELF, self.subdir, '.extract_' + self.project
+                self.dir, '.extract_' + self.project
             )
             run('mkdir', '-p', extract_dir)
             os.chdir(extract_dir)
