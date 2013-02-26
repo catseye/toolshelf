@@ -1,58 +1,92 @@
-# This is a catalog of all software projects that
-# Cat's Eye Technologies has ever released -- for some
-# value of "all", i.e., it's quite incomplete.
-
-# Note that this doesn't include forks of other folks'
-# projects or anything.
-
-# Note that some of these don't have anything resembling
-# an executable that can be put on your path.  But you
-# can still check them out, of course, and the sources
-# will be put on your toolshelf, where you can view them,
-# hack at them, run them in emulators, etc.
-
-# The projects that are in repos (i.e. not the distfiles
-# hosted on catseye.tc) are generally mirrored on both
-# Github (git) and Bitbucket (hg).  TODO: toolshelf should
-# figure out which to check out based on your preferences.
-# It should lower-case the name when trying Bitbucket.
-
-# There might be hints in here to begin with, but
-# they should eventually be moved to cookies.conf.
-
-catseye/Apple-Befunge
-catseye/Bubble-Escape
-catseye/Deturgenchry
-catseye/Dieter
-catseye/Dipple
-catseye/Eightebed
-catseye/Falderal
-catseye/FBBI
-catseye/Flobnar
-catseye/Hev
-catseye/Mascarpone
-catseye/Pail
-catseye/Pixley
-catseye/Quylthulg
-# on Bitbucket, this is catseye/pl-goto-.net ... unfortunately:
-catseye/PL-GOTO.NET
-catseye/Robin
-catseye/Sally
-catseye/SMITH
-catseye/Strelnokoff
-catseye/Super-Wumpus-Land
-# errr... no, the world isn't ready for this yet:
-# catseye/toolshelf
-catseye/Unlikely
-catseye/Version
-catseye/yoob
-catseye/yucca
-catseye/ZOWIE
-catseye/Zzrk
-
-# Only a few distfiles for now.
-
-# broken:
-# http://catseye.tc/distfiles/2iota-1.0-2011.1214.zip
-# no makefile:
-# http://catseye.tc/distfiles/bef-2.22-2011.0318.zip
+bb:catseye/console-virtual
+bb:catseye/dipple
+bb:catseye/ypsilax
+bb:catseye/robin
+bb:catseye/yucca
+bb:catseye/sally
+bb:catseye/larabee
+bb:catseye/pail
+bb:catseye/kosheri
+bb:catseye/sbeezg
+bb:catseye/mascarpone
+bb:catseye/maentwrog
+bb:catseye/n-dcnc
+bb:catseye/hev
+bb:catseye/kangaroo-iceberg
+bb:catseye/deturgenchry
+bb:catseye/kelxquoia
+bb:catseye/exanoke
+bb:catseye/thue
+bb:catseye/c64-demo-depot
+bb:catseye/disksumo
+bb:catseye/velo
+bb:catseye/eightebed
+bb:catseye/apple-befunge
+bb:catseye/circute
+bb:catseye/zzrk
+bb:catseye/rube
+bb:catseye/toolshelf
+bb:catseye/quylthulg
+bb:catseye/smetana
+bb:catseye/braktif
+bb:catseye/etcha
+bb:catseye/corona-realm-of-magic
+bb:catseye/unlikely
+bb:catseye/flip
+bb:catseye/pixley
+bb:catseye/arboretuum
+bb:catseye/noit-o-mnain-worb
+bb:catseye/rooibos
+bb:catseye/strelnokoff
+bb:catseye/burro
+bb:catseye/animals
+bb:catseye/squishy2k
+bb:catseye/crone
+bb:catseye/jaccia
+bb:catseye/wierd
+bb:catseye/redgreen
+bb:catseye/befunge-93
+bb:catseye/cabra
+bb:catseye/granola-m
+bb:catseye/super-wumpus-land
+bb:catseye/emmental
+bb:catseye/alpaca
+bb:catseye/gemooy
+bb:catseye/illgol-grand-mal
+bb:catseye/beturing
+bb:catseye/xoomonk
+bb:catseye/mzstorkipiwanbotbotbot
+bb:catseye/bubble-escape
+bb:catseye/bhuna
+bb:catseye/sickbay
+bb:catseye/falderal
+bb:catseye/pl-goto-.net
+bb:catseye/funge-98
+bb:catseye/dungeons-of-ekileugor
+bb:catseye/jolverine
+bb:catseye/zowie
+bb:catseye/muriel
+bb:catseye/troupe
+bb:catseye/version
+bb:catseye/treacle
+bb:catseye/rube-ii
+bb:catseye/tpis
+bb:catseye/hunter
+bb:catseye/transmat
+bb:catseye/befos
+bb:catseye/dieter
+bb:catseye/yoob
+bb:catseye/beta-juliet
+bb:catseye/cfluviurrh
+bb:catseye/shelta
+bb:catseye/iphigeneia
+bb:catseye/flobnar
+bb:catseye/castile
+bb:catseye/chrysoberyl
+bb:catseye/pophery
+bb:catseye/nhohnhehr
+bb:catseye/whothm
+bb:catseye/smith
+bb:catseye/xigxag
+bb:catseye/pibfi
+bb:catseye/fbbi
