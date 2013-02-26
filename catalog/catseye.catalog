@@ -1,4 +1,6 @@
 bb:catseye/console-virtual
+bb:catseye/yoob
+
 bb:catseye/dipple
 bb:catseye/ypsilax
 bb:catseye/robin
@@ -75,7 +77,6 @@ bb:catseye/hunter
 bb:catseye/transmat
 bb:catseye/befos
 bb:catseye/dieter
-bb:catseye/yoob
 bb:catseye/beta-juliet
 bb:catseye/cfluviurrh
 bb:catseye/shelta

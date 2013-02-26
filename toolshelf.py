@@ -457,7 +457,7 @@ class Source(object):
 
     @property
     def name(self):
-        return os.path.join(self.subdir, self.project)
+        return os.path.join(self.host, self.subdir, self.project)
 
     @property
     def dir(self):
