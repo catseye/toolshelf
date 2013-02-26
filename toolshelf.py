@@ -324,6 +324,8 @@ class Source(object):
 
         """
 
+        hints = None
+
         # resolve name shorthands
         # TODO: make these configurable
         match = re.match(r'^gh:(.*?)\/(.*?)$', name)

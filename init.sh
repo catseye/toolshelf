@@ -3,7 +3,8 @@
 # the `toolshelf` directory is expected to be passed as the first argument.
 
 export TOOLSHELF=$1
-toolshelf() {
+
+function toolshelf {
     F=$TOOLSHELF/.tmp-toolshelf-result.sh
     python $TOOLSHELF/.toolshelf/toolshelf.py $*
     if [ -e $F ]; then
@@ -11,5 +12,5 @@ toolshelf() {
         rm -f $F
     fi
 }
-echo "running toolshelf path rebuild"
+
 toolshelf path rebuild
