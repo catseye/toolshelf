@@ -392,9 +392,9 @@ class Source(object):
 
         A docked source specifier may take any of the following forms:
 
-          user/project               the source docked under this name
-          user/*                 NYI all docked projects for this user
-          *                          all docked projects
+          host/user/project          the source docked under this name
+          user/all               NYI all docked projects for this user
+          all                        all docked projects
           project                NYI unambiguous project in toolshelf
           @local/file/name       NYI read list of sources from file
           @@foo                  NYI read list in toolshelf/catalog/foo
@@ -404,21 +404,7 @@ class Source(object):
         a list-like object.
 
         """
-        # TODO: look up specifier in database, to obtain "cookies"
-
-        if name.startswith('@@'):
-            filename = os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
-            )
-            return klass.from_catalog(
-                'docked', filename, problems
-            )
-        if name.startswith('@'):
-            return klass.from_catalog(
-                'docked', name[1:], problems
-            )
-
-        if name == '*':
+        if name == 'all':
             # TODO: should divine whether a docked project is a git
             # repo, a mercurial repo, or whatnot.
             sources = []
@@ -439,13 +425,13 @@ class Source(object):
                         sources.append(s)
             return sources
 
-        # XXX wrong now.  but we should rewrite all this anyway
-        match = re.match(r'^(.*?)\/(.*?)$', name)
+        match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
         if match:
-            user = match.group(1)
-            project = match.group(2)
-            if os.path.isdir(os.path.join(TOOLSHELF, user, project)):
-                s = Source(user=user, project=project, type='unknown')
+            host = match.group(1)
+            user = match.group(2)
+            project = match.group(3)
+            if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
+                s = Source(host=host, user=user, project=project, type='unknown')
                 s.load_hints()
                 return [s]
             problems.append("Source '%s' not docked" % name)
@@ -613,12 +599,29 @@ def dock_cmd(result, args):
         raise SourceSpecSyntaxError(repr(problems))
     COOKIES.apply_hints(sources)
     for source in sources:
-        source.checkout()
+        # XXX for now, skip if already docked
+        if not source.docked:
+            source.checkout()
+            source.build()
+    # XXX overkill for now.  should be like
+    # + [s.name for s in sources]
+    # except s.spec, or make s.name parseable as a spec
+    path_cmd(result, ['rebuild', 'all'])
+
+
+def build_cmd(result, args):
+    problems = []
+    sources = Source.from_specs('docked', args, problems)
+    # TODO: improve this
+    if problems:
+        raise SourceSpecSyntaxError(repr(problems))
+    COOKIES.apply_hints(sources)
+    for source in sources:
         source.build()
     # XXX overkill for now.  should be like
     # + [s.name for s in sources]
     # except s.spec, or make s.name parseable as a spec
-    path_cmd(result, ['rebuild', '*'])
+    path_cmd(result, ['rebuild', 'all'])
 
 
 def path_cmd(result, args):
@@ -702,6 +705,7 @@ SUBCOMMANDS = {
     'dock': dock_cmd,
     'path': path_cmd,
     'cd': cd_cmd,
+    'build': build_cmd,
 }
 
 
