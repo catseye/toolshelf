@@ -141,7 +141,7 @@ def expand_docked_specs(specs, default_all=False):
     A docked source specifier may take any of the following forms:
 
       user/project           NYI from any host under this name
-      project                NYI from any host & user under this name
+      project                    from any host & user under this name
       all                        all docked projects
 
     """
@@ -149,7 +149,7 @@ def expand_docked_specs(specs, default_all=False):
         specs = ['all']
     new_specs = []
     for name in specs:
-        if name == 'all':      
+        if name == 'all':
             for host in os.listdir(TOOLSHELF):
                 if host in ('.toolshelf', '.toolshelfrc'):
                     # skip the toolshelf dir itself
@@ -162,6 +162,24 @@ def expand_docked_specs(specs, default_all=False):
                         if not os.path.isdir(project_dirname):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))
+        elif '/' not in name:
+            found = False
+            for host in os.listdir(TOOLSHELF):
+                if found:
+                    break
+                if host in ('.toolshelf', '.toolshelfrc'):
+                    # skip the toolshelf dir itself
+                    continue
+                host_dirname = os.path.join(TOOLSHELF, host)
+                for user in os.listdir(host_dirname):
+                    if found:
+                        break
+                    sub_dirname = os.path.join(host_dirname, user)
+                    for project in os.listdir(sub_dirname):
+                        if project == name:
+                            new_specs.append('%s/%s/%s' % (host, user, project))
+                            found = True
+                            break
         else:
             new_specs.append(name)
 
@@ -596,10 +614,7 @@ def dock_cmd(result, args):
         if not source.docked:
             source.checkout()
             source.build()
-    # XXX overkill for now.  should be like
-    # + [s.name for s in sources]
-    # except s.spec, or make s.name parseable as a spec
-    path_cmd(result, ['rebuild', 'all'])
+    path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def build_cmd(result, args):
@@ -612,10 +627,7 @@ def build_cmd(result, args):
     COOKIES.apply_hints(sources)
     for source in sources:
         source.build()
-    # XXX overkill for now.  should be like
-    # + [s.name for s in sources]
-    # except s.spec, or make s.name parseable as a spec
-    path_cmd(result, ['rebuild', 'all'])
+    path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def update_cmd(result, args):
