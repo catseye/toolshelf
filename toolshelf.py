@@ -135,6 +135,39 @@ def note(msg):
         print msg
 
 
+def expand_docked_specs(specs, default_all=False):
+    """Convert a docked source specifier into a full source specifier.
+
+    A docked source specifier may take any of the following forms:
+
+      user/project           NYI from any host under this name
+      project                NYI from any host & user under this name
+      all                        all docked projects
+
+    """
+    if default_all and specs == []:
+        specs = ['all']
+    new_specs = []
+    for name in specs:
+        if name == 'all':      
+            for host in os.listdir(TOOLSHELF):
+                if host in ('.toolshelf', '.toolshelfrc'):
+                    # skip the toolshelf dir itself
+                    continue
+                host_dirname = os.path.join(TOOLSHELF, host)
+                for user in os.listdir(host_dirname):
+                    sub_dirname = os.path.join(host_dirname, user)
+                    for project in os.listdir(sub_dirname):
+                        project_dirname = os.path.join(sub_dirname, project)
+                        if not os.path.isdir(project_dirname):
+                            continue
+                        new_specs.append('%s/%s/%s' % (host, user, project))
+        else:
+            new_specs.append(name)
+
+    return new_specs
+
+
 ### Exceptions
 
 class CommandLineSyntaxError(ValueError):
@@ -206,7 +239,7 @@ class Cookies(object):
     def source_map(self):
         if self._source_map is None:
             problems = []
-            sources = Source.from_catalog('external', self.filename, problems)
+            sources = Source.from_catalog(self.filename, problems)
             if problems:
                 raise ValueError(problems)
             self._source_map = {}
@@ -265,7 +298,7 @@ class Source(object):
         self.hints = hints
 
     @classmethod
-    def from_catalog(klass, type, filename, problems):
+    def from_catalog(klass, filename, problems):
         filename = os.path.join(CWD, filename)
         try:
             file = open(filename)
@@ -277,40 +310,25 @@ class Source(object):
             line = line.strip()
             if line == '' or line.startswith('#'):
                 continue
-            sources += Source.from_spec(type, line, problems)
+            sources += Source.from_spec(line, problems)
         file.close()
         return sources
 
     @classmethod
-    def from_specs(klass, type, names, problems):
+    def from_specs(klass, names, problems):
         sources = []
         for name in names:
-            sources += klass.from_spec(type, name, problems)
+            sources += klass.from_spec(name, problems)
         return sources
 
     @classmethod
-    def from_spec(klass, type, name, problems):
-        if name.startswith('@@'):
-            filename = os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
-            )
-            return klass.from_catalog(type, filename, problems)
-        if name.startswith('@'):
-            return klass.from_catalog(type, name[1:], problems)
-        if type == 'external':
-            return klass.external_from_spec(name, problems)
-        elif type == 'docked':
-            return klass.docked_from_spec(name, problems)
-        else:
-            raise KeyError("type must be 'external' or 'docked'")
-
-    @classmethod
-    def external_from_spec(klass, name, problems):
+    def from_spec(klass, name, problems):
         """Parse an external source specifier and return a list of
         Source objects.
 
         An external source specifier may take any of the following forms:
 
+          host/user/project          local source, already docked
           git://host.dom/.../user/repo.git       git
           http[s]://host.dom/.../user/repo.git   git
           http[s]://host.dom/.../user/repo       Mercurial
@@ -327,6 +345,13 @@ class Source(object):
         a list-like object.
 
         """
+        if name.startswith('@@'):
+            filename = os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+            )
+            return klass.from_catalog(filename, problems)
+        if name.startswith('@'):
+            return klass.from_catalog(name[1:], problems)
 
         hints = None
 
@@ -382,55 +407,14 @@ class Source(object):
                        type='hg', hints=hints)
             ]
 
-        problems.append("Couldn't parse source spec '%s'" % name)
-        return []
-
-    @classmethod
-    def docked_from_spec(klass, name, problems):
-        """Parse a docked source specifier and return a list of Source
-        objects.
-
-        A docked source specifier may take any of the following forms:
-
-          host/user/project          the source docked under this name
-          user/all               NYI all docked projects for this user
-          all                        all docked projects
-          project                NYI unambiguous project in toolshelf
-          @local/file/name       NYI read list of sources from file
-          @@foo                  NYI read list in toolshelf/catalog/foo
-
-        If problems are encountered while parsing the source spec,
-        they will be added to the problems parameter, assumed to be
-        a list-like object.
-
-        """
-        if name == 'all':
-            # TODO: should divine whether a docked project is a git
-            # repo, a mercurial repo, or whatnot.
-            sources = []
-            for host in os.listdir(TOOLSHELF):
-                if host in ('.toolshelf', '.toolshelfrc'):
-                    # skip the toolshelf dir itself
-                    continue
-                host_dirname = os.path.join(TOOLSHELF, host)
-                for user in os.listdir(host_dirname):
-                    sub_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(sub_dirname):
-                        project_dirname = os.path.join(sub_dirname, project)
-                        if not os.path.isdir(project_dirname):
-                            continue
-                        # TODO: do we apply the given hints here?  (depends)
-                        s = Source(host=host, user=user, project=project, type='unknown')
-                        s.load_hints()
-                        sources.append(s)
-            return sources
-
+        # local
         match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
             if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
+                # TODO divine type
                 s = Source(host=host, user=user, project=project, type='unknown')
                 s.load_hints()
                 return [s]
@@ -602,7 +586,7 @@ class Source(object):
 
 def dock_cmd(result, args):
     problems = []
-    sources = Source.from_specs('external', args, problems)
+    sources = Source.from_specs(args, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
@@ -620,7 +604,8 @@ def dock_cmd(result, args):
 
 def build_cmd(result, args):
     problems = []
-    sources = Source.from_specs('docked', args, problems)
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
@@ -635,7 +620,8 @@ def build_cmd(result, args):
 
 def update_cmd(result, args):
     problems = []
-    sources = Source.from_specs('docked', args, problems)
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
@@ -652,6 +638,7 @@ def update_cmd(result, args):
 def path_cmd(result, args):
     def clean_path(path, sources, all=False):
         # special case to handle total rebuilds/disables:
+        # XXX all= no longer works, fix this somehow
         if all:
             note("* Removing from your PATH all toolshelf directories")
             path.remove_components_by_prefix(TOOLSHELF)
@@ -663,11 +650,9 @@ def path_cmd(result, args):
                 path.remove_components_by_prefix(source.dir)
 
     if args[0] == 'rebuild':
-        specs = args[1:]
-        if not specs:
-            specs = ['all']
+        specs = expand_docked_specs(args[1:], default_all=True)
         problems = []
-        sources = Source.from_specs('docked', specs, problems)
+        sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -679,11 +664,9 @@ def path_cmd(result, args):
                 p.add_component(component)
         p.write(result)
     elif args[0] == 'disable':
-        specs = args[1:]
-        if not specs:
-            specs = ['all']
+        specs = expand_docked_specs(args[1:], default_all=True)
         problems = []
-        sources = Source.from_specs('docked', specs, problems)
+        sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -691,11 +674,9 @@ def path_cmd(result, args):
         clean_path(p, sources, all=(specs == ['all']))
         p.write(result)
     elif args[0] == 'show':
-        specs = args[1:]
-        if not specs:
-            specs = ['all']
+        specs = expand_docked_specs(args[1:], default_all=True)
         problems = []
-        sources = Source.from_specs('docked', specs, problems)
+        sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
@@ -715,7 +696,8 @@ def path_cmd(result, args):
 
 def cd_cmd(result, args):
     problems = []
-    sources = Source.from_specs('docked', args, problems)
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
