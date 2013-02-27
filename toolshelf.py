@@ -22,9 +22,9 @@
 
 # toolshelf.py:
 
-# Invoked by `toolshelf.sh` (for which `toolshelf` is an alias) to do the
-# heavy lifting involved in docking packages and placing their relevant
-# directories on the search path.
+# Invoked by the bash function `toolshelf()` to do the heavy lifting involved
+# in docking packages and placing their relevant directories on the search
+# path.
 
 # Still largely under construction.
 
@@ -536,6 +536,15 @@ class Source(object):
         elif os.path.isfile('build.sh'):
             run('./build.sh')
 
+    def update(self):
+        os.chdir(self.dir)
+        if os.path.isdir('.git'):
+            run('git', 'pull')
+        if os.path.isdir('.hg'):
+            run('hg', 'pull', '-u')
+        else:
+            raise NotImplementedError
+
     def find_path_components(self):
         index = {}
         find_executables(self.dir, index)
@@ -624,6 +633,22 @@ def build_cmd(result, args):
     path_cmd(result, ['rebuild', 'all'])
 
 
+def update_cmd(result, args):
+    problems = []
+    sources = Source.from_specs('docked', args, problems)
+    # TODO: improve this
+    if problems:
+        raise SourceSpecSyntaxError(repr(problems))
+    COOKIES.apply_hints(sources)
+    for source in sources:
+        source.update()
+        source.build()
+    # XXX overkill for now.  should be like
+    # + [s.name for s in sources]
+    # except s.spec, or make s.name parseable as a spec
+    path_cmd(result, ['rebuild', 'all'])
+
+
 def path_cmd(result, args):
     def clean_path(path, sources, all=False):
         # special case to handle total rebuilds/disables:
@@ -640,14 +665,14 @@ def path_cmd(result, args):
     if args[0] == 'rebuild':
         specs = args[1:]
         if not specs:
-            specs = ['*']
+            specs = ['all']
         problems = []
         sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
         p = Path()
-        clean_path(p, sources, all=(specs == ['*']))
+        clean_path(p, sources, all=(specs == ['all']))
         note("* Adding the following executables to your PATH...")
         for source in sources:
             for component in source.find_path_components():
@@ -656,19 +681,19 @@ def path_cmd(result, args):
     elif args[0] == 'disable':
         specs = args[1:]
         if not specs:
-            specs = ['*']
+            specs = ['all']
         problems = []
         sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
         if problems:
             raise SourceSpecSyntaxError(repr(problems))
         p = Path()
-        clean_path(p, sources, all=(specs == ['*']))
+        clean_path(p, sources, all=(specs == ['all']))
         p.write(result)
     elif args[0] == 'show':
         specs = args[1:]
         if not specs:
-            specs = ['*']
+            specs = ['all']
         problems = []
         sources = Source.from_specs('docked', specs, problems)
         # TODO: improve this
@@ -706,6 +731,7 @@ SUBCOMMANDS = {
     'path': path_cmd,
     'cd': cd_cmd,
     'build': build_cmd,
+    'update': update_cmd,
 }
 
 
