@@ -1,0 +1,18 @@
+# Experimental programming languages:
+
+gh:darius/awklisp
+gh:darius/ichbins
+gh:munificent/magpie
+gh:Scriptor/pharen
+gh:fogus/potion
+gh:darius/wren
+
+# Esoteric programming languages:
+
+gh:harpyon/fish.py
+gh:palfrey/Clostridium
+
+# Emulators:
+
+gh:rascal999/chip8-emulator
+gh:pikhq/cmako
