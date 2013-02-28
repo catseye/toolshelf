@@ -91,7 +91,7 @@ RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 UNINTERESTING_EXECUTABLES = (
     'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
     'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
-    'build.pl', 'make.pl', 'install.pl',
+    'build.pl', 'make.pl', 'install.pl', 'test.pl',
     'configure', 'config.status',
 )
 
@@ -695,7 +695,8 @@ def path_cmd(result, args):
         p = Path()
         for component in p.components:
             for source in sources:
-                if component.startswith(source.dir):
+                if component == source.dir or \
+                   component.startswith(source.dir + '/'):
                     print component
                     for filename in sorted(os.listdir(component)):
                         if is_executable(os.path.join(component, filename)):
