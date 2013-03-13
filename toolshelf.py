@@ -528,15 +528,19 @@ class Source(object):
         note("* Building %s..." % self.dir)
 
         os.chdir(self.dir)
-        if os.path.isfile('configure'):
-            run('./configure')
-        if os.path.isfile('Makefile'):
-            run('make')
-        elif os.path.isfile('src/Makefile'):
-            os.chdir('src')
-            run('make')
-        elif os.path.isfile('build.sh'):
+        if os.path.isfile('build.sh'):
             run('./build.sh')
+        else:
+            if os.path.isfile('autogen.sh'):
+                run('./autogen.sh')
+            if os.path.isfile('configure'):
+                run('./configure')
+
+            if os.path.isfile('Makefile'):
+                run('make')
+            elif os.path.isfile('src/Makefile'):
+                os.chdir('src')
+                run('make')
 
     def update(self):
         os.chdir(self.dir)
