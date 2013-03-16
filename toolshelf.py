@@ -91,6 +91,13 @@ UNINTERESTING_EXECUTABLES = (
     'configure', 'config.status',
 )
 
+HINT_NAMES = (
+    'exclude_paths',
+    'only_paths',
+    'requires_executables',
+    'prerequisites',
+)
+
 CWD = os.getcwd()
 
 
@@ -98,6 +105,16 @@ CWD = os.getcwd()
 
 OPTIONS = None
 COOKIES = None
+
+
+### Exceptions
+
+class CommandLineSyntaxError(ValueError):
+    pass
+
+
+class SourceSpecError(ValueError):
+    pass
 
 
 ### Helper Functions
@@ -187,7 +204,7 @@ def expand_docked_specs(specs, default_all=False):
     return new_specs
 
 
-def parse_source_spec(name, problems):
+def parse_source_spec(name):
     """Parse a full source specifier and return a dictionary
     of fields suitable for creating a Source object with.
 
@@ -204,8 +221,7 @@ def parse_source_spec(name, problems):
       bb:user/project            short for https://bitbucket.org/...
 
     If problems are encountered while parsing the source spec,
-    they will be added to the problems parameter, assumed to be
-    a list-like object.
+    an exception will be raised.
 
     """
 
@@ -267,21 +283,9 @@ def parse_source_spec(name, problems):
             # TODO divine type
             return dict(url='', host=host, user=user, project=project,
                         type='unknown')
-        problems.append("Source '%s' not docked" % name)
-        return {}
+        raise SourceSpecError("Source '%s' not docked" % name)
 
-    problems.append("Couldn't parse source spec '%s'" % name)
-    return {}
-
-
-### Exceptions
-
-class CommandLineSyntaxError(ValueError):
-    pass
-
-
-class SourceSpecSyntaxError(ValueError):
-    pass
+    raise SourceSpecError("Couldn't parse source spec '%s'" % name)
 
 
 ### Classes
@@ -306,23 +310,39 @@ class Cookies(object):
         self.filename = os.path.join(
             TOOLSHELF, '.toolshelf', 'cookies.catalog'
         )
-        self._source_map = None
+        self._specs = None
+
+    def _load_catalog(self):
+        self._specs = []
+        with open(self.filename, 'r') as file:
+            spec = {'hints': {}}
+            for line in file:
+                line = line.strip()
+                found_hint = False
+                for hint_name in HINT_NAMES:
+                    pattern = r'^%s\s+(.*?)\s*$' % hint_name
+                    match = re.match(pattern, line)
+                    if match:
+                        spec['hints'][hint_name] = match.group(1)
+                        found_hint = True
+                        break
+                if found_hint or line == '' or line.startswith('#'):
+                    continue
+                spec['spec'] = parse_source_spec(line)
+                self._specs.append(spec)
+                spec = {'hints': {}}
+        self._specs.append(spec)
 
     @property
-    def source_map(self):
-        if self._source_map is None:
-            problems = []
-            sources = [] # Source.from_catalog(self.filename, problems)
-            if problems:
-                raise ValueError(problems)
-            self._source_map = {}
-            for source in sources:
-                self._source_map[source.name] = source
-        return self._source_map
+    def specs(self):
+        if self._specs is None:
+            self._load_catalog()
+        return self._specs
 
     def apply_hints(self, source):
-        if source.name in self.source_map:
-            source.hints = self.source_map[source.name].hints
+        #if source.name in self.source_map:
+        #    source.hints = self.source_map[source.name].hints
+        pass
 
 
 class Path(object):
@@ -374,7 +394,6 @@ class Source(object):
 
     @classmethod
     def from_catalog(klass, filename, problems):
-        filename = os.path.join(CWD, filename)
         try:
             file = open(filename)
         except IOError as e:
@@ -420,8 +439,12 @@ class Source(object):
         if name.startswith('@'):
             return klass.from_catalog(name[1:], problems)
 
-        kwargs = parse_source_spec(name, problems)
-        return [Source(**kwargs)]
+        try:
+            kwargs = parse_source_spec(name)
+            return [Source(**kwargs)]
+        except Exception as e:
+            problems.append(repr(e))
+            return []
 
     @property
     def distfile(self):
@@ -590,7 +613,7 @@ def dock_cmd(result, args):
     sources = Source.from_specs(args, problems)
     # TODO: improve this
     if problems:
-        raise SourceSpecSyntaxError(repr(problems))
+        raise SourceSpecError(repr(problems))
     for source in sources:
         # XXX for now, skip if already docked
         if not source.docked:
@@ -605,7 +628,7 @@ def build_cmd(result, args):
     sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
-        raise SourceSpecSyntaxError(repr(problems))
+        raise SourceSpecError(repr(problems))
     for source in sources:
         source.build()
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
@@ -617,7 +640,7 @@ def update_cmd(result, args):
     sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
-        raise SourceSpecSyntaxError(repr(problems))
+        raise SourceSpecError(repr(problems))
     for source in sources:
         source.update()
         source.build()
@@ -647,7 +670,7 @@ def path_cmd(result, args):
         sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
-            raise SourceSpecSyntaxError(repr(problems))
+            raise SourceSpecError(repr(problems))
         p = Path()
         clean_path(p, sources, all=(specs == ['all']))
         note("* Adding the following executables to your PATH...")
@@ -661,7 +684,7 @@ def path_cmd(result, args):
         sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
-            raise SourceSpecSyntaxError(repr(problems))
+            raise SourceSpecError(repr(problems))
         p = Path()
         clean_path(p, sources, all=(specs == ['all']))
         p.write(result)
@@ -671,7 +694,7 @@ def path_cmd(result, args):
         sources = Source.from_specs(specs, problems)
         # TODO: improve this
         if problems:
-            raise SourceSpecSyntaxError(repr(problems))
+            raise SourceSpecError(repr(problems))
         p = Path()
         for component in p.components:
             for source in sources:
@@ -693,7 +716,7 @@ def cd_cmd(result, args):
     sources = Source.from_specs(specs, problems)
     # TODO: improve this
     if problems:
-        raise SourceSpecSyntaxError(repr(problems))
+        raise SourceSpecError(repr(problems))
     if len(sources) != 1:
         raise CommandLineSyntaxError(
             "'cd' subcommand requires exactly one source\n"
@@ -739,7 +762,7 @@ def main():
             sys.stderr.write(str(e) + '\n')
             print "Usage: " + __doc__
             sys.exit(2)
-        except SourceSpecSyntaxError as e:
+        except SourceSpecError as e:
             sys.stderr.write(repr(e) + '\n')
             sys.exit(1)
         except subprocess.CalledProcessError as e:
