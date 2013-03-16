@@ -1,16 +1,17 @@
 toolshelf
 =========
 
-**CAUTION, UNDER RECONSTRUCTION. USE AT OWN RISK.**
+**Version 0.0 -- subject to change radically**
 
 `toolshelf` is a "package manager" which doesn't actually install any files.
 Instead, it stores the source trees of sundry packages in a single directory,
 and manages your search paths to include the relevant subdirectories of those
 trees.  The source trees are typically the working directories of local `git`
-or Mercurial clones, or they can be source distributions from tarballs.
+or Mercurial clones, or they can be source distributions from downloaded
+tarballs (which includes `.zip` archives).
 
 `toolshelf` requires that you use `bash` as your shell.  It also requires
-Python to run the workhorse script.
+Python 2.7 to run the workhorse script.
 
 `toolshelf` is placed under an MIT-style license.
 
@@ -28,13 +29,14 @@ Quick Start
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,
 
-    toolshelf dock nelhage/reptyr
+    toolshelf dock gh:nelhage/reptyr
 
 When that completes, you can run `reptyr` by simply typing
 
     reptyr
 
-Convenient!  And if you ever want to get rid of `reptyr` from your system, simply
+Convenient!  And if you ever want to get rid of `reptyr` from your system,
+simply run
 
     rm -rf $TOOLSHELF/nelhage/reptyr
 
@@ -50,13 +52,14 @@ directory doesn't exist, they won't run anyway.)
 Status
 ------
 
-While `toolshelf` works (try it out!), it is still a work in progress, so usage
-of it may be somewhat chaotic for now -- you may have to wipe out your
+While `toolshelf` works (try it out!), it is still a work in progress, so its
+usage may be somewhat chaotic for now -- you may have to wipe out your
 `$TOOLSHELF` directory, if a disruptive change is made in how source trees and
 their metadata are organized.
 
-`toolshelf` has been used successfully on Ubuntu 11.10 and cygwin.  It should
-probably work on Mac OS X; if you have a Mac, please try it and let me know.
+`toolshelf` has been used successfully on Ubuntu 12.04 LTS and cygwin.  There
+is no reason it would not also work on *BSD systems.  It will probably work on
+Mac OS X; if you have a Mac, please try it and let me know.
 
 Why `toolshelf`?
 ----------------
@@ -114,6 +117,27 @@ So I decided I should write `toolshelf`.
   going to install Ruby for you if it's not already installed; the onus is on
   you to install Ruby if the package needs it.
 
+* The array of possible build tools that are used by small, experimental
+  software distributions is huge -- too large for `toolshelf`'s heuristics
+  to ever realistically encompass.  It handles the most common ones
+  (`autoconf`, `make`, and the like.)
+
+* Small, experimental software distributions don't always include an automated
+  build procedure, just instructions for a human, and `toolshelf` obviously
+  can't follow those.
+
+* Taking the previous two points together, you can't expect `toolshelf` to
+  "just work" in any case that's not well-trodden.  (On the other hand, if
+  you were going to install from source without `toolshelf`, you'd have to
+  fiddle with your build environment anyway, so it's no worse than that.)
+
+* Most operating systems impose a fixed limit on the size of an environment
+  variable, and the search path is stored in an environment variable.  Thus
+  you can hit a limit if you dock a large number of sources and/or sources
+  which have a large number of executable directories.  This will possibly
+  be addressed in a future version by switching to having a single "link
+  farm" directory on the search path (cf. `pkgsrc`.)
+
 * It does essentially no dependency tracking.  Upgrade one of your docked
   sources, and anything else you have that might rely on it might break.
 
@@ -123,10 +147,10 @@ So I decided I should write `toolshelf`.
 Heuristics
 ----------
 
-This section describes how `toolshelf` goes about figuring out
-where it should grab the source from, how it should build it, and what it
-should put on your search paths; and how you can influence it when it's not
-clever enough to figure these things out by itself.
+This section describes how `toolshelf` goes about figuring out where it should
+grab a source from, how it should build it, and what it should put on your
+search paths; and how you can influence it when it's not clever enough to
+figure these things out by itself.
 
 When you refer to a source, `toolshelf` tries to do a lot of clever guessing
 about what source you mean, how to build it, and how to put its executables
@@ -135,10 +159,12 @@ along in this process.
 
 Sections marked ♦ are not yet implemented.
 
-### How does it know where to grab a source from? ###
+### How does it know which source you mean? ###
 
-This is easiest to answer when the source is explicitly specified.
-Unsurprisingly,
+#### When docking sources ####
+
+When docking a source, the source must by explicitly specified, although
+there are shortcuts you can use.  Unsurprisingly,
 
     toolshelf dock git://github.com/alincoln/Gettysburg-Address.git
 
@@ -146,17 +172,17 @@ will clone a `git` repo from github to use as the source.  Similarly,
 
     toolshelf dock https://bitbucket.org/plato/the-republic
 
-will clone a Mercurial repo from Bitbucket.  And you can even bring in a
-vanilla, non-version-controlled tarball by saying
+will clone a Mercurial repo from Bitbucket.  ♦ And you can dock a vanilla,
+non-version-controlled tarball by saying
 
     toolshelf dock http://example.com/distfiles/foo-1.0.tar.gz
 
 (It will place the source tree in a directory called `example.com/foo-1.0`
 under `$TOOLSHELF`.)
 
-♦ `toolshelf` understands a few shortcuts for Github and Bitbucket:
+`toolshelf` understands a few shortcuts for Github and Bitbucket:
 
-    toolshelf dock gh:alincoln/Gettysburg-Address.git
+    toolshelf dock gh:alincoln/Gettysburg-Address
     toolshelf dock bb:plato/the-republic
 
 This syntax is called a _source specification_.  There are a few other source
@@ -177,6 +203,19 @@ the following specification as a shortcut for
 to pass the `@` or `@@` as a seperate argument on the command line, like:
 
     toolshelf dock @ ~/gezbo.catalog
+
+#### When referring to an already-docked source ####
+
+When referring to a source which is already docked, `toolshelf` allows
+you to give just the source's base name, omitting the site name and the
+user name.  For example, to build the first source we docked above, you
+can say
+
+    toolshelf build Gettysburg-Address
+
+If there is an ambiguity, one such source will be picked non-deterministically
+(TODO: perhaps this should be an error?)  ♦ In which case, you may add the
+username and/or the site name to resolve the ambiguity.
 
 ### How does it know which directories to place on your path? ###
 
@@ -208,114 +247,132 @@ executable permission based on whether `file` called it `executable` or not.
 
 ### How does it know how to build the executables from the sources? ###
 
+If there is a script called `build.sh` or ♦ `make.sh`, it will run that.
+Otherwise...
+
+If there's an `autogen.sh` ♦ but no `configure`, it runs that first, to
+create `configure`.
+
+♦ If there's no `autogen.sh`, but there is a `configure.in`, it runs
+`autconf` to create `configure`.
+
+If there's a `configure`, it runs that, to create a `Makefile`.
+
 If there's a `Makefile`, it runs `make`.
-
-If there's no `Makefile`, but there is a `configure`, it runs `configure`,
-then runs `make`.
-
-♦ If there's no `configure` either, but there is a `configure.in`, it runs
-`autconf`, then `configure`, then `make` (although I'll be surprised if I
-ever see this succeed.)
 
 ♦ If there's a `build.xml`, it runs `ant` instead.
 
-If there's none of this, but there is a script called `build.sh`, it'll run
-that.  ♦ Or, if there's a `make.sh`, it'll run that.
-
-### Hints ###
-
-**THIS IS TOTALLY GOING TO BE REWRITTEN**
-
-`toolshelf` allows _hints_ to be supplied as part of a source
-specification.  A hint specification is enclosed in curly brackets,
-immediately following the source specification; for example,
-
-    https://bitbucket.org/aristotle/nicomachean-ethics{o=bin:r=perl}
-
-The hint specification consists of a colon-seperated list of hints.
-Each hint consists of a hint name, an equals sign, and the hint value.
-
-When a hint may be a list of values, the values are seperated by plus
-signs in a single hint.
-
-The choice of symbols here is intended to not clash with shell meta-
-characters which may need escaping.  (We cannot use a comma instead of
-a colon or a plus sign, or the shell will interpret the curly braces
-as something to expand.)
-
-Hint names are often one or two characters.  The meanings of these names
-are as follows.
-
-* ♦ `r` indicates a required executable.  When this is given, `toolshelf`
-  first checks if you have the named executable on your path; if you do not,
-  it will display an error message, and will not try to dock the source.
-  Example: `r=perl`.
-
-* ♦ `R` means rectify the execute permissions; after checking out the given
-  source but before building it, traverse all of the files in the source
-  tree, run `file` on each one, and set its executable permission based on
-  whether `file` called it `executable` or not.  (This is the default for
-  `.zip` archives.)  The value should be `y` to trigger this behavior.
-
-* ♦ `d` indicates a dependency source tree.  When this is given, `toolshelf`
-  first checks if you have the source named by the hint's value, a source
-  specification, docked; if you do not, it will try to dock that source first.
-  Example: `d=Scriptor/Pharen`.
-
-* `x` indicates a directory subtree that you should not be added to the
-  executable search path.  This could be useful if there are executables
-  included in a source tree that you don't want put on your path, but
-  `toolshelf` itself isn't clever enough to figure out that you don't want
-  them.  Example: `x=tests/x86`.  Note that this rejects all directories that
-  start with the text, so the example would prevent executables in all of the
-  following directories from being put on the path: `tests/x86/passing`,
-  `tests/x86/failing`, `tests/x8600`.
-
-* ♦ `o` indicates that *only* these subdirectories should be added to the
-  executable search path.  Example: `o=bin`.
-
-* ♦ `b` specifies a command to run to build the source.  Not sure if it will
-  be passed to a shell for execution, or just split into words at the spaces.
-  The command will be run with the root of the source tree as the working
-  directory.  Note that if the command contains spaces, and the source spec
-  is given on the command line, it will need to be quoted.
-  Example: `b=tools/make-it`.
-
-* ♦ `E` indicates an environment variable to set to the name of the source
-  tree directory.  (mnemonic: set.)  Many source distributions come with
-  library files, example files, configuration files, or whatnot which are
-  stored in the source tree, and this provides an easy method to find them.
-  Example: `E=FOO`.  Then, after docking `foo`, you could say
-  `foo $FOO/eg/eg.foo` to run an example `foo` program supplied in the
-  distribution.
-
 ### "Cookies" ###
 
-♦ `toolshelf` comes with a database of "cookies" which supplies extra
-information (in the form of hints) about the idiosyncracies of particular,
-known projects.
+**THIS SECTION DOES NOT YET TOTALLY REFLECT HOW THINGS PRESENTLY WORK AND IS
+SUBJECT TO CHANGE**
+
+`toolshelf` comes with a (small) database of "cookies" which supplies extra
+information (hints) about the idiosyncracies of particular, known projects.
+As you discover idiosyncracies of new software you try to dock, you can add
+new hints to this database (and open a pull request to push them upstream for
+everyone to benefit from.)
 
 The use of the term "cookie" here is not like "HTTP cookie" or "magic cookie",
 but more like how it was used in Windows 3.1 (and may, for all I know, still
-be used in modern Windows.)  Such "cookies" informed the OS about how to deal
+be used in modern Windows.)  Such cookies informed the OS about how to deal
 with particular hardware for which the generic handling was not sufficient.
-
-This usage of the word is derived from the word "kooky" -- that is,
+This usage of the word is apparently derived from the word "kooky" -- that is,
 idiosyncratic and non-standard.
 
-The "cookies" file for `toolshelf` consists of a list of source specifications
+In some ways, `toolshelf`'s cookies file is like the `Makefile`s used in
+FreeBSD's package system -- the information contained in it is similar.
+However, it is just a single file, and is parsed directly instead of being a
+`Makefile`.
+
+The cookies file for `toolshelf` consists of a list of source specifications
 with hints.  When `toolshelf` is given a source specification which matches
-one in the "cookies" file, it automatically applies those hints.  You can
-probably override them with hints in the given source specification.
+one in the cookies file, it automatically applies those hints.
+
+Example of an entry in the cookies file:
+
+    gh:user/project
+      exclude_path tests
+      build_command ./configure --with-lighter-fluid --no-barbecue
+
+It should be possible to have a local cookies files that supplements
+`toolshelf`'s supplied cookies file, at some point.
+
+#### Hints ####
+
+Hints are given, one per line, underneath a source specification in the
+cookies file.  Each hint consists of the hint name, some whitespace, and
+the hint value (the syntax of which is determined by the hint name.)
+
+Hint names are verbose because they're more readable that way and you'll
+probably just be copy-pasting them from other cookies in the cookies file.
+
+It *may* be possible to give ad-hoc hints on the command line at some point,
+but this is not a recommended practice, as you'll probably want to record
+those hints for future use or for sharing.
+
+The names of hints are as follows.
+
+*   ♦ `requires_executable`
+    
+    Example: `requires_executable perl`
+    
+    A space-separated list of executables required to dock and run the source.
+    When this is given, `toolshelf` first checks if you have the named
+    executable on your executable search path; if you do not, it will display
+    an error message, and will not try to dock the source.
+    
+*   ♦ `rectify_permissions`
+    
+    Example: `rectify_permissions`
+
+    means rectify the execute permissions; after checking out the given
+    source but before building it, traverse all of the files in the source
+    tree, run `file` on each one, and set its executable permission based on
+    whether `file` called it `executable` or not.  (This is the default for
+    `.zip` archives.)
+    
+*   ♦ `prerequisite`
+    
+    Example: `prerequisite gh:nelhage/reptyr`
+    
+    indicates a dependency source tree.  When this is given, `toolshelf`
+    first checks if you have the source named by the hint's value, a source
+    specification, docked; if you do not, it will try to dock that source first.
+    Example: `d=Scriptor/Pharen`.
+    
+*   ♦ `exclude_path`
+    
+    indicates a directory subtree that you should not be added to the
+    executable search path.  This could be useful if there are executables
+    included in a source tree that you don't want put on your path, but
+    `toolshelf` itself isn't clever enough to figure out that you don't want
+    them.  Example: `x=tests/x86`.  Note that this rejects all directories that
+    start with the text, so the example would prevent executables in all of the
+    following directories from being put on the path: `tests/x86/passing`,
+    `tests/x86/failing`, `tests/x8600`.
+    
+*   ♦ `o`
+    
+    indicates that *only* these subdirectories should be added to the
+    executable search path.  Example: `o=bin`.
+    
+*   ♦ `build_command`
+    
+    specifies a command to run to build the source.  Not sure if it will
+    be passed to a shell for execution, or just split into words at the spaces.
+    The command will be run with the root of the source tree as the working
+    directory.  Note that if the command contains spaces, and the source spec
+    is given on the command line, it will need to be quoted.
+    Example: `b=tools/make-it`.
 
 Theory of Operation
 -------------------
 
-See [Theory of Operation][] for how it works -- specifically, how typing
+This section describes how it all works -- specifically, how typing
 `toolshelf` can seemingly magically alter your search paths.
 
-`bootstrap-toolshelf.sh`
-------------------------
+### `bootstrap-toolshelf.sh` ###
 
 The bootstrap script does a few things:
 
@@ -326,34 +383,36 @@ The bootstrap script does a few things:
   `$HOME/toolshelf`.
 - It then clones the `toolshelf` git repo into `$TOOLSHELF/toolshelf`.
 - It then asks permission to modify your `.bashrc` (if you decline, you are
-  asked to make these changes manually.)  It adds a command sequence to it
-  that:
-  * exports the `TOOLSHELF` environment variable
-  * defines an alias called `toolshelf` which `source`s the script
-    `$TOOLSHELF/toolshelf/toolshelf.sh`
-  * runs `toolshelf path rebuild`
-- Finally, it exports `TOOLSHELF` and defines the `toolshelf` alias and runs
-  `toolshelf path rebuild` itself, so you can start using `toolshelf` as soon
-  as the bootstrap script finishes, instead of having to start a new shell.
+  asked to make these changes manually.)  It adds a line that `source`s
+  `init.sh` (see below.)
+- Finally, it `source`s `init.sh` itself, so that `toolshelf` is available
+  immediately after bootstrapping (you don't need to start a new shell.)
 
-`toolshelf.sh`
---------------
+### `init.sh` ###
 
-The script `toolshelf.sh` does one thing, and does it well:
+The script `init.sh` initializes `toolshelf` for use; it is typically
+`source`d from within `.bashrc`.  This is what it does:
 
-- It runs `$TOOLSHELF/toolshelf/toolshelf.py`, with the arguments that were
-  passed to `toolshelf.sh`, expecting it to output a temporary file -- then
-  it `source`s that temporary file and deletes it.
+-   Takes a single command-line argument, which is the `toolshelf` directory,
+    and exports it as the `TOOLSHELF` environment variable
+-   Defines a `bash` function called `toolshelf`, which does the following:
+    -   It runs `$TOOLSHELF/toolshelf/toolshelf.py`, with the arguments that
+        were passed to the `toolshelf` function, expecting it to output a
+        temporary file -- then it `source`s that temporary file and deletes
+        it.
+-   runs `toolshelf path rebuild`
 
-The `toolshelf` alias and the `toolshelf.sh` script, taken together, perform
-something which we could call the "double-source trick".  In effect, it makes
-it possible for a "command" (really an alias) to affect the environment of
-the user's current interactive shell -- something an ordinarily invoked
-command cannot do.  This is what lets `toolshelf` immediately alter your
-search paths.
+The `toolshelf` function and the `toolshelf.py` script, taken together,
+perform something which we could call the "shell-then-source trick".  In
+effect, it makes it possible for a "command" (really a `bash` function) to
+affect the environment of the user's current interactive shell -- something
+an ordinarily invoked command cannot do.  This is what lets `toolshelf`
+immediately alter your search paths.
 
-`toolshelf.py`
---------------
+In a shell which unlike `bash` does not support functions, this could also
+be done (soemwhat more crudely) with an alias.
+
+### `toolshelf.py` ###
 
 The Python script `toolshelf.py` is the workhorse:
 
@@ -381,14 +440,14 @@ Case Studies
 This is just a sampling of sources I've tried with `toolshelf` so far, and
 description of how well they work with the `toolshelf` model, and why.
 
-* `toolshelf dock `[`nelhage/reptyr`][]
+* `toolshelf dock `[`gh:nelhage/reptyr`][]
 
   `reptyr` is a Linux utility, written in C, for attaching an already-running
   process to a GNU `screen` session.  It lives in a github repo.  Because it's
   Linux-specific, its build process is simple and `toolshelf` has no problem
   figuring out how to build it and put it on the executable search path.
 
-* `toolshelf dock `[`https://bitbucket.org/catseye/yucca`][]
+* `toolshelf dock `[`bb:catseye/yucca`][]
 
   `yucca` is a Python program for performing static analysis on 8-bit BASIC
   programs.  Because it's written in Python, it doesn't need building, and
@@ -400,20 +459,21 @@ description of how well they work with the `toolshelf` model, and why.
   (One day it will do this automatically; for now, the full URL of the remote
   repo must be specified.)
 
-* `toolshelf dock `[`kulp/tenyr`][]`{x=scripts}`
+* `toolshelf dock `[`gh:kulp/tenyr`][]
 
   `tenyr` is an aspiring 32-bit toy computational environment.  `toolshelf`
   has no problem building it, finding the built executables, and putting them
   on your path.
 
-  `{x=scripts}` is a hint specifier which says to decline putting any paths
-  from this project on the search path if they start with `scripts`.  This
-  prevents the scripts that ship with `tenyr` from being put on your path
-  (because they have rather generic names, and are probably not things that
-  you would use frequently.)
+  ♦ `exclude_path scripts` is a hint specifier which says to decline putting
+  any paths from this project where the final directory is called `scripts`
+  on the search path.  This prevents the scripts that ship with `tenyr` from
+  being put on your path (because they have rather generic names, and are
+  probably not things that you would use frequently.)
 
-* `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]`{x=tests:x=etc:x=examples:x=build-aux}`
+* ♦ `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]
 
+  ♦ `{x=tests:x=etc:x=examples:x=build-aux}`
   Is your system `bison` version 2.4, but you need version 2.5 installed
   temporarily in order to build `kulp/tenyr`?  No problem; just put it on
   your `toolshelf` with the above command.  After it's docked, you can issue
@@ -421,17 +481,28 @@ description of how well they work with the `toolshelf` model, and why.
   `toolshelf path rebuild ftp.gnu.org/bison-2.5` to remove or reinstate
   it from your search path, respectively.
 
-[`nelhage/reptyr`]: https://github.com/nelhage/reptyr
-[`https://bitbucket.org/catseye/yucca`] https://bitbucket.org/catseye/yucca
-[`kulp/tenyr`]: https://github.com/kulp/tenyr
+[`gh:nelhage/reptyr`]: https://github.com/nelhage/reptyr
+[`bb:catseye/yucca`] https://bitbucket.org/catseye/yucca
+[`gh:kulp/tenyr`]: https://github.com/kulp/tenyr
 [`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`]: http://www.gnu.org/software/bison/bison.html
 
 Related Work
 ------------
 
-* `sources`
+* [checkoutmanager][]
+
+* [Gobolinux][]
+
+* [pathify][]
+
+* [sources][]
+
+* [spackle][]
 
 * `zero-install`/`0launch`
 
-* `checkoutmanager`
-
+[checkoutmanager]: https://bitbucket.org/reinout/checkoutmanager
+[Gobolinux]: http://gobolinux.org/
+[pathify]: https://github.com/kristi/pathify
+[sources]: https://github.com/trentm/sources
+[spackle]: https://github.com/kristi/spackle
