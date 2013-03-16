@@ -328,15 +328,17 @@ The names of hints are as follows.
     executable on your executable search path; if you do not, it will display
     an error message, and will not try to dock the source.
     
-*   ♦ `rectify_permissions`
+*   `rectify_permissions`
     
     Example: `rectify_permissions yes`
 
-    means rectify the execute permissions; after checking out the given
-    source but before building it, traverse all of the files in the source
-    tree, run `file` on each one, and set its executable permission based on
-    whether `file` called it `executable` or not.  (This is the default for
-    `.zip` archives.)
+    Either `yes` or `no`.  If `yes`, rectify the execute permissions of the
+    source, which means: after checking out the source but before building
+    it, traverse all of the files in the source tree, run `file` on each one,
+    and set its executable permission based on whether `file` called it
+    `executable` or not.  This defaults to `no` for all sources except for
+    `.zip` archives, for which it defaults to `yes`; this hint will override
+    the default.
     
 *   ♦ `prerequisites`
     

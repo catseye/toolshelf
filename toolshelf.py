@@ -96,6 +96,7 @@ HINT_NAMES = (
     'exclude_paths',
     'only_paths',
     #'prerequisites',
+    'rectify_permissions',
     'require_executables',
 )
 
@@ -337,6 +338,11 @@ class Cookies(object):
                             (hint_name, hint_value, spec_key)
                         )
                         self._hint_map[spec_key][hint_name] = hint_value
+                        if (hint_name == 'rectify_permissions' and
+                            hint_value not in ('yes', 'no')):
+                            raise ValueError(
+                                "rectify_permissions must be 'yes' or 'no'"
+                            )
                         found_hint = True
                         break
                 if found_hint or line == '' or line.startswith('#'):
@@ -526,11 +532,21 @@ class Source(object):
                 extracted_dir = extract_dir
             run('mv', extracted_dir, self.dir)
             run('rm', '-rf', extract_dir)
-
-            if self.type == 'zip':
-                self.rectify_executable_permissions()
         else:
             raise NotImplementedError(self.type)
+        
+        rectify_permissions = 'no'
+        if self.type == 'zip':
+            rectify_permissions = 'yes'
+        rectify_permissions = self.hints.get(
+            'rectify_permissions', rectify_permissions
+        )
+        if rectify_permissions not in ('yes', 'no'):
+            raise ValueError(
+                "rectify_permissions should be 'yes' or 'no'"
+            )
+        if rectify_permissions == 'yes':
+            self.rectify_executable_permissions()
 
     def build(self):
         if not OPTIONS.build:
