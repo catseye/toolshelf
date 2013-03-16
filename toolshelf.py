@@ -411,30 +411,26 @@ class Source(object):
                  self.project, self.type, self.hints))
 
     @classmethod
-    def from_catalog(klass, filename, problems):
-        try:
-            file = open(filename)
-        except IOError as e:
-            problems.append(e)
-            return []
+    def from_catalog(klass, filename):
+        note('Reading catalog %s' % filename)
         sources = []
-        for line in file:
-            line = line.strip()
-            if line == '' or line.startswith('#'):
-                continue
-            sources += Source.from_spec(line, problems)
-        file.close()
+        with open(filename, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line == '' or line.startswith('#'):
+                    continue
+                sources += Source.from_spec(line)
         return sources
 
     @classmethod
-    def from_specs(klass, names, problems):
+    def from_specs(klass, names):
         sources = []
         for name in names:
-            sources += klass.from_spec(name, problems)
+            sources += klass.from_spec(name)
         return sources
 
     @classmethod
-    def from_spec(klass, name, problems):
+    def from_spec(klass, name):
         """Parse an external source specifier and return a list of
         Source objects.
 
@@ -444,25 +440,17 @@ class Source(object):
           @local/file/name           read list of sources from file
           @@foo                      read list in .toolshelf/catalog/foo
 
-        If problems are encountered while parsing the source spec,
-        they will be added to the problems parameter, assumed to be
-        a list-like object.
-
         """
         if name.startswith('@@'):
             filename = os.path.join(
                 TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
             )
-            return klass.from_catalog(filename, problems)
+            return klass.from_catalog(filename)
         if name.startswith('@'):
-            return klass.from_catalog(name[1:], problems)
+            return klass.from_catalog(os.path.join(CWD, name[1:]))
 
-        try:
-            kwargs = parse_source_spec(name)
-            return [Source(**kwargs)]
-        except Exception as e:
-            problems.append(repr(e))
-            return []
+        kwargs = parse_source_spec(name)
+        return [Source(**kwargs)]
 
     @property
     def distfile(self):
@@ -562,8 +550,11 @@ class Source(object):
             run('./build.sh')
         elif os.path.isfile('make.sh'):
             run('./make.sh')
+        elif os.path.isfile('build.xml'):
+            run('ant')
         else:
-            if os.path.isfile('autogen.sh'):
+            if (os.path.isfile('autogen.sh') and
+                not os.path.isfile('configure')):
                 run('./autogen.sh')
             if os.path.isfile('configure'):
                 run('./configure')
@@ -643,11 +634,7 @@ class Source(object):
 
 
 def dock_cmd(result, args):
-    problems = []
-    sources = Source.from_specs(args, problems)
-    # TODO: improve this
-    if problems:
-        raise SourceSpecError(repr(problems))
+    sources = Source.from_specs(args)
     for source in sources:
         if source.docked:
             print "%s already docked." % source.name
@@ -669,24 +656,16 @@ def dock_cmd(result, args):
 
 
 def build_cmd(result, args):
-    problems = []
     specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs, problems)
-    # TODO: improve this
-    if problems:
-        raise SourceSpecError(repr(problems))
+    sources = Source.from_specs(specs)
     for source in sources:
         source.build()
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def update_cmd(result, args):
-    problems = []
     specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs, problems)
-    # TODO: improve this
-    if problems:
-        raise SourceSpecError(repr(problems))
+    sources = Source.from_specs(specs)
     for source in sources:
         source.update()
         source.build()
@@ -709,11 +688,7 @@ def path_cmd(result, args):
 
     if args[0] == 'rebuild':
         specs = expand_docked_specs(args[1:], default_all=True)
-        problems = []
-        sources = Source.from_specs(specs, problems)
-        # TODO: improve this
-        if problems:
-            raise SourceSpecError(repr(problems))
+        sources = Source.from_specs(specs)
         p = Path()
         clean_path(p, sources, all=(specs == ['all']))
         note("Adding the following executables to your PATH...")
@@ -723,21 +698,13 @@ def path_cmd(result, args):
         p.write(result)
     elif args[0] == 'disable':
         specs = expand_docked_specs(args[1:], default_all=True)
-        problems = []
-        sources = Source.from_specs(specs, problems)
-        # TODO: improve this
-        if problems:
-            raise SourceSpecError(repr(problems))
+        sources = Source.from_specs(specs)
         p = Path()
         clean_path(p, sources, all=(specs == ['all']))
         p.write(result)
     elif args[0] == 'show':
         specs = expand_docked_specs(args[1:], default_all=True)
-        problems = []
-        sources = Source.from_specs(specs, problems)
-        # TODO: improve this
-        if problems:
-            raise SourceSpecError(repr(problems))
+        sources = Source.from_specs(specs)
         p = Path()
         for component in p.components:
             for source in sources:
@@ -754,12 +721,8 @@ def path_cmd(result, args):
 
 
 def cd_cmd(result, args):
-    problems = []
     specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs, problems)
-    # TODO: improve this
-    if problems:
-        raise SourceSpecError(repr(problems))
+    sources = Source.from_specs(specs)
     if len(sources) != 1:
         raise CommandLineSyntaxError(
             "'cd' subcommand requires exactly one source\n"

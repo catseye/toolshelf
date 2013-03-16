@@ -131,6 +131,18 @@ So I decided I should write `toolshelf`.
   you were going to install from source without `toolshelf`, you'd have to
   fiddle with your build environment anyway, so it's no worse than that.)
 
+* Some executables load resources, and expect those resources to be in
+  certain locations.  If the executable looks for those resources in locations
+  that are relative to the path to the executable, that's good; the executable
+  and the resources will both be in the docked source, and it should find
+  them.  Or, if it looks for them on a search path, that's also not so bad.
+  But sometimes they look for resources relative to the current working
+  directory -- in which case there's little point being able to invoke the
+  executable, from the search path, while in another directory.  (`toolshelf`
+  may one day grow a feature to handle this.)  And if they look for resources
+  in fixed locations, well, that's not so good, and there's not a lot one can
+  do about that, aside from maybe forking the project and fixing it.
+
 * Most operating systems impose a fixed limit on the size of an environment
   variable, and the search path is stored in an environment variable.  Thus
   you can hit a limit if you dock a large number of sources and/or sources
@@ -263,7 +275,7 @@ command will be used.  Otherwise...
 If there is a script called `build.sh` or `make.sh`, it will run that.
 Otherwise...
 
-If there's an `autogen.sh` ♦ but no `configure`, it runs that first, to
+If there's an `autogen.sh` but no `configure`, it runs that first, to
 create `configure`.
 
 ♦ If there's no `autogen.sh`, but there is a `configure.in`, it runs
@@ -273,7 +285,7 @@ If there's a `configure`, it runs that, to create a `Makefile`.
 
 If there's a `Makefile`, it runs `make`.
 
-♦ If there's a `build.xml`, it runs `ant` instead.
+If there's a `build.xml`, it runs `ant` instead.
 
 ### "Cookies" ###
 
