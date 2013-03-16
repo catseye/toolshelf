@@ -217,8 +217,12 @@ can say
 
     toolshelf build Gettysburg-Address
 
-If there is an ambiguity, one such source will be picked non-deterministically
-(TODO: perhaps this should be an error?)  In this case, you must add both the
+If there is an ambiguity, ♦ an error will occur.  ♦ You may supply the
+username as well to resolve the ambiguity:
+
+    toolshelf build alincoln/Gettysburg-Address
+
+but an ambiguity may still occur.  In this case, you must add both the
 host name and the username to resolve the ambiguity:
 
     toolshelf build github.com/alincoln/Gettysburg-Address
@@ -253,7 +257,10 @@ executable permission based on whether `file` called it `executable` or not.
 
 ### How does it know how to build the executables from the sources? ###
 
-If there is a script called `build.sh` or ♦ `make.sh`, it will run that.
+If the source has a cookie that specifies a `build_command` hint, that
+command will be used.  Otherwise...
+
+If there is a script called `build.sh` or `make.sh`, it will run that.
 Otherwise...
 
 If there's an `autogen.sh` ♦ but no `configure`, it runs that first, to
@@ -269,9 +276,6 @@ If there's a `Makefile`, it runs `make`.
 ♦ If there's a `build.xml`, it runs `ant` instead.
 
 ### "Cookies" ###
-
-**THIS SECTION DOES NOT YET TOTALLY REFLECT HOW THINGS PRESENTLY WORK AND IS
-SUBJECT TO CHANGE**
 
 `toolshelf` comes with a (small) database of "cookies" which supplies extra
 information (hints) about the idiosyncracies of particular, known projects.
@@ -423,7 +427,7 @@ an ordinarily invoked command cannot do.  This is what lets `toolshelf`
 immediately alter your search paths.
 
 In a shell which unlike `bash` does not support functions, this could also
-be done (soemwhat more crudely) with an alias.
+be done (somewhat more crudely) with an alias.
 
 ### `toolshelf.py` ###
 
