@@ -172,7 +172,7 @@ def expand_docked_specs(specs, default_all=False):
             for host in os.listdir(TOOLSHELF):
                 if found:
                     break
-                if host in ('.toolshelf', '.toolshelfrc'):
+                if host in ('.distfiles', '.toolshelf', '.toolshelfrc'):
                     # skip the toolshelf dir itself
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
