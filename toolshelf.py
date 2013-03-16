@@ -138,18 +138,18 @@ def find_executables(dirname, index):
 
 
 def run(*args):
-    note("* Runnning `%s`..." % ' '.join(args))
+    note("Running `%s`..." % ' '.join(args))
     subprocess.check_call(args)
 
 
 def chdir(path):
-    note("* Changing dir to `%s`..." % path)
+    note("Changing dir to `%s`..." % path)
     os.chdir(path)
 
 
 def note(msg):
     if OPTIONS.verbose:
-        print msg
+        print "*", msg
 
 
 def expand_docked_specs(specs, default_all=False):
@@ -310,12 +310,12 @@ class Cookies(object):
         self.filename = os.path.join(
             TOOLSHELF, '.toolshelf', 'cookies.catalog'
         )
-        self._specs = None
+        self._hint_map = None
 
-    def _load_catalog(self):
-        self._specs = []
+    def _load_hints(self):
+        self._hint_map = {}
         with open(self.filename, 'r') as file:
-            spec = {'hints': {}}
+            spec_key = None
             for line in file:
                 line = line.strip()
                 found_hint = False
@@ -323,26 +323,33 @@ class Cookies(object):
                     pattern = r'^%s\s+(.*?)\s*$' % hint_name
                     match = re.match(pattern, line)
                     if match:
-                        spec['hints'][hint_name] = match.group(1)
+                        if spec_key is None:
+                            raise SourceSpecError(
+                                'Found hint %s before any spec' % hint_name
+                            )
+                        hint_value = match.group(1)
+                        note("Adding hint '%s %s' to %s" %
+                            (hint_name, hint_value, spec_key)
+                        )
+                        self._hint_map[spec_key][hint_name] = hint_value
                         found_hint = True
                         break
                 if found_hint or line == '' or line.startswith('#'):
                     continue
-                spec['spec'] = parse_source_spec(line)
-                self._specs.append(spec)
-                spec = {'hints': {}}
-        self._specs.append(spec)
+                spec = parse_source_spec(line)
+                spec_key = os.path.join(
+                    spec['host'], spec['user'], spec['project']
+                )
+                self._hint_map.setdefault(spec_key, {})
 
     @property
-    def specs(self):
-        if self._specs is None:
-            self._load_catalog()
-        return self._specs
+    def hint_map(self):
+        if self._hint_map is None:
+            self._load_hints()
+        return self._hint_map
 
     def apply_hints(self, source):
-        #if source.name in self.source_map:
-        #    source.hints = self.source_map[source.name].hints
-        pass
+        source.hints.update(self.hint_map.get(source.name, {}))
 
 
 class Path(object):
@@ -383,7 +390,7 @@ class Source(object):
         self.user = user or 'distfile'
         self.project = project
         self.type = type
-        self.hints = ''
+        self.hints = {}
         COOKIES.apply_hints(self)
 
     def __repr__(self):
@@ -471,7 +478,7 @@ class Source(object):
         return os.path.isdir(self.dir)
 
     def checkout(self):
-        note("* Checking out %s..." % self.name)
+        note("Checking out %s..." % self.name)
 
         try:
             os.makedirs(self.user_dir)
@@ -522,9 +529,9 @@ class Source(object):
 
     def build(self):
         if not OPTIONS.build:
-            note("* SKIPPING build of %s" % self.name)
+            note("SKIPPING build of %s" % self.name)
             return
-        note("* Building %s..." % self.dir)
+        note("Building %s..." % self.dir)
 
         chdir(self.dir)
         if os.path.isfile('build.sh'):
@@ -551,20 +558,14 @@ class Source(object):
             raise NotImplementedError
 
     def may_use_path(self, dirname):
-        # TODO: rewrite this to use new hints
-        use_it = True
-        for hint in self.hints.split(':'):
-            # TODO: better hint parsing
-            try:
-                (name, value) = hint.split('=')
-            except ValueError:
-                continue
-            if name == 'x':
-                verboten = os.path.join(self.dir, value)
-                if dirname.startswith(verboten):
-                    use_it = False
-                    break
-        return use_it
+        exclude_paths = self.hints.get('exclude_paths', '').split(' ')
+        if exclude_paths == ['']:
+            return True
+        for path in exclude_paths:
+            verboten = os.path.join(self.dir, path)
+            if dirname.startswith(verboten):
+                return False
+        return True
 
     def find_path_components(self):
         index = {}
@@ -572,7 +573,7 @@ class Source(object):
         components = []
         for dirname in sorted(index):
             if not self.may_use_path(dirname):
-                note("(SKIPPING %s)" % dirname)
+                note("%s excluded from search path" % dirname)
                 continue
             note("  %s:" % dirname)
             for filename in index[dirname]:
@@ -596,10 +597,10 @@ class Source(object):
                     if 'executable' in output:
                         make_it_executable = True
                     if make_it_executable:
-                        note("* Making %s executable" % name)
+                        note("Making %s executable" % name)
                         subprocess.check_call(["chmod", "u+x", filename])
                     else:
-                        note("* Making %s NON-executable" % name)
+                        note("Making %s NON-executable" % name)
                         subprocess.check_call(["chmod", "u-x", filename])
 
         traverse(self.dir)
@@ -644,10 +645,7 @@ def update_cmd(result, args):
     for source in sources:
         source.update()
         source.build()
-    # XXX overkill for now.  should be like
-    # + [s.name for s in sources]
-    # except s.spec, or make s.name parseable as a spec
-    path_cmd(result, ['rebuild', 'all'])
+    path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def path_cmd(result, args):
@@ -655,10 +653,10 @@ def path_cmd(result, args):
         # special case to handle total rebuilds/disables:
         # XXX all= no longer works, fix this somehow
         if all:
-            note("* Removing from your PATH all toolshelf directories")
+            note("Removing from your PATH all toolshelf directories")
             path.remove_components_by_prefix(TOOLSHELF)
         else:
-            note("* Removing from your PATH all directories that "
+            note("Removing from your PATH all directories that "
                  "start with one of the following...")
             for source in sources:
                 note("  " + source.dir)
@@ -673,7 +671,7 @@ def path_cmd(result, args):
             raise SourceSpecError(repr(problems))
         p = Path()
         clean_path(p, sources, all=(specs == ['all']))
-        note("* Adding the following executables to your PATH...")
+        note("Adding the following executables to your PATH...")
         for source in sources:
             for component in source.find_path_components():
                 p.add_component(component)

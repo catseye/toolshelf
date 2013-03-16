@@ -218,8 +218,10 @@ can say
     toolshelf build Gettysburg-Address
 
 If there is an ambiguity, one such source will be picked non-deterministically
-(TODO: perhaps this should be an error?)  ♦ In which case, you may add the
-username and/or the site name to resolve the ambiguity.
+(TODO: perhaps this should be an error?)  In this case, you must add both the
+host name and the username to resolve the ambiguity:
+
+    toolshelf build github.com/alincoln/Gettysburg-Address
 
 ### How does it know which directories to place on your path? ###
 
@@ -296,7 +298,7 @@ one in the cookies file, it automatically applies those hints.
 Example of an entry in the cookies file:
 
     gh:user/project
-      exclude_path tests
+      exclude_paths tests
       build_command ./configure --with-lighter-fluid --no-barbecue && make
 
 It should be possible to have a local cookies files that supplements
@@ -317,9 +319,9 @@ those hints for future use or for sharing.
 
 The names of hints are as follows.
 
-*   ♦ `requires_executable`
+*   ♦ `requires_executables`
     
-    Example: `requires_executable perl`
+    Example: `requires_executables perl`
     
     A space-separated list of executables required to dock and run the source.
     When this is given, `toolshelf` first checks if you have the named
@@ -328,7 +330,7 @@ The names of hints are as follows.
     
 *   ♦ `rectify_permissions`
     
-    Example: `rectify_permissions`
+    Example: `rectify_permissions yes`
 
     means rectify the execute permissions; after checking out the given
     source but before building it, traverse all of the files in the source
@@ -336,15 +338,15 @@ The names of hints are as follows.
     whether `file` called it `executable` or not.  (This is the default for
     `.zip` archives.)
     
-*   ♦ `prerequisite`
+*   ♦ `prerequisites`
     
-    Example: `prerequisite gh:Scriptor/Pharen`
+    Example: `prerequisites gh:Scriptor/Pharen`
     
     indicates a dependency source tree.  When this is given, `toolshelf`
     first checks if you have the source named by the hint's value, a source
     specification, docked; if you do not, it will try to dock that source first.
     
-*   ♦ `exclude_path`
+*   `exclude_paths`
     
     indicates a directory subtree that you should not be added to the
     executable search path.  This could be useful if there are executables
@@ -355,9 +357,9 @@ The names of hints are as follows.
     following directories from being put on the path: `tests/x86/passing`,
     `tests/x86/failing`, `tests/x8600`.
     
-*   ♦ `only_path`
+*   ♦ `only_paths`
     
-    Example: `only_path bin`
+    Example: `only_paths bin`
     
     indicates that *only* these subdirectories should be added to the
     executable search path.
@@ -469,11 +471,13 @@ description of how well they work with the `toolshelf` model, and why.
   has no problem building it, finding the built executables, and putting them
   on your path.
 
-  ♦ `exclude_path scripts` is a hint specifier which says to decline putting
-  any paths from this project where the final directory is called `scripts`
-  on the search path.  This prevents the scripts that ship with `tenyr` from
-  being put on your path (because they have rather generic names, and are
-  probably not things that you would use frequently.)
+  In `toolshelf`'s cookies database, this source has the hint
+  `exclude_paths bench ui hw scripts` associated with it; it says to decline
+  putting any paths from this project which begin with `bench`, `ui`, `hw`,
+  or `scripts` onto the search path.  This prevents several scripts with
+  rather generic names, and which you would typically not use frequently, from
+  appearing on the search path.  These scripts can still be run by giving the
+  full path to them, of course.
 
 * `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]
 
@@ -482,8 +486,8 @@ description of how well they work with the `toolshelf` model, and why.
   your `toolshelf` with the above command.  After it's docked, you can issue
   the commands `toolshelf path disable ftp.gnu.org/bison-2.5` and
   `toolshelf path rebuild ftp.gnu.org/bison-2.5` to remove or reinstate
-  it from your search path, respectively.
-  TODO ♦ `{x=tests:x=etc:x=examples:x=build-aux}`
+  it from your search path, respectively.  Similar to `tenyr`, this source has
+  the hint `exclude_paths tests etc examples build-aux` associated with it.
 
 [`gh:nelhage/reptyr`]: https://github.com/nelhage/reptyr
 [`bb:catseye/yucca`]: https://bitbucket.org/catseye/yucca

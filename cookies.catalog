@@ -4,7 +4,7 @@
 # see if it is listed here.  If it is, it uses the hints listed in this file.
 
 gh:kulp/tenyr
-  exclude_paths scripts
+  exclude_paths bench ui hw scripts
 
 gh:darius/ichbins
   exclude_paths tests
