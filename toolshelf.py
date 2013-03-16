@@ -272,8 +272,7 @@ class Path(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                 type=None, hints=''):
-        # TODO: look up specifier in database, to obtain "cookies"
+                 type=None):
         self.url = url
         if not host:
             raise ValueError('no host supplied')
@@ -281,7 +280,7 @@ class Source(object):
         self.user = user or 'distfile'
         self.project = project
         self.type = type
-        self.hints = hints
+        COOKIES.apply_hints(self)
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
@@ -345,8 +344,6 @@ class Source(object):
         if name.startswith('@'):
             return klass.from_catalog(name[1:], problems)
 
-        hints = None
-
         # resolve name shorthands
         # TODO: make these configurable
         match = re.match(r'^gh:(.*?)\/(.*?)$', name)
@@ -369,7 +366,7 @@ class Source(object):
             project = match.group(3)
             return [
                 Source(url=name, host=host, user=user, project=project,
-                       type='git', hints=hints)
+                       type='git')
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
@@ -379,7 +376,7 @@ class Source(object):
             project = match.group(3)
             return [
                 Source(url=name, host=host, user=user, project=project,
-                       type='git', hints=hints)
+                       type='git')
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
@@ -389,8 +386,7 @@ class Source(object):
             project = match.group(2)
             ext = match.group(3)
             return [
-                Source(url=name, host=host, project=project, type=ext,
-                       hints=hints)
+                Source(url=name, host=host, project=project, type=ext)
             ]
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
@@ -400,7 +396,7 @@ class Source(object):
             project = match.group(3)
             return [
                 Source(url=name, host=host, user=user, project=project,
-                       type='hg', hints=hints)
+                       type='hg')
             ]
 
         # local
@@ -413,7 +409,6 @@ class Source(object):
                 # TODO divine type
                 s = Source(host=host, user=user, project=project,
                            type='unknown')
-                s.load_hints()
                 return [s]
             problems.append("Source '%s' not docked" % name)
             return []
@@ -495,8 +490,6 @@ class Source(object):
         else:
             raise NotImplementedError(self.type)
 
-        self.save_hints()
-
     def build(self):
         if not OPTIONS.build:
             note("* SKIPPING build of %s" % self.name)
@@ -527,25 +520,28 @@ class Source(object):
         else:
             raise NotImplementedError
 
+    def may_use_path(self, dirname):
+        # TODO: rewrite this to use new hints
+        use_it = True
+        for hint in self.hints.split(':'):
+            # TODO: better hint parsing
+            try:
+                (name, value) = hint.split('=')
+            except ValueError:
+                continue
+            if name == 'x':
+                verboten = os.path.join(self.dir, value)
+                if dirname.startswith(verboten):
+                    use_it = False
+                    break
+        return use_it
+
     def find_path_components(self):
         index = {}
         find_executables(self.dir, index)
         components = []
         for dirname in sorted(index):
-            # TODO: rewrite this more elegantly
-            add_it = True
-            for hint in self.hints.split(':'):
-                # TODO: better hint parsing
-                try:
-                    (name, value) = hint.split('=')
-                except ValueError:
-                    continue
-                if name == 'x':
-                    verboten = os.path.join(self.dir, value)
-                    if dirname.startswith(verboten):
-                        add_it = False
-                        break
-            if not add_it:
+            if not self.may_use_path(dirname):
                 note("(SKIPPING %s)" % dirname)
                 continue
             note("  %s:" % dirname)
@@ -588,7 +584,6 @@ def dock_cmd(result, args):
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
-    COOKIES.apply_hints(sources)
     for source in sources:
         # XXX for now, skip if already docked
         if not source.docked:
@@ -604,7 +599,6 @@ def build_cmd(result, args):
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
-    COOKIES.apply_hints(sources)
     for source in sources:
         source.build()
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
@@ -617,7 +611,6 @@ def update_cmd(result, args):
     # TODO: improve this
     if problems:
         raise SourceSpecSyntaxError(repr(problems))
-    COOKIES.apply_hints(sources)
     for source in sources:
         source.update()
         source.build()
