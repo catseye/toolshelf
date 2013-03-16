@@ -1,9 +1,13 @@
 # "cookies" for toolshelf.
 
 # When you try to dock a source tree, toolshelf looks in this file to
-# see if it is listed here.  If it is, and if you didn't specify any hints,
-# it uses the hints listed in this file.
+# see if it is listed here.  If it is, it uses the hints listed in this file.
 
-gh:kulp/tenyr{x=scripts}
-gh:darius/ichbins{x=tests}
-http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz{x=tests:x=etc:x=examples:x=build-aux}
+gh:kulp/tenyr
+  exclude_paths scripts
+
+gh:darius/ichbins
+  exclude_paths tests
+
+http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
+  exclude_paths tests etc example build-aux

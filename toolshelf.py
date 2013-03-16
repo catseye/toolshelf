@@ -187,6 +187,93 @@ def expand_docked_specs(specs, default_all=False):
     return new_specs
 
 
+def parse_source_spec(name, problems):
+    """Parse a full source specifier and return a dictionary
+    of fields suitable for creating a Source object with.
+
+    An full source specifier may take any of the following forms:
+
+      host/user/project          local source, already docked
+      git://host.dom/.../user/repo.git       git
+      http[s]://host.dom/.../user/repo.git   git
+      http[s]://host.dom/.../user/repo       Mercurial
+      http[s]://host.dom/.../distfile.tgz    |
+      http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
+      http[s]://host.dom/.../distfile.zip    |
+      gh:user/project            short for git://github.com/...
+      bb:user/project            short for https://bitbucket.org/...
+
+    If problems are encountered while parsing the source spec,
+    they will be added to the problems parameter, assumed to be
+    a list-like object.
+
+    """
+
+    # resolve name shorthands
+    # TODO: make these configurable
+    match = re.match(r'^gh:(.*?)\/(.*?)$', name)
+    if match:
+        # TODO: allow different styles (https, git, ssh+git...)
+        name = 'git://github.com/%s/%s.git' % (
+            match.group(1), match.group(2)
+        )
+    match = re.match(r'^bb:(.*?)\/(.*?)$', name)
+    if match:
+        # TODO: allow different styles (https, git, ssh+git...)
+        name = 'https://bitbucket.org/%s/%s' % (
+            match.group(1), match.group(2)
+        )
+
+    match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
+    if match:
+        host = match.group(1)
+        user = match.group(2)
+        project = match.group(3)
+        return dict(url=name, host=host, user=user, project=project,
+                    type='git')
+
+    match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
+    if match:
+        host = match.group(1)
+        user = match.group(2)
+        project = match.group(3)
+        return dict(url=name, host=host, user=user, project=project,
+                    type='git')
+
+    match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
+                     r'\.(zip|tgz|tar\.gz)$', name)
+    if match:
+        host = match.group(1)
+        project = match.group(2)
+        ext = match.group(3)
+        return dict(url=name, host=host, user='distfile', project=project,
+                    type=ext)
+
+    match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
+    if match:
+        host = match.group(1)
+        user = match.group(2)
+        project = match.group(3)
+        return dict(url=name, host=host, user=user, project=project,
+                    type='hg')
+
+    # local
+    match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
+    if match:
+        host = match.group(1)
+        user = match.group(2)
+        project = match.group(3)
+        if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
+            # TODO divine type
+            return dict(url='', host=host, user=user, project=project,
+                        type='unknown')
+        problems.append("Source '%s' not docked" % name)
+        return {}
+
+    problems.append("Couldn't parse source spec '%s'" % name)
+    return {}
+
+
 ### Exceptions
 
 class CommandLineSyntaxError(ValueError):
@@ -225,7 +312,7 @@ class Cookies(object):
     def source_map(self):
         if self._source_map is None:
             problems = []
-            sources = Source.from_catalog(self.filename, problems)
+            sources = [] # Source.from_catalog(self.filename, problems)
             if problems:
                 raise ValueError(problems)
             self._source_map = {}
@@ -233,13 +320,9 @@ class Cookies(object):
                 self._source_map[source.name] = source
         return self._source_map
 
-    def apply_hints(self, sources):
-        for source in sources:
-            if source.hints:
-                # already specified; they override what we think we know
-                continue
-            if source.name in self.source_map:
-                source.hints = self.source_map[source.name].hints
+    def apply_hints(self, source):
+        if source.name in self.source_map:
+            source.hints = self.source_map[source.name].hints
 
 
 class Path(object):
@@ -280,6 +363,7 @@ class Source(object):
         self.user = user or 'distfile'
         self.project = project
         self.type = type
+        self.hints = ''
         COOKIES.apply_hints(self)
 
     def __repr__(self):
@@ -317,17 +401,9 @@ class Source(object):
         """Parse an external source specifier and return a list of
         Source objects.
 
-        An external source specifier may take any of the following forms:
+        An external source specifier may take any of the forms listed
+        in parse_source_spec's docstring, as well as the following:
 
-          host/user/project          local source, already docked
-          git://host.dom/.../user/repo.git       git
-          http[s]://host.dom/.../user/repo.git   git
-          http[s]://host.dom/.../user/repo       Mercurial
-          http[s]://host.dom/.../distfile.tgz    |
-          http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
-          http[s]://host.dom/.../distfile.zip    |
-          gh:user/project            short for git://github.com/...
-          bb:user/project            short for https://bitbucket.org/...
           @local/file/name           read list of sources from file
           @@foo                      read list in .toolshelf/catalog/foo
 
@@ -344,77 +420,8 @@ class Source(object):
         if name.startswith('@'):
             return klass.from_catalog(name[1:], problems)
 
-        # resolve name shorthands
-        # TODO: make these configurable
-        match = re.match(r'^gh:(.*?)\/(.*?)$', name)
-        if match:
-            # TODO: allow different styles (https, git, ssh+git...)
-            name = 'git://github.com/%s/%s.git' % (
-                match.group(1), match.group(2)
-            )
-        match = re.match(r'^bb:(.*?)\/(.*?)$', name)
-        if match:
-            # TODO: allow different styles (https, git, ssh+git...)
-            name = 'https://bitbucket.org/%s/%s' % (
-                match.group(1), match.group(2)
-            )
-
-        match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
-        if match:
-            host = match.group(1)
-            user = match.group(2)
-            project = match.group(3)
-            return [
-                Source(url=name, host=host, user=user, project=project,
-                       type='git')
-            ]
-
-        match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
-        if match:
-            host = match.group(1)
-            user = match.group(2)
-            project = match.group(3)
-            return [
-                Source(url=name, host=host, user=user, project=project,
-                       type='git')
-            ]
-
-        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
-                         r'\.(zip|tgz|tar\.gz)$', name)
-        if match:
-            host = match.group(1)
-            project = match.group(2)
-            ext = match.group(3)
-            return [
-                Source(url=name, host=host, project=project, type=ext)
-            ]
-
-        match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
-        if match:
-            host = match.group(1)
-            user = match.group(2)
-            project = match.group(3)
-            return [
-                Source(url=name, host=host, user=user, project=project,
-                       type='hg')
-            ]
-
-        # local
-        match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
-        if match:
-            host = match.group(1)
-            user = match.group(2)
-            project = match.group(3)
-            if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
-                # TODO divine type
-                s = Source(host=host, user=user, project=project,
-                           type='unknown')
-                return [s]
-            problems.append("Source '%s' not docked" % name)
-            return []
-
-        problems.append("Couldn't parse source spec '%s'" % name)
-        return []
+        kwargs = parse_source_spec(name, problems)
+        return [Source(**kwargs)]
 
     @property
     def distfile(self):
