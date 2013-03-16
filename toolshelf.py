@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c)2012 Chris Pressey, Cat's Eye Technologies
+# Copyright (c)2012-2013 Chris Pressey, Cat's Eye Technologies
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -58,9 +58,6 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         missing from the filesystem, and any executables on it which are
         shadowed by prior entries with the same name.
 
-    path config <docked-source-spec>           (:not yet implemented:)
-        Change the hints for a docked source.
-
     cd <docked-source-spec>
         Change the current working directory to the directory of the
         given docked source.
@@ -71,7 +68,6 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         display its contents with $PAGER.
 """
 
-import ConfigParser as configparser
 import errno
 import os
 import optparse
@@ -101,7 +97,6 @@ CWD = os.getcwd()
 ### Globals
 
 OPTIONS = None
-CONFIG = None
 COOKIES = None
 
 
@@ -156,8 +151,8 @@ def expand_docked_specs(specs, default_all=False):
     for name in specs:
         if name == 'all':
             for host in os.listdir(TOOLSHELF):
-                if host in ('.toolshelf', '.toolshelfrc'):
-                    # skip the toolshelf dir itself
+                if host.startswith('.'):
+                    # skip hidden dirs
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
                 for user in os.listdir(host_dirname):
@@ -172,8 +167,8 @@ def expand_docked_specs(specs, default_all=False):
             for host in os.listdir(TOOLSHELF):
                 if found:
                     break
-                if host in ('.distfiles', '.toolshelf', '.toolshelfrc'):
-                    # skip the toolshelf dir itself
+                if host.startswith('.'):
+                    # skip hidden dirs
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
                 for user in os.listdir(host_dirname):
@@ -182,7 +177,8 @@ def expand_docked_specs(specs, default_all=False):
                     sub_dirname = os.path.join(host_dirname, user)
                     for project in os.listdir(sub_dirname):
                         if project == name:
-                            new_specs.append('%s/%s/%s' % (host, user, project))
+                            new_specs.append('%s/%s/%s' %
+                                             (host, user, project))
                             found = True
                             break
         else:
@@ -216,39 +212,6 @@ class LazyFile(object):
     def close(self):
         if self.file is not None:
             self.file.close()
-
-
-class Config(object):
-    def __init__(self):
-        self.filename = os.path.join(TOOLSHELF, '.toolshelfrc')
-        self._config = None
-
-    @property
-    def config(self):
-        if self._config is None:
-            self._config = configparser.RawConfigParser()
-            self._config.read([self.filename])
-            if not self._config.has_section('hints'):
-                self._config.add_section('hints')
-        return self._config
-
-    # XXX disabled until we rewrite this
-    def get_hints(self, source):
-        return ''
-        try:
-            hints = self.config.get('hints', source.name)
-        except configparser.NoOptionError:
-            return None
-        return hints
-
-    def set_hints(self, source):
-        self.config.set('hints', source.name, source.hints)
-
-    def save(self):
-        if self._config is not None:
-            f = open(self.filename, 'w')
-            self.config.write(f)
-            f.close()
 
 
 class Cookies(object):
@@ -389,11 +352,15 @@ class Source(object):
         match = re.match(r'^gh:(.*?)\/(.*?)$', name)
         if match:
             # TODO: allow different styles (https, git, ssh+git...)
-            name = 'git://github.com/%s/%s.git' % (match.group(1), match.group(2))
+            name = 'git://github.com/%s/%s.git' % (
+                match.group(1), match.group(2)
+            )
         match = re.match(r'^bb:(.*?)\/(.*?)$', name)
         if match:
             # TODO: allow different styles (https, git, ssh+git...)
-            name = 'https://bitbucket.org/%s/%s' % (match.group(1), match.group(2))
+            name = 'https://bitbucket.org/%s/%s' % (
+                match.group(1), match.group(2)
+            )
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -444,7 +411,8 @@ class Source(object):
             project = match.group(3)
             if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
                 # TODO divine type
-                s = Source(host=host, user=user, project=project, type='unknown')
+                s = Source(host=host, user=user, project=project,
+                           type='unknown')
                 s.load_hints()
                 return [s]
             problems.append("Source '%s' not docked" % name)
@@ -472,14 +440,6 @@ class Source(object):
     @property
     def dir(self):
         return os.path.join(self.user_dir, self.project)
-
-    def save_hints(self):
-        CONFIG.set_hints(self)
-
-    def load_hints(self):
-        hints = CONFIG.get_hints(self)
-        if hints is not None:
-            self.hints = hints
 
     @property
     def docked(self):
@@ -751,7 +711,7 @@ SUBCOMMANDS = {
 
 
 def main():
-    global OPTIONS, CONFIG, COOKIES
+    global OPTIONS, COOKIES
 
     parser = optparse.OptionParser(__doc__)
 
@@ -769,7 +729,6 @@ def main():
 
     chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
-    CONFIG = Config()
     COOKIES = Cookies()
 
     subcommand = args[0]
@@ -792,7 +751,6 @@ def main():
         sys.exit(2)
 
     result.close()
-    CONFIG.save()
 
 
 if __name__ == '__main__':
