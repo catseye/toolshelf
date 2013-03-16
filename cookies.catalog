@@ -11,3 +11,6 @@ gh:darius/ichbins
 
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
+
+gh:catseye/VICE
+  only_paths src

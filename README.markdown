@@ -342,13 +342,13 @@ The names of hints are as follows.
     
     Example: `prerequisites gh:Scriptor/Pharen`
     
-    indicates a dependency source tree.  When this is given, `toolshelf`
-    first checks if you have the source named by the hint's value, a source
-    specification, docked; if you do not, it will try to dock that source first.
+    A space-separated list of  source specifications.  When this is given,
+    `toolshelf` first checks if you have each of the sources given in the
+    hint value, docked; if you do not, it will try to dock the source first.
     
 *   `exclude_paths`
     
-    indicates a directory subtree that you should not be added to the
+    A space-separated list of directory names that should not be added to the
     executable search path.  This could be useful if there are executables
     included in a source tree that you don't want put on your path, but
     `toolshelf` itself isn't clever enough to figure out that you don't want
@@ -357,12 +357,16 @@ The names of hints are as follows.
     following directories from being put on the path: `tests/x86/passing`,
     `tests/x86/failing`, `tests/x8600`.
     
-*   ♦ `only_paths`
+*   `only_paths`
     
     Example: `only_paths bin`
     
-    indicates that *only* these subdirectories should be added to the
-    executable search path.
+    A space-separated list of directory names.  If this hint is given, any
+    `exclude_paths` hint is ignores, and *only* these subdirectories will be
+    added to the executable search path.  Unlike `exclude_paths`, these
+    directories are specific; i.e. if `bin/subdir` contains executables, but
+    `only_paths bin` is given, `bin/subdir` will not be added to the search
+    path.
     
 *   ♦ `build_command`
     

@@ -558,13 +558,20 @@ class Source(object):
             raise NotImplementedError
 
     def may_use_path(self, dirname):
-        exclude_paths = self.hints.get('exclude_paths', '').split(' ')
-        if exclude_paths == ['']:
-            return True
-        for path in exclude_paths:
-            verboten = os.path.join(self.dir, path)
-            if dirname.startswith(verboten):
-                return False
+        only_paths = self.hints.get('only_paths', None)
+        if only_paths is not None:
+            only_paths = only_paths.split(' ')
+            for path in only_paths:
+                if dirname == os.path.join(self.dir, path):
+                    return True
+            return False
+        exclude_paths = self.hints.get('exclude_paths', None)
+        if exclude_paths is not None:
+            exclude_paths = exclude_paths.split(' ')
+            for path in exclude_paths:
+                verboten = os.path.join(self.dir, path)
+                if dirname.startswith(verboten):
+                    return False
         return True
 
     def find_path_components(self):
