@@ -14,3 +14,4 @@ http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
 
 gh:catseye/VICE
   only_paths src
+  build_command autogen.sh && ./configure --enable-gnomeui && make

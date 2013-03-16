@@ -92,10 +92,11 @@ UNINTERESTING_EXECUTABLES = (
 )
 
 HINT_NAMES = (
+    'build_command',
     'exclude_paths',
     'only_paths',
-    'requires_executables',
-    'prerequisites',
+    #'prerequisites',
+    #'requires_executables',
 )
 
 CWD = os.getcwd()
@@ -137,9 +138,9 @@ def find_executables(dirname, index):
             find_executables(filename, index)
 
 
-def run(*args):
+def run(*args, **kwargs):
     note("Running `%s`..." % ' '.join(args))
-    subprocess.check_call(args)
+    subprocess.check_call(args, **kwargs)
 
 
 def chdir(path):
@@ -534,8 +535,13 @@ class Source(object):
         note("Building %s..." % self.dir)
 
         chdir(self.dir)
-        if os.path.isfile('build.sh'):
+        build_command = self.hints.get('build_command', None)
+        if build_command is not None:
+            run(build_command, shell=True)
+        elif os.path.isfile('build.sh'):
             run('./build.sh')
+        elif os.path.isfile('make.sh'):
+            run('./make.sh')
         else:
             if os.path.isfile('autogen.sh'):
                 run('./autogen.sh')

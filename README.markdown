@@ -368,13 +368,14 @@ The names of hints are as follows.
     `only_paths bin` is given, `bin/subdir` will not be added to the search
     path.
     
-*   ♦ `build_command`
+*   `build_command`
     
     Example: `build_command ./configure --no-cheese && make`
     
-    specifies a command to run to build the source.  Passes the entire hint
-    value to the shell for execution.  The command will be run with the root
-    of the source tree as the working directory. 
+    A shell command that will be used to build the source.  `toolshelf`
+    passes the entire hint value to the shell for execution.  The command
+    will be run with the root of the source tree as the working directory.
+    `toolshelf`'s built-in heuristics for building sources will not be used.
 
 Theory of Operation
 -------------------
