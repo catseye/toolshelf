@@ -172,13 +172,17 @@ will clone a `git` repo from github to use as the source.  Similarly,
 
     toolshelf dock https://bitbucket.org/plato/the-republic
 
-will clone a Mercurial repo from Bitbucket.  ♦ And you can dock a vanilla,
+will clone a Mercurial repo from Bitbucket.  And you can dock a vanilla,
 non-version-controlled tarball by saying
 
     toolshelf dock http://example.com/distfiles/foo-1.0.tar.gz
 
-(It will place the source tree in a directory called `example.com/foo-1.0`
-under `$TOOLSHELF`.)
+(It will download the tarball to `$TOOLSHELF/.distfiles/foo-1.0.tar.gz`
+and cache it there, extract it to a temporary directory, and place the
+source tree in `$TOOLSHELF/example.com/distfile/foo-1.0`.  This will work
+regardless of whether the tarball contains a single directory called
+`foo-1.0`, as is standard, or if it is a "tarbomb" where all the files are
+contained in the root of the tar archive.  Which is frowned upon.)
 
 `toolshelf` understands a few shortcuts for Github and Bitbucket:
 
@@ -293,7 +297,7 @@ Example of an entry in the cookies file:
 
     gh:user/project
       exclude_path tests
-      build_command ./configure --with-lighter-fluid --no-barbecue
+      build_command ./configure --with-lighter-fluid --no-barbecue && make
 
 It should be possible to have a local cookies files that supplements
 `toolshelf`'s supplied cookies file, at some point.
@@ -334,12 +338,11 @@ The names of hints are as follows.
     
 *   ♦ `prerequisite`
     
-    Example: `prerequisite gh:nelhage/reptyr`
+    Example: `prerequisite gh:Scriptor/Pharen`
     
     indicates a dependency source tree.  When this is given, `toolshelf`
     first checks if you have the source named by the hint's value, a source
     specification, docked; if you do not, it will try to dock that source first.
-    Example: `d=Scriptor/Pharen`.
     
 *   ♦ `exclude_path`
     
@@ -352,19 +355,20 @@ The names of hints are as follows.
     following directories from being put on the path: `tests/x86/passing`,
     `tests/x86/failing`, `tests/x8600`.
     
-*   ♦ `o`
+*   ♦ `only_path`
+    
+    Example: `only_path bin`
     
     indicates that *only* these subdirectories should be added to the
-    executable search path.  Example: `o=bin`.
+    executable search path.
     
 *   ♦ `build_command`
     
-    specifies a command to run to build the source.  Not sure if it will
-    be passed to a shell for execution, or just split into words at the spaces.
-    The command will be run with the root of the source tree as the working
-    directory.  Note that if the command contains spaces, and the source spec
-    is given on the command line, it will need to be quoted.
-    Example: `b=tools/make-it`.
+    Example: `build_command ./configure --no-cheese && make`
+    
+    specifies a command to run to build the source.  Passes the entire hint
+    value to the shell for execution.  The command will be run with the root
+    of the source tree as the working directory. 
 
 Theory of Operation
 -------------------
@@ -471,18 +475,18 @@ description of how well they work with the `toolshelf` model, and why.
   being put on your path (because they have rather generic names, and are
   probably not things that you would use frequently.)
 
-* ♦ `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]
+* `toolshelf dock `[`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`][]
 
-  ♦ `{x=tests:x=etc:x=examples:x=build-aux}`
   Is your system `bison` version 2.4, but you need version 2.5 installed
   temporarily in order to build `kulp/tenyr`?  No problem; just put it on
   your `toolshelf` with the above command.  After it's docked, you can issue
   the commands `toolshelf path disable ftp.gnu.org/bison-2.5` and
   `toolshelf path rebuild ftp.gnu.org/bison-2.5` to remove or reinstate
   it from your search path, respectively.
+  TODO ♦ `{x=tests:x=etc:x=examples:x=build-aux}`
 
 [`gh:nelhage/reptyr`]: https://github.com/nelhage/reptyr
-[`bb:catseye/yucca`] https://bitbucket.org/catseye/yucca
+[`bb:catseye/yucca`]: https://bitbucket.org/catseye/yucca
 [`gh:kulp/tenyr`]: https://github.com/kulp/tenyr
 [`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`]: http://www.gnu.org/software/bison/bison.html
 

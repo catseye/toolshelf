@@ -130,6 +130,11 @@ def run(*args):
     subprocess.check_call(args)
 
 
+def chdir(path):
+    note("* Changing dir to `%s`..." % path)
+    os.chdir(path)
+
+
 def note(msg):
     if OPTIONS.verbose:
         print msg
@@ -315,6 +320,12 @@ class Source(object):
         self.type = type
         self.hints = hints
 
+    def __repr__(self):
+        return ("Source(url=%r, host=%r, user=%r, "
+                "project=%r, type=%r, hints=%r)" %
+                (self.url, self.host, self.user,
+                 self.project, self.type, self.hints))
+
     @classmethod
     def from_catalog(klass, filename, problems):
         filename = os.path.join(CWD, filename)
@@ -445,7 +456,8 @@ class Source(object):
     @property
     def distfile(self):
         if self.type in ('zip', 'tgz', 'tar.gz'):
-            return os.path.join(self.dir, '%s.%s' % (self.project, self.type))
+            return os.path.join(TOOLSHELF, '.distfiles',
+                                '%s.%s' % (self.project, self.type))
         else:
             return None
 
@@ -483,21 +495,21 @@ class Source(object):
                 pass
             else:
                 raise
-        os.chdir(self.user_dir)
+        chdir(self.user_dir)
 
         if self.type == 'git':
             run('git', 'clone', self.url)
         elif self.type == 'hg':
             run('hg', 'clone', self.url)
         elif self.distfile is not None:
-            # XXX might not work anymore
-            run('rm', '-f', self.distfile)
-            run('wget', '-nc', '-O', self.distfile, self.url)
+            run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
+            if not os.path.exists(self.distfile):
+                run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
-                self.dir, '.extract_' + self.project
+                TOOLSHELF, '.extract_' + self.project
             )
             run('mkdir', '-p', extract_dir)
-            os.chdir(extract_dir)
+            chdir(extract_dir)
             if self.type == 'zip':
                 run('unzip', self.distfile)
             elif self.type in ('tgz', 'tar.gz'):
@@ -506,10 +518,14 @@ class Source(object):
 
             files = os.listdir(extract_dir)
             if len(files) == 1:
+                note("Archive is well-structured "
+                     "(all files in one directory)")
                 extracted_dir = os.path.join(extract_dir, files[0])
                 if not os.path.isdir(extracted_dir):
                     extracted_dir = extract_dir
             else:
+                note("Archive is a 'tarbomb' "
+                     "(all files in the root of the archive)")
                 extracted_dir = extract_dir
             run('mv', extracted_dir, self.dir)
             run('rm', '-rf', extract_dir)
@@ -527,7 +543,7 @@ class Source(object):
             return
         note("* Building %s..." % self.dir)
 
-        os.chdir(self.dir)
+        chdir(self.dir)
         if os.path.isfile('build.sh'):
             run('./build.sh')
         else:
@@ -539,11 +555,11 @@ class Source(object):
             if os.path.isfile('Makefile'):
                 run('make')
             elif os.path.isfile('src/Makefile'):
-                os.chdir('src')
+                chdir('src')
                 run('make')
 
     def update(self):
-        os.chdir(self.dir)
+        chdir(self.dir)
         if os.path.isdir('.git'):
             run('git', 'pull')
         if os.path.isdir('.hg'):
@@ -751,7 +767,7 @@ def main():
         print "Usage: " + __doc__
         sys.exit(2)
 
-    os.chdir(TOOLSHELF)
+    chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
     CONFIG = Config()
     COOKIES = Cookies()
