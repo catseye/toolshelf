@@ -96,7 +96,7 @@ HINT_NAMES = (
     'exclude_paths',
     'only_paths',
     #'prerequisites',
-    #'requires_executables',
+    'require_executables',
 )
 
 CWD = os.getcwd()
@@ -115,6 +115,10 @@ class CommandLineSyntaxError(ValueError):
 
 
 class SourceSpecError(ValueError):
+    pass
+
+
+class DependencyError(ValueError):
     pass
 
 
@@ -536,7 +540,7 @@ class Source(object):
 
         chdir(self.dir)
         build_command = self.hints.get('build_command', None)
-        if build_command is not None:
+        if build_command:
             run(build_command, shell=True)
         elif os.path.isfile('build.sh'):
             run('./build.sh')
@@ -565,14 +569,14 @@ class Source(object):
 
     def may_use_path(self, dirname):
         only_paths = self.hints.get('only_paths', None)
-        if only_paths is not None:
+        if only_paths:
             only_paths = only_paths.split(' ')
             for path in only_paths:
                 if dirname == os.path.join(self.dir, path):
                     return True
             return False
         exclude_paths = self.hints.get('exclude_paths', None)
-        if exclude_paths is not None:
+        if exclude_paths:
             exclude_paths = exclude_paths.split(' ')
             for path in exclude_paths:
                 verboten = os.path.join(self.dir, path)
@@ -629,8 +633,20 @@ def dock_cmd(result, args):
     if problems:
         raise SourceSpecError(repr(problems))
     for source in sources:
-        # XXX for now, skip if already docked
-        if not source.docked:
+        if source.docked:
+            print "%s already docked." % source.name
+        else:
+            require_executables = source.hints.get(
+                'require_executables', None
+            )
+            if require_executables:
+                p = Path()
+                for executable in require_executables.split(' '):
+                    if not p.which(executable):
+                        raise DependencyError(
+                            '%s requires `%s` not found on search path' %
+                            (source.name, executable)
+                        )
             source.checkout()
             source.build()
     path_cmd(result, ['rebuild'] + [s.name for s in sources])

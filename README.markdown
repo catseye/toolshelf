@@ -319,9 +319,9 @@ those hints for future use or for sharing.
 
 The names of hints are as follows.
 
-*   ♦ `requires_executables`
+*   `require_executables`
     
-    Example: `requires_executables perl`
+    Example: `require_executables perl`
     
     A space-separated list of executables required to dock and run the source.
     When this is given, `toolshelf` first checks if you have the named
