@@ -1,17 +1,24 @@
 # Experimental programming languages:
 
+gh:crcx/retro-language
 gh:darius/awklisp
 gh:darius/ichbins
 gh:darius/squerm
+gh:darius/wren
+gh:fogus/potion
+gh:hiredman/Arkham
+gh:jlongster/outlet
+gh:kmcallister/qoppa
 gh:munificent/bulfinch
 gh:munificent/finch
+gh:munificent/lark
 gh:munificent/magpie
-gh:Scriptor/pharen
-gh:fogus/potion
-gh:darius/wren
-gh:zephyrfalcon/nepenthe
 gh:petermichaux/bootstrap-scheme
-gh:kmcallister/qoppa
+gh:paulhodge/circa
+gh:Scriptor/pharen
+gh:zephyrfalcon/nepenthe
+gh:digego/extempore
+gh:GeekHorse/Trot
 
 # Esoteric programming languages:
 
@@ -26,12 +33,19 @@ gh:Deewiant/fungify
 gh:ehird/funge-archive
 gh:b441berith/MalbolgeInterpreter
 gh:kallisti-dev/dogless
+gh:qpliu/esolang
 
 # Emulators:
 
 gh:rascal999/chip8-emulator
 gh:pikhq/cmako
 gh:JohnEarnest/Mako
+
+# Games:
+
+gh:mistydemeo/deathhack
+gh:Halfwake/Nork
+gh:wrog/lambdamoo
 
 # Other:
 

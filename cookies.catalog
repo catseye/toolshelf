@@ -21,3 +21,9 @@ bb:catseye/yucca
 
 http://catseye.tc/dieter-1.0-2011.1214.zip
   rectify_permissions no
+
+gh:munificent/magpie
+  exclude_paths dep
+
+gh:digego/extempore
+  build_command ./all.bash

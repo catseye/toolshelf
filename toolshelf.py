@@ -750,6 +750,10 @@ def main():
 
     parser = optparse.OptionParser(__doc__)
 
+    parser.add_option("-k", "--keep-going", dest="keep_going",
+                      default=False, action="store_true",
+                      help="don't abort if error occurs with a single "
+                           "source when processing multiple sources")
     parser.add_option("-B", "--no-build", dest="build",
                       default=True, action="store_false",
                       help="don't try to build sources during docking")
