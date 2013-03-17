@@ -172,6 +172,7 @@ def expand_docked_specs(specs, default_all=False):
         specs = ['all']
     new_specs = []
     for name in specs:
+        match = re.match(r'^([^/]*)/([^/]*)$', name)
         if name == 'all':
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
@@ -185,8 +186,10 @@ def expand_docked_specs(specs, default_all=False):
                         if not os.path.isdir(project_dirname):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))
-        match = re.match(r'^([^/]*)/([^/]*)$', name)
-        if match:
+            break
+        elif name.startswith('@'):
+            new_specs.append(name)
+        elif match:
             user = match.group(1)
             project = match.group(2)
             for host in os.listdir(TOOLSHELF):
@@ -664,8 +667,15 @@ def dock_cmd(result, args):
 def build_cmd(result, args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
+    exceptions = []
     for source in sources:
-        source.build()
+        try:
+            source.build()
+        except Exception as e:
+            if OPTIONS.keep_going:
+                exceptions.append(e)
+            else:
+                raise
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
