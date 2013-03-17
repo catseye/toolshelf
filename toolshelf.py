@@ -89,6 +89,12 @@ UNINTERESTING_EXECUTABLES = (
     'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
     'build.pl', 'make.pl', 'install.pl', 'test.pl',
     'configure', 'config.status',
+    # these are not "interesting" executable because if you happen
+    # to dock a source which builds an executable by one of these
+    # names and toolshelf puts it on the path, it may just have a wee
+    # bit of problems when trying to build anything else :)
+    'make', 'ant', 'mkdir', 'mv', 'rm',
+    'git', 'hg', 'wget','unzip', 'tar',
 )
 
 HINT_NAMES = (
