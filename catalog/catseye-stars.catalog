@@ -11,14 +11,35 @@ gh:jlongster/outlet
 gh:kmcallister/qoppa
 gh:munificent/bulfinch
 gh:munificent/finch
+gh:munificent/jasic
 gh:munificent/lark
 gh:munificent/magpie
 gh:petermichaux/bootstrap-scheme
 gh:paulhodge/circa
+gh:Scriptor/hub
 gh:Scriptor/pharen
 gh:zephyrfalcon/nepenthe
 gh:digego/extempore
 gh:GeekHorse/Trot
+gh:mozilla/rust
+gh:RobinMorisset/Tryskell
+gh:kwantam/lviv
+gh:automata/vivace
+gh:aliclark/hasp
+gh:JeffBezanson/femtolisp
+gh:santoshrajan/lispyscript
+gh:presidentbeef/brat
+gh:faylang/fay
+gh:clever-lang/clever
+gh:zephyrfalcon/xera
+gh:pikatchu/LinearML
+gh:jckarter/clay
+gh:realityforge/jasm
+gh:maryrosecook/isla
+gh:kueblc/Koala
+gh:emoon/Score
+git://factorcode.org/git/factor.git
+https://code.google.com/p/chibi-scheme/
 
 # Esoteric programming languages:
 
@@ -40,6 +61,13 @@ gh:qpliu/esolang
 gh:rascal999/chip8-emulator
 gh:pikhq/cmako
 gh:JohnEarnest/Mako
+gh:ppeccin/javatari
+gh:schnej7/Atari-2600-emulator
+gh:samplx/z80pack
+gh:LawrenceWoodman/xAce
+gh:ctm/syn68k
+gh:TomHarte/Clock-Signal
+gh:begoon/jasper
 
 # Games:
 
@@ -47,8 +75,14 @@ gh:mistydemeo/deathhack
 gh:Halfwake/Nork
 gh:wrog/lambdamoo
 
+# Websites:
+
+gh:cwcon/push
+gh:sudara/alonetone
+
 # Other:
 
+gh:joh/when-changed
 gh:kristi/pathify
 gh:kristi/spackle
 gh:trentm/sources

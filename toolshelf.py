@@ -68,6 +68,10 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Change the current working directory to the directory of the
         given docked source.
 
+    pwd <docked-source-spec>
+        Emit the name of the directory of the docked source (or exit with an
+        error if there is no such source docked.)
+
     consult <docked-source-spec>               (:not yet implemented:)
         Display a menu containing all files in the given docked source
         which are likely to be documentation; when one is selected,
@@ -766,10 +770,21 @@ def cd_cmd(result, args):
     result.write('cd %s\n' % sources[0].dir)
 
 
+def pwd_cmd(result, args):
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs)
+    if len(sources) != 1:
+        raise CommandLineSyntaxError(
+            "'pwd' subcommand requires exactly one source\n"
+        )
+    print sources[0].dir
+
+
 SUBCOMMANDS = {
     'dock': dock_cmd,
     'path': path_cmd,
     'cd': cd_cmd,
+    'pwd': pwd_cmd,
     'build': build_cmd,
     'update': update_cmd,
 }
