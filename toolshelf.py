@@ -179,34 +179,40 @@ def expand_docked_specs(specs, default_all=False):
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
                 for user in os.listdir(host_dirname):
-                    sub_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(sub_dirname):
-                        project_dirname = os.path.join(sub_dirname, project)
+                    user_dirname = os.path.join(host_dirname, user)
+                    for project in os.listdir(user_dirname):
+                        project_dirname = os.path.join(user_dirname, project)
                         if not os.path.isdir(project_dirname):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))
-        elif '/' not in name:
-            found = False
+        match = re.match(r'^([^/]*)/([^/]*)$', name)
+        if match:
+            user = match.group(1)
+            project = match.group(2)
             for host in os.listdir(TOOLSHELF):
-                if found:
-                    break
+                if host.startswith('.'):
+                    # skip hidden dirs
+                    continue
+                project_dirname = os.path.join(TOOLSHELF, host, user, project)
+                if not os.path.isdir(project_dirname):
+                    continue
+                new_specs.append('%s/%s/%s' % (host, user, project))            
+        elif '/' not in name:
+            for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
                     # skip hidden dirs
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
                 for user in os.listdir(host_dirname):
-                    if found:
-                        break
-                    sub_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(sub_dirname):
+                    user_dirname = os.path.join(host_dirname, user)
+                    for project in os.listdir(user_dirname):
                         if project == name:
                             new_specs.append('%s/%s/%s' %
                                              (host, user, project))
-                            found = True
-                            break
         else:
             new_specs.append(name)
 
+    note('Resolved source specs to %r' % new_specs)
     return new_specs
 
 

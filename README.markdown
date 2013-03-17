@@ -209,7 +209,7 @@ specifications you can use.  For example,
 will read a list of source specifications, one per line, from the given text
 file (called a _catalog file_.)
 
-♦ Several catalog files are supplied with `toolshelf` itself; you can use
+Several catalog files are supplied with `toolshelf` itself; you can use
 the following specification as a shortcut for
 `@$TOOLSHELF/.toolshelf/catalog/collection.catalog`:
 
@@ -222,6 +222,10 @@ to pass the `@` or `@@` as a seperate argument on the command line, like:
 
 #### When referring to an already-docked source ####
 
+When referring to a source which is already docked, a single source
+specification may resolve to multiple sources.  Notably, the source
+specification `all` refers to all sources which are currently dockes.
+
 When referring to a source which is already docked, `toolshelf` allows
 you to give just the source's base name, omitting the site name and the
 user name.  For example, to build the first source we docked above, you
@@ -229,12 +233,14 @@ can say
 
     toolshelf build Gettysburg-Address
 
-If there is an ambiguity, ♦ an error will occur.  ♦ You may supply the
+If more than one source has the same base name, the source specification
+will resolve to all sources that have that base name.  You may supply the
 username as well to resolve the ambiguity:
 
     toolshelf build alincoln/Gettysburg-Address
 
-but an ambiguity may still occur.  In this case, you must add both the
+but an ambiguity may still occur, and the specification may refer to
+multiple sources from multiple hosts.  In this case, you must add both the
 host name and the username to resolve the ambiguity:
 
     toolshelf build github.com/alincoln/Gettysburg-Address
