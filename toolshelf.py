@@ -645,12 +645,29 @@ class Source(object):
         traverse(self.dir)
 
 
+### Helper
+
+
+def foreach_source(specs, fun):
+    sources = Source.from_specs(specs)
+    exceptions = []
+    for source in sources:
+        try:
+            fun(source)
+        except Exception as e:
+            if OPTIONS.keep_going:
+                exceptions.append((source.name, str(e)))
+            else:
+                raise
+    if exceptions:
+        raise ValueError(str(exceptions))
+
+
 ### Subcommands
 
 
 def dock_cmd(result, args):
-    sources = Source.from_specs(args)
-    for source in sources:
+    def dock(source):
         if source.docked:
             print "%s already docked." % source.name
         else:
@@ -667,30 +684,22 @@ def dock_cmd(result, args):
                         )
             source.checkout()
             source.build()
+    foreach_source(args, dock)
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def build_cmd(result, args):
     specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    exceptions = []
-    for source in sources:
-        try:
-            source.build()
-        except Exception as e:
-            if OPTIONS.keep_going:
-                exceptions.append(e)
-            else:
-                raise
+    foreach_source(specs, lambda(source): source.build())
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 def update_cmd(result, args):
     specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    for source in sources:
+    def update(source):
         source.update()
         source.build()
+    foreach_source(specs, lambda(source): source.build())
     path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 

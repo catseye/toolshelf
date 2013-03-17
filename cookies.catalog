@@ -27,3 +27,6 @@ gh:munificent/magpie
 
 gh:digego/extempore
   build_command ./all.bash
+
+gh:paulhodge/circa
+  exclude_paths platform tests
