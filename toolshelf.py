@@ -45,6 +45,9 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     update {<docked-source-spec>}
         ...
 
+    status {<docked-source-spec>}
+        ...
+
     path rebuild {<docked-source-spec>}
         Update your $PATH to contain the executables for the given
         docked sources.  If none are given, all docked sources will apply.
@@ -260,13 +263,16 @@ def parse_source_spec(name):
     # TODO: make these configurable
     match = re.match(r'^gh:(.*?)\/(.*?)$', name)
     if match:
-        # TODO: allow different styles (https, git, ssh+git...)
         name = 'git://github.com/%s/%s.git' % (
+            match.group(1), match.group(2)
+        )
+    match = re.match(r'^ghh:(.*?)\/(.*?)$', name)
+    if match:
+        name = 'https://github.com/%s/%s.git' % (
             match.group(1), match.group(2)
         )
     match = re.match(r'^bb:(.*?)\/(.*?)$', name)
     if match:
-        # TODO: allow different styles (https, git, ssh+git...)
         name = 'https://bitbucket.org/%s/%s' % (
             match.group(1), match.group(2)
         )
@@ -599,6 +605,13 @@ class Source(object):
         else:
             raise NotImplementedError
 
+    def status(self):
+        chdir(self.dir)
+        if os.path.isdir('.git'):
+            run('git', 'status')
+        elif os.path.isdir('.hg'):
+            run('hg', 'status')
+
     def may_use_path(self, dirname):
         only_paths = self.hints.get('only_paths', None)
         if only_paths:
@@ -712,6 +725,12 @@ def update_cmd(result, args):
     foreach_source(result, expand_docked_specs(args), update)
 
 
+def status_cmd(result, args):
+    foreach_source(
+        result, expand_docked_specs(args), lambda(source): source.status()
+    )
+
+
 def path_cmd(result, args):
     def clean_path(path, sources, all=False):
         # special case to handle total rebuilds/disables:
@@ -787,6 +806,7 @@ SUBCOMMANDS = {
     'pwd': pwd_cmd,
     'build': build_cmd,
     'update': update_cmd,
+    'status': status_cmd,
 }
 
 
