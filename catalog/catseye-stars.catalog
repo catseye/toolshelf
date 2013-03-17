@@ -38,10 +38,14 @@ gh:realityforge/jasm
 gh:maryrosecook/isla
 gh:kueblc/Koala
 gh:emoon/Score
+gh:wbhart/Cesium3
+gh:hcs64/explain
+gh:stanistan/tiddlylisp-js
+gh:ryanmcgrath/splash
 git://factorcode.org/git/factor.git
 https://code.google.com/p/chibi-scheme/
 
-# Esoteric programming languages:
+# Esoteric programming languages and things:
 
 gh:harpyon/fish.py
 gh:palfrey/Clostridium
@@ -55,6 +59,11 @@ gh:ehird/funge-archive
 gh:b441berith/MalbolgeInterpreter
 gh:kallisti-dev/dogless
 gh:qpliu/esolang
+gh:pikhq/clambda-demo
+
+# Mathematics:
+
+http://hg.andrej.com/alg/
 
 # Emulators:
 
@@ -68,12 +77,15 @@ gh:LawrenceWoodman/xAce
 gh:ctm/syn68k
 gh:TomHarte/Clock-Signal
 gh:begoon/jasper
+gh:XelaRellum/ZPlet
+gh:Two9A/jsGB
 
 # Games:
 
 gh:mistydemeo/deathhack
 gh:Halfwake/Nork
 gh:wrog/lambdamoo
+gh:nathanj/adventure-quest
 
 # Websites:
 
@@ -86,3 +98,5 @@ gh:joh/when-changed
 gh:kristi/pathify
 gh:kristi/spackle
 gh:trentm/sources
+bb:chrisatlee/poster
+gh:mono/winforms
