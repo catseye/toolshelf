@@ -2,18 +2,39 @@
 
 gh:darius/awklisp
 gh:darius/ichbins
+gh:darius/squerm
+gh:munificent/bulfinch
+gh:munificent/finch
 gh:munificent/magpie
 gh:Scriptor/pharen
 gh:fogus/potion
 gh:darius/wren
+gh:zephyrfalcon/nepenthe
+gh:petermichaux/bootstrap-scheme
+gh:kmcallister/qoppa
 
 # Esoteric programming languages:
 
 gh:harpyon/fish.py
 gh:palfrey/Clostridium
+gh:serprex/Befunge
+gh:programble/befungee
+gh:nejucomo/befungee
+gh:Deewiant/CCBI
+gh:Deewiant/Fungicide
+gh:Deewiant/fungify
+gh:ehird/funge-archive
+gh:b441berith/MalbolgeInterpreter
+gh:kallisti-dev/dogless
 
 # Emulators:
 
 gh:rascal999/chip8-emulator
 gh:pikhq/cmako
 gh:JohnEarnest/Mako
+
+# Other:
+
+gh:kristi/pathify
+gh:kristi/spackle
+gh:trentm/sources
