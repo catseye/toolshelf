@@ -39,6 +39,12 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         them as needed, and place those executables on your $PATH.
         Triggers a `path rebuild`.
 
+    build {<docked-source-spec>}
+        ...
+
+    update {<docked-source-spec>}
+        ...
+
     path rebuild {<docked-source-spec>}
         Update your $PATH to contain the executables for the given
         docked sources.  If none are given, all docked sources will apply.
@@ -584,7 +590,7 @@ class Source(object):
         chdir(self.dir)
         if os.path.isdir('.git'):
             run('git', 'pull')
-        if os.path.isdir('.hg'):
+        elif os.path.isdir('.hg'):
             run('hg', 'pull', '-u')
         else:
             raise NotImplementedError
@@ -648,7 +654,7 @@ class Source(object):
 ### Helper
 
 
-def foreach_source(specs, fun):
+def foreach_source(result, specs, fun, rebuild_paths=True):
     sources = Source.from_specs(specs)
     exceptions = []
     for source in sources:
@@ -661,6 +667,8 @@ def foreach_source(specs, fun):
                 raise
     if exceptions:
         raise ValueError(str(exceptions))
+    if rebuild_paths:
+        path_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 ### Subcommands
@@ -684,23 +692,20 @@ def dock_cmd(result, args):
                         )
             source.checkout()
             source.build()
-    foreach_source(args, dock)
-    path_cmd(result, ['rebuild'] + [s.name for s in sources])
+    foreach_source(result, args, dock)
 
 
 def build_cmd(result, args):
-    specs = expand_docked_specs(args)
-    foreach_source(specs, lambda(source): source.build())
-    path_cmd(result, ['rebuild'] + [s.name for s in sources])
+    foreach_source(
+        result, expand_docked_specs(args), lambda(source): source.build()
+    )
 
 
 def update_cmd(result, args):
-    specs = expand_docked_specs(args)
     def update(source):
         source.update()
         source.build()
-    foreach_source(specs, lambda(source): source.build())
-    path_cmd(result, ['rebuild'] + [s.name for s in sources])
+    foreach_source(result, expand_docked_specs(args), update)
 
 
 def path_cmd(result, args):
