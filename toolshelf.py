@@ -553,19 +553,6 @@ class Source(object):
             run('rm', '-rf', extract_dir)
         else:
             raise NotImplementedError(self.type)
-        
-        rectify_permissions = 'no'
-        if self.type == 'zip':
-            rectify_permissions = 'yes'
-        rectify_permissions = self.hints.get(
-            'rectify_permissions', rectify_permissions
-        )
-        if rectify_permissions not in ('yes', 'no'):
-            raise ValueError(
-                "rectify_permissions should be 'yes' or 'no'"
-            )
-        if rectify_permissions == 'yes':
-            self.rectify_executable_permissions()
 
     def build(self):
         if not OPTIONS.build:
@@ -659,13 +646,27 @@ class Source(object):
                     if 'executable' in output:
                         make_it_executable = True
                     if make_it_executable:
-                        note("Making %s executable" % name)
+                        note("Making %s executable" % os.path.join(dirname, name))
                         subprocess.check_call(["chmod", "u+x", filename])
                     else:
-                        note("Making %s NON-executable" % name)
+                        note("Making %s NON-executable" % os.path.join(dirname, name))
                         subprocess.check_call(["chmod", "u-x", filename])
 
         traverse(self.dir)
+
+    def rectify_permissions_if_needed(self):
+        rectify_permissions = 'no'
+        if self.type == 'zip':
+            rectify_permissions = 'yes'
+        rectify_permissions = self.hints.get(
+            'rectify_permissions', rectify_permissions
+        )
+        if rectify_permissions not in ('yes', 'no'):
+            raise ValueError(
+                "rectify_permissions should be 'yes' or 'no'"
+            )
+        if rectify_permissions == 'yes':
+            self.rectify_executable_permissions()
 
 
 ### Helper
@@ -708,6 +709,7 @@ def dock_cmd(result, args):
                             (source.name, executable)
                         )
             source.checkout()
+            source.rectify_permissions_if_needed()
             source.build()
     foreach_source(result, args, dock)
 
@@ -773,6 +775,14 @@ def path_cmd(result, args):
                     for filename in sorted(os.listdir(component)):
                         if is_executable(os.path.join(component, filename)):
                             print "  %s" % filename
+    elif args[0] == 'rectify':
+        specs = expand_docked_specs(args[1:], default_all=True)
+        sources = Source.from_specs(specs)
+        p = Path()
+        for component in p.components:
+            for source in sources:
+                  source.rectify_permissions_if_needed()
+                  path_cmd(result, ['rebuild', source.name])
     else:
         raise CommandLineSyntaxError(
             "Unrecognized 'path' subcommand '%s'\n" % args[0]
