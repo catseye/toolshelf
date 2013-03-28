@@ -1,35 +1,24 @@
 # Experimental programming languages:
 
 gh:crcx/retro-language
-gh:darius/awklisp
-gh:darius/ichbins
 gh:darius/squerm
 gh:darius/wren
 gh:fogus/potion
 gh:hiredman/Arkham
-gh:jlongster/outlet
 gh:kmcallister/qoppa
 gh:munificent/bulfinch
 gh:munificent/finch
 gh:munificent/jasic
 gh:munificent/lark
 gh:munificent/magpie
-gh:petermichaux/bootstrap-scheme
-gh:paulhodge/circa
 gh:Scriptor/hub
-gh:Scriptor/pharen
 gh:zephyrfalcon/nepenthe
-gh:digego/extempore
 gh:GeekHorse/Trot
 gh:mozilla/rust
 gh:RobinMorisset/Tryskell
 gh:kwantam/lviv
-gh:automata/vivace
 gh:aliclark/hasp
-gh:JeffBezanson/femtolisp
-gh:santoshrajan/lispyscript
 gh:presidentbeef/brat
-gh:faylang/fay
 gh:clever-lang/clever
 gh:zephyrfalcon/xera
 gh:pikatchu/LinearML
@@ -40,10 +29,39 @@ gh:kueblc/Koala
 gh:emoon/Score
 gh:wbhart/Cesium3
 gh:hcs64/explain
-gh:stanistan/tiddlylisp-js
 gh:ryanmcgrath/splash
+gh:viznut/IBNIZ
+gh:listofoptions/midori
+gh:antirez/load81
+gh:FMNSSun/mopl
+gh:lvzixun/A2
 git://factorcode.org/git/factor.git
 https://code.google.com/p/chibi-scheme/
+
+# Lisps and Schemes:
+
+gh:jlongster/outlet
+gh:darius/awklisp
+gh:darius/ichbins
+gh:petermichaux/bootstrap-scheme
+gh:Scriptor/pharen
+gh:stamourv/picobit
+gh:stanistan/tiddlylisp-js
+gh:JeffBezanson/femtolisp
+gh:santoshrajan/lispyscript
+gh:benekastah/oppo
+
+# Other implementations of existing languages:
+
+gh:mherkender/lua.js
+gh:faylang/fay
+
+# Livecoding
+
+gh:paulhodge/circa
+gh:maximecb/CodeBeats
+gh:automata/vivace
+gh:digego/extempore
 
 # Esoteric programming languages and things:
 
@@ -59,11 +77,16 @@ gh:ehird/funge-archive
 gh:b441berith/MalbolgeInterpreter
 gh:kallisti-dev/dogless
 gh:qpliu/esolang
-gh:pikhq/clambda-demo
+gh:workmajj/boogiewoogie
 
-# Mathematics:
+# Mathematics and logic and whatnot:
 
 http://hg.andrej.com/alg/
+gh:poeschko/Mathics
+gh:silentmatt/javascript-biginteger
+gh:jtobey/javascript-bignum
+gh:CurryBoy/Peirce-Logic
+gh:pikhq/clambda-demo
 
 # Emulators:
 
@@ -79,6 +102,8 @@ gh:TomHarte/Clock-Signal
 gh:begoon/jasper
 gh:XelaRellum/ZPlet
 gh:Two9A/jsGB
+gh:enukane/z80-js
+gh:maximecb/toyCPU
 
 # Games:
 
@@ -86,6 +111,8 @@ gh:mistydemeo/deathhack
 gh:Halfwake/Nork
 gh:wrog/lambdamoo
 gh:nathanj/adventure-quest
+gh:Fiona/AreWeAlone
+gh:lizadaly/first-draft-of-the-revolution
 
 # Websites:
 
