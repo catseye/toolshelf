@@ -33,3 +33,6 @@ gh:paulhodge/circa
 
 git://factorcode.org/git/factor.git
   exclude_paths basis extra unmaintained
+
+gh:joyent/node
+  exclude_paths deps
