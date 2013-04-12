@@ -22,22 +22,21 @@
 
 # toolshelf.py:
 
-# Invoked by the bash function `toolshelf()` to do the heavy lifting involved
-# in docking packages and placing their relevant directories on the search
-# path.
+# Does the heavy lifting involved in docking sources and creating links to
+# the relevant executables in a link farm.
 
 # Still largely under construction.
 
 """\
 toolshelf {options} <subcommand>
 
-Manage sources and paths maintained by the toolshelf environment.
+Manage sources and links maintained by the toolshelf environment.
 Each <subcommand> has its own syntax.  <subcommand> is one of:
 
     dock {<external-source-spec>}
         Obtain source trees from a remote source, build executables for
-        them as needed, and place those executables on your $PATH.
-        Triggers a `path rebuild`.
+        them as needed, and make links to those executables in a link
+        farm which is on your executable search path.
 
     build {<docked-source-spec>}
         ...
@@ -48,22 +47,21 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     status {<docked-source-spec>}
         ...
 
-    path rebuild {<docked-source-spec>}
-        Update your $PATH to contain the executables for the given
+    relink {<docked-source-spec>}
+        Update your link farm to contain links to the executables for the given
         docked sources.  If none are given, all docked sources will apply.
 
-    path disable {<docked-source-spec>}
-        Temporarily remove the executables in the given docked projects
-        from your $PATH.  A subsequent `path rebuild` will restore them.
+    disable {<docked-source-spec>}
+        Temporarily remove the links to executables in the given docked projects
+        from your link farm.  A subsequent `relink` will restore them.
         If no source specs are given, all docked sources will apply.
 
-    path show {<docked-source-spec>}
-        Display the directories that have been put on your $PATH by the
-        given docked sources.  Also show the executables in those
-        directories.
+    show {<docked-source-spec>}
+        Display the links that have been put on your linked farm for the
+        given docked sources.  Also show the executables those links point to.
 
-    path check                                 (:not yet implemented:)
-        Analyze the current $PATH and report any directories in it which are
+    check                                      (:not yet implemented:)
+        Analyze the link farm and report any directories in it which are
         missing from the filesystem, and any executables on it which are
         shadowed by prior entries with the same name.
 
@@ -444,9 +442,6 @@ class LinkFarm(object):
     to files (typically executables) in various other parts of
     the filesystem.
 
-    Not used in toolshelf yet.  Will be, because the search path
-    approach doesn't scale well.
-
     """
     def __init__(self, dirname):
         self.dirname = dirname
@@ -465,7 +460,7 @@ class LinkFarm(object):
         filename = os.path.realpath(filename)
         linkname = os.path.basename(filename)
         linkname = os.path.join(self.dirname, linkname)
-        if not os.path.islink(fullfilename):
+        if not os.path.islink(linkname):
             return None
         source = os.readlink(linkname)
         return (linkname, source)
@@ -673,20 +668,6 @@ class Source(object):
                     return False
         return True
 
-    def find_path_components(self):
-        index = {}
-        find_executables(self.dir, index)
-        components = []
-        for dirname in sorted(index):
-            if not self.may_use_path(dirname):
-                note("%s excluded from search path" % dirname)
-                continue
-            note("  %s:" % dirname)
-            for filename in index[dirname]:
-                note("    %s" % filename)
-            components.append(dirname)
-        return components
-
     def linkable_executables(self):
         index = {}
         find_executables(self.dir, index)  # dirname => [filenames]
@@ -755,7 +736,7 @@ def foreach_source(result, specs, fun, rebuild_paths=True):
     if exceptions:
         raise ValueError(str(exceptions))
     if rebuild_paths:
-        links_cmd(result, ['rebuild'] + [s.name for s in sources])
+        relink_cmd(result, [s.name for s in sources])
 
 
 ### Subcommands
@@ -802,54 +783,6 @@ def status_cmd(result, args):
     )
 
 
-def path_cmd(result, args):
-    def clean_path(path, sources, all=False):
-        # special case to handle total rebuilds/disables:
-        # XXX all= no longer works, fix this somehow
-        if all:
-            note("Removing from your PATH all toolshelf directories")
-            path.remove_components_by_prefix(TOOLSHELF)
-        else:
-            note("Removing from your PATH all directories that "
-                 "start with one of the following...")
-            for source in sources:
-                note("  " + source.dir)
-                path.remove_components_by_prefix(source.dir)
-
-    if args[0] == 'rebuild':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        p = Path()
-        clean_path(p, sources, all=(specs == ['all']))
-        note("Adding the following executables to your PATH...")
-        for source in sources:
-            for component in source.find_path_components():
-                p.add_component(component)
-        p.write(result)
-    elif args[0] == 'disable':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        p = Path()
-        clean_path(p, sources, all=(specs == ['all']))
-        p.write(result)
-    elif args[0] == 'show':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        p = Path()
-        for component in p.components:
-            for source in sources:
-                if component == source.dir or \
-                   component.startswith(source.dir + '/'):
-                    print component
-                    for filename in sorted(os.listdir(component)):
-                        if is_executable(os.path.join(component, filename)):
-                            print "  %s" % filename
-    else:
-        raise CommandLineSyntaxError(
-            "Unrecognized 'path' subcommand '%s'\n" % args[0]
-        )
-
-
 def cd_cmd(result, args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
@@ -877,43 +810,43 @@ def rectify_cmd(result, args):
           source.rectify_permissions_if_needed()
 
 
-def links_cmd(result, args):
-    if args[0] == 'rebuild':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        note("Adding the following executables to your link farm...")
-        for source in sources:
-            LINK_FARM.clean(prefix=source.dir)
-            for filename in source.linkable_executables():
-                LINK_FARM.create_link(filename)
-    elif args[0] == 'disable':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        for source in sources:
-            LINK_FARM.clean(prefix=source.dir)
-    elif args[0] == 'show':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        for source in sources:
-            for (linkname, filename) in LINK_FARM.links():
-                if filename.startswith(source.dir):
-                    print "%s -> %s" % (os.path.basename(linkname), filename)
-    else:
-        raise CommandLineSyntaxError(
-            "Unrecognized 'links' subcommand '%s'\n" % args[0]
-        )
+def relink_cmd(result, args):
+    specs = expand_docked_specs(args, default_all=True)
+    sources = Source.from_specs(specs)
+    note("Adding the following executables to your link farm...")
+    for source in sources:
+        LINK_FARM.clean(prefix=source.dir)
+        for filename in source.linkable_executables():
+            LINK_FARM.create_link(filename)
+
+
+def disable_cmd(result, args):
+    specs = expand_docked_specs(args, default_all=True)
+    sources = Source.from_specs(specs)
+    for source in sources:
+        LINK_FARM.clean(prefix=source.dir)
+
+
+def show_cmd(result, args):
+    specs = expand_docked_specs(args, default_all=True)
+    sources = Source.from_specs(specs)
+    for source in sources:
+        for (linkname, filename) in LINK_FARM.links():
+            if filename.startswith(source.dir):
+                print "%s -> %s" % (os.path.basename(linkname), filename)
 
 
 SUBCOMMANDS = {
     'dock': dock_cmd,
-    'path': path_cmd,
     'cd': cd_cmd,
     'pwd': pwd_cmd,
     'build': build_cmd,
     'update': update_cmd,
     'status': status_cmd,
     'rectify': rectify_cmd,
-    '_links': links_cmd,  # unofficial! not yet supported!
+    'show': show_cmd,
+    'disable': disable_cmd,
+    'relink': relink_cmd,
 }
 
 
