@@ -755,7 +755,7 @@ def foreach_source(result, specs, fun, rebuild_paths=True):
     if exceptions:
         raise ValueError(str(exceptions))
     if rebuild_paths:
-        path_cmd(result, ['rebuild'] + [s.name for s in sources])
+        links_cmd(result, ['rebuild'] + [s.name for s in sources])
 
 
 ### Subcommands
@@ -844,14 +844,6 @@ def path_cmd(result, args):
                     for filename in sorted(os.listdir(component)):
                         if is_executable(os.path.join(component, filename)):
                             print "  %s" % filename
-    elif args[0] == 'rectify':
-        specs = expand_docked_specs(args[1:], default_all=True)
-        sources = Source.from_specs(specs)
-        p = Path()
-        for component in p.components:
-            for source in sources:
-                  source.rectify_permissions_if_needed()
-                  path_cmd(result, ['rebuild', source.name])
     else:
         raise CommandLineSyntaxError(
             "Unrecognized 'path' subcommand '%s'\n" % args[0]
@@ -876,6 +868,13 @@ def pwd_cmd(result, args):
             "'pwd' subcommand requires exactly one source\n"
         )
     print sources[0].dir
+
+
+def rectify_cmd(result, args):
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs)
+    for source in sources:
+          source.rectify_permissions_if_needed()
 
 
 def links_cmd(result, args):
@@ -913,6 +912,7 @@ SUBCOMMANDS = {
     'build': build_cmd,
     'update': update_cmd,
     'status': status_cmd,
+    'rectify': rectify_cmd,
     '_links': links_cmd,  # unofficial! not yet supported!
 }
 

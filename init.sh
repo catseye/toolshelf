@@ -13,4 +13,5 @@ function toolshelf {
     fi
 }
 
-toolshelf path rebuild
+#toolshelf path rebuild
+export PATH="$TOOLSHELF/.bin:$PATH"

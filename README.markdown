@@ -3,6 +3,8 @@ toolshelf
 
 **Version 0.0 -- subject to change radically**
 
+**in fact, it's probably broken at the moment**
+
 `toolshelf` is a "package manager" which doesn't actually install any files.
 Instead, it stores the source trees of sundry packages in a single directory,
 and manages your search paths to include the relevant subdirectories of those
