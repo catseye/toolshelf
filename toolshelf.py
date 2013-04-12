@@ -91,10 +91,10 @@ import sys
 
 ### Constants (per each run)
 
-SCRIPT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 TOOLSHELF = os.environ.get('TOOLSHELF')
 
 RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
+LINK_FARM_DIR = os.path.join(TOOLSHELF, '.links')
 
 # TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
@@ -126,6 +126,7 @@ CWD = os.getcwd()
 
 OPTIONS = None
 COOKIES = None
+LINK_FARM = None
 
 
 ### Exceptions
@@ -167,9 +168,24 @@ def run(*args, **kwargs):
     subprocess.check_call(args, **kwargs)
 
 
-def chdir(path):
-    note("Changing dir to `%s`..." % path)
-    os.chdir(path)
+def chdir(dirname):
+    note("Changing dir to `%s`..." % dirname)
+    os.chdir(dirname)
+
+
+def makedirs(dirname):
+    try:
+        os.makedirs(dirname)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(dirname):
+            pass
+        else:
+            raise
+
+
+def symlink(sourcename, linkname):
+    note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
+    os.symlink(sourcename, linkname)
 
 
 def note(msg):
@@ -422,6 +438,48 @@ class Path(object):
         return found
 
 
+class LinkFarm(object):
+    """A link farm is a directory which contains symbolic links
+    to files (typically executables) in various other parts of
+    the filesystem.
+
+    Not used in toolshelf yet.  Will be, because the search path
+    approach doesn't scale well.
+
+    """
+    def __init__(self, dirname):
+        self.dirname = dirname
+        makedirs(dirname)
+
+    def links(self):
+        for name in os.listdir(self.dirname):
+            fullfilename = os.path.join(self.dirname, name)
+            if not os.path.islink(fullfilename):
+                continue
+            source = os.readlink(fullfilename)
+            yield (fullfilename, source)
+
+    def get_link(self, filename):
+        filename = os.path.abspath(filename)
+        filename = os.path.realpath(filename)
+        linkname = os.path.basename(filename)
+        linkname = os.path.join(self.dirname, linkname)
+        if not os.path.islink(fullfilename):
+            return None
+        source = os.readlink(linkname)
+        return (linkname, source)
+
+    def create_link(self, filename):
+        filename = os.path.abspath(filename)
+        linkname = os.path.basename(filename)
+        linkname = os.path.join(self.dirname, linkname)
+        # XXX FOR NOW ONLY, trample existing links
+        if os.path.islink(linkname):
+            os.unlink(linkname)
+        symlink(filename, linkname)
+
+
+
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
                  type=None):
@@ -510,13 +568,7 @@ class Source(object):
     def checkout(self):
         note("Checking out %s..." % self.name)
 
-        try:
-            os.makedirs(self.user_dir)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(self.user_dir):
-                pass
-            else:
-                raise
+        makedirs(self.user_dir)
         chdir(self.user_dir)
 
         if self.type == 'git':
@@ -629,6 +681,18 @@ class Source(object):
                 note("    %s" % filename)
             components.append(dirname)
         return components
+
+    def linkable_executables(self):
+        index = {}
+        find_executables(self.dir, index)  # dirname => [filenames]
+        for dirname in index:
+            if not self.may_use_path(dirname):
+                note("%s excluded from search path" % dirname)
+                continue
+            note("  %s:" % dirname)
+            for filename in index[dirname]:
+                note("    %s" % filename)
+                yield os.path.join(dirname, filename)
 
     def rectify_executable_permissions(self):
         def traverse(dirname):
@@ -809,6 +873,14 @@ def pwd_cmd(result, args):
     print sources[0].dir
 
 
+def linkfarm_cmd(result, args):
+    specs = expand_docked_specs(args)
+    sources = Source.from_specs(specs)
+    for source in sources:
+        for filename in source.linkable_executables():
+            LINK_FARM.create_link(filename)
+
+
 SUBCOMMANDS = {
     'dock': dock_cmd,
     'path': path_cmd,
@@ -817,11 +889,12 @@ SUBCOMMANDS = {
     'build': build_cmd,
     'update': update_cmd,
     'status': status_cmd,
+    '_linkfarm': linkfarm_cmd,  # unofficial! unsupported!
 }
 
 
 def main():
-    global OPTIONS, COOKIES
+    global OPTIONS, COOKIES, LINK_FARM
 
     parser = optparse.OptionParser(__doc__)
 
@@ -844,6 +917,7 @@ def main():
     chdir(TOOLSHELF)
     result = LazyFile(RESULT_SH_FILENAME)
     COOKIES = Cookies()
+    LINK_FARM = LinkFarm(LINK_FARM_DIR)
 
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
