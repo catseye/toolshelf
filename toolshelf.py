@@ -94,7 +94,8 @@ import sys
 TOOLSHELF = os.environ.get('TOOLSHELF')
 
 RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
-LINK_FARM_DIR = os.path.join(TOOLSHELF, '.links')
+# TODO: there will eventually be multiple link farms (.lib, etc)
+LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
 
 # TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
@@ -478,6 +479,10 @@ class LinkFarm(object):
             os.unlink(linkname)
         symlink(filename, linkname)
 
+    def clean(self, prefix=''):
+        for (linkname, sourcename) in self.links():
+            if sourcename.startswith(prefix):
+                os.unlink(linkname)
 
 
 class Source(object):
@@ -873,12 +878,31 @@ def pwd_cmd(result, args):
     print sources[0].dir
 
 
-def linkfarm_cmd(result, args):
-    specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    for source in sources:
-        for filename in source.linkable_executables():
-            LINK_FARM.create_link(filename)
+def links_cmd(result, args):
+    if args[0] == 'rebuild':
+        specs = expand_docked_specs(args[1:], default_all=True)
+        sources = Source.from_specs(specs)
+        note("Adding the following executables to your link farm...")
+        for source in sources:
+            LINK_FARM.clean(prefix=source.dir)
+            for filename in source.linkable_executables():
+                LINK_FARM.create_link(filename)
+    elif args[0] == 'disable':
+        specs = expand_docked_specs(args[1:], default_all=True)
+        sources = Source.from_specs(specs)
+        for source in sources:
+            LINK_FARM.clean(prefix=source.dir)
+    elif args[0] == 'show':
+        specs = expand_docked_specs(args[1:], default_all=True)
+        sources = Source.from_specs(specs)
+        for source in sources:
+            for (linkname, filename) in LINK_FARM.links():
+                if filename.startswith(source.dir):
+                    print "%s -> %s" % (os.path.basename(linkname), filename)
+    else:
+        raise CommandLineSyntaxError(
+            "Unrecognized 'links' subcommand '%s'\n" % args[0]
+        )
 
 
 SUBCOMMANDS = {
@@ -889,7 +913,7 @@ SUBCOMMANDS = {
     'build': build_cmd,
     'update': update_cmd,
     'status': status_cmd,
-    '_linkfarm': linkfarm_cmd,  # unofficial! unsupported!
+    '_links': links_cmd,  # unofficial! not yet supported!
 }
 
 
