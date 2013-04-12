@@ -3,14 +3,8 @@
 # the `toolshelf` directory is expected to be passed as the first argument.
 
 export TOOLSHELF=$1
+export PATH="$TOOLSHELF/.toolshelf:$TOOLSHELF/.bin:$PATH"
 
-function toolshelf {
-    F=$TOOLSHELF/.tmp-toolshelf-result.sh
-    python $TOOLSHELF/.toolshelf/toolshelf.py $*
-    if [ -e $F ]; then
-        source $F
-        rm -f $F
-    fi
+function toolshelf_cd {
+    cd `$TOOLSHELF/.toolshelf/toolshelf.py pwd $*`
 }
-
-export PATH="$TOOLSHELF/.bin:$PATH"

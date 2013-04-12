@@ -91,7 +91,6 @@ import sys
 
 TOOLSHELF = os.environ.get('TOOLSHELF')
 
-RESULT_SH_FILENAME = os.path.join(TOOLSHELF, '.tmp-toolshelf-result.sh')
 # TODO: there will eventually be multiple link farms (.lib, etc)
 LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
 
@@ -342,21 +341,6 @@ def parse_source_spec(name):
 
 ### Classes
 
-class LazyFile(object):
-    def __init__(self, filename):
-        self.filename = filename
-        self.file = None
-
-    def write(self, data):
-        if self.file is None:
-            self.file = open(self.filename, 'w')
-        self.file.write(data)
-
-    def close(self):
-        if self.file is not None:
-            self.file.close()
-
-
 class Cookies(object):
     def __init__(self):
         self.filename = os.path.join(
@@ -410,6 +394,10 @@ class Cookies(object):
 
 
 class Path(object):
+    """For historical purposes only, although may still be used to
+    see if executables shadow other executables in the search path.
+
+    """
     def __init__(self, value=None):
         if value is None:
             value = os.environ['PATH']
@@ -722,7 +710,7 @@ class Source(object):
 ### Helper
 
 
-def foreach_source(result, specs, fun, rebuild_paths=True):
+def foreach_source(specs, fun, rebuild_paths=True):
     sources = Source.from_specs(specs)
     exceptions = []
     for source in sources:
@@ -736,13 +724,13 @@ def foreach_source(result, specs, fun, rebuild_paths=True):
     if exceptions:
         raise ValueError(str(exceptions))
     if rebuild_paths:
-        relink_cmd(result, [s.name for s in sources])
+        relink_cmd([s.name for s in sources])
 
 
 ### Subcommands
 
 
-def dock_cmd(result, args):
+def dock_cmd(args):
     def dock(source):
         if source.docked:
             print "%s already docked." % source.name
@@ -761,39 +749,29 @@ def dock_cmd(result, args):
             source.checkout()
             source.rectify_permissions_if_needed()
             source.build()
-    foreach_source(result, args, dock)
+    foreach_source(args, dock)
 
 
-def build_cmd(result, args):
+def build_cmd(args):
     foreach_source(
-        result, expand_docked_specs(args), lambda(source): source.build()
+        expand_docked_specs(args), lambda(source): source.build()
     )
 
 
-def update_cmd(result, args):
+def update_cmd(args):
     def update(source):
         source.update()
         source.build()
-    foreach_source(result, expand_docked_specs(args), update)
+    foreach_source(expand_docked_specs(args), update)
 
 
-def status_cmd(result, args):
+def status_cmd(args):
     foreach_source(
-        result, expand_docked_specs(args), lambda(source): source.status()
+        expand_docked_specs(args), lambda(source): source.status()
     )
 
 
-def cd_cmd(result, args):
-    specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    if len(sources) != 1:
-        raise CommandLineSyntaxError(
-            "'cd' subcommand requires exactly one source\n"
-        )
-    result.write('cd %s\n' % sources[0].dir)
-
-
-def pwd_cmd(result, args):
+def pwd_cmd(args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
     if len(sources) != 1:
@@ -803,14 +781,14 @@ def pwd_cmd(result, args):
     print sources[0].dir
 
 
-def rectify_cmd(result, args):
+def rectify_cmd(args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
     for source in sources:
-          source.rectify_permissions_if_needed()
+        source.rectify_permissions_if_needed()
 
 
-def relink_cmd(result, args):
+def relink_cmd(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     note("Adding the following executables to your link farm...")
@@ -820,14 +798,14 @@ def relink_cmd(result, args):
             LINK_FARM.create_link(filename)
 
 
-def disable_cmd(result, args):
+def disable_cmd(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     for source in sources:
         LINK_FARM.clean(prefix=source.dir)
 
 
-def show_cmd(result, args):
+def show_cmd(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     for source in sources:
@@ -838,7 +816,6 @@ def show_cmd(result, args):
 
 SUBCOMMANDS = {
     'dock': dock_cmd,
-    'cd': cd_cmd,
     'pwd': pwd_cmd,
     'build': build_cmd,
     'update': update_cmd,
@@ -872,14 +849,13 @@ def main():
         sys.exit(2)
 
     chdir(TOOLSHELF)
-    result = LazyFile(RESULT_SH_FILENAME)
     COOKIES = Cookies()
     LINK_FARM = LinkFarm(LINK_FARM_DIR)
 
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
         try:
-            SUBCOMMANDS[subcommand](result, args[1:])
+            SUBCOMMANDS[subcommand](args[1:])
         except CommandLineSyntaxError as e:
             sys.stderr.write(str(e) + '\n')
             print "Usage: " + __doc__
@@ -894,8 +870,6 @@ def main():
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
         sys.exit(2)
-
-    result.close()
 
 
 if __name__ == '__main__':
