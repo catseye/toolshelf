@@ -65,10 +65,6 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         missing from the filesystem, and any executables on it which are
         shadowed by prior entries with the same name.
 
-    cd <docked-source-spec>
-        Change the current working directory to the directory of the
-        given docked source.
-
     pwd <docked-source-spec>
         Emit the name of the directory of the docked source (or exit with an
         error if there is no such source docked.)
@@ -827,7 +823,7 @@ SUBCOMMANDS = {
 }
 
 
-def main():
+def main(args):
     global OPTIONS, COOKIES, LINK_FARM
 
     parser = optparse.OptionParser(__doc__)
@@ -843,7 +839,7 @@ def main():
                       default=False, action="store_true",
                       help="report steps taken to standard output")
 
-    (OPTIONS, args) = parser.parse_args()
+    (OPTIONS, args) = parser.parse_args(args)
     if len(args) == 0:
         print "Usage: " + __doc__
         sys.exit(2)
@@ -873,4 +869,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
