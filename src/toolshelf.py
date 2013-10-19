@@ -36,16 +36,19 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     dock {<external-source-spec>}
         Obtain source trees from a remote source, build executables for
         them as needed, and make links to those executables in a link
-        farm which is on your executable search path.
+        farm which is on your executable search path.  Implies `build`.
 
     build {<docked-source-spec>}
-        ...
+        Build (or re-build) the executables for the given docked sources.
 
     update {<docked-source-spec>}
-        ...
+        Pull the latest revision of the given docked sources from each's
+        upstream repository (which is always the external source from which
+        it was originally docked.)  Implies `build`.  (But shouldn't.)
 
     status {<docked-source-spec>}
-        ...
+        Show the `hg status` or `git status`, as appropriate, in their
+        naive format, for the given docked sources.
 
     relink {<docked-source-spec>}
         Update your link farm to contain links to the executables for the given
@@ -59,20 +62,15 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     show {<docked-source-spec>}
         Display the links that have been put on your linked farm for the
         given docked sources.  Also show the executables those links point to.
-
-    check                                      (:not yet implemented:)
-        Analyze the link farm and report any directories in it which are
-        missing from the filesystem, and any executables on it which are
-        shadowed by prior entries with the same name.
+        Will also report any broken links and may, in the future, list any
+        executables it shadows or is shadowed by.  (Pipe the output into grep
+        to narrow this report down.  In fact, `ls -l $TOOLSHELF/.bin` will
+        get you most of this information, when a colour listing is output,
+        so it's tempting to just replace it with that...)
 
     pwd <docked-source-spec>
         Emit the name of the directory of the docked source (or exit with an
         error if there is no such source docked.)
-
-    consult <docked-source-spec>               (:not yet implemented:)
-        Display a menu containing all files in the given docked source
-        which are likely to be documentation; when one is selected,
-        display its contents with $PAGER.
 """
 
 import errno
@@ -808,6 +806,9 @@ def show_cmd(args):
         for (linkname, filename) in LINK_FARM.links():
             if filename.startswith(source.dir):
                 print "%s -> %s" % (os.path.basename(linkname), filename)
+                if (not os.path.isfile(filename) or
+                    not os.access(filename, os.X_OK)):
+                    print "BROKEN: %s is not an executable file" % filename
 
 
 SUBCOMMANDS = {
