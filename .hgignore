@@ -1,3 +1,7 @@
+syntax: glob
+
+*.pyc
+
 syntax: regexp
 
 ^tmp-toolshelf-result.sh
