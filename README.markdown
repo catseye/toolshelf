@@ -19,15 +19,19 @@ Quick Start
 -----------
 
 * Start a `bash` shell.
-* Download `bootstrap-toolshelf.sh`, for example by running:
-
-    wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
-
+* Download [`bootstrap-toolshelf.sh`][], for example by running:
+  
+      wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
+  
+  (If you don't have `wget` installed, `curl` should also work.)
+  
 * Run:
 
-    source bootstrap-toolshelf.sh
+      source bootstrap-toolshelf.sh
 
 * Follow the instructions given to you by the script.
+
+[`bootstrap-toolshelf.sh`]: https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
 
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,

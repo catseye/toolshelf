@@ -1,4 +1,4 @@
-# Copyright (c)2012 Chris Pressey, Cat's Eye Technologies
+# Copyright (c)2012-2013 Chris Pressey, Cat's Eye Technologies
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -43,8 +43,17 @@ bootstrap_toolshelf() {
 
     OK=1
 
-    if [ ! -e $HOME/.bashrc ]; then
-        echo "***NOTE: You do not appear to have a ~/.bashrc file."
+    BASHRC=''
+    if [ -e $HOME/.bashrc ]; then
+        BASHRC="$HOME/.bashrc"
+    fi
+    if [ -e $HOME/.bash_profile ]; then
+        BASHRC="$HOME/.bash_profile"
+    fi
+
+    if [ -z $BASHRC ]; then
+        echo "***NOTE: You do not appear to have either a ~/.bashrc or"
+        echo "a ~/.bash_profile."
         echo "toolshelf assumes you are using bash as your shell."
         echo "Please rectify this situation if you wish to use"
         echo "toolshelf, then re-source this script."
@@ -118,28 +127,28 @@ bootstrap_toolshelf() {
 
     BASHRC1="source $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF >/dev/null 2>&1 # added-by-bootstrap-toolshelf"
 
-    echo "Now we'd like to add the following line to your .bashrc file:"
+    echo "Now we'd like to add the following line to your $BASHRC file:"
     echo
     echo "  $BASHRC1"
     echo
-    echo "Your current .bashrc will be backed up first (to .bashrc.orig),"
+    echo "Your current $BASHRC will be backed up first (to $BASHRC.orig),"
     echo "and any lines currently containing 'added-by-bootstrap-toolshelf'"
     echo "will be removed first."
     echo
-    echo "If you don't want this script to touch your .bashrc file, you"
+    echo "If you don't want this script to touch your $BASHRC file, you"
     echo "may decline (but you'll have to add this line yourself.)"
     echo
-    echo -n "Modify the file $HOME/.bashrc? [y/N] "
+    echo -n "Modify the file $BASHRC? [y/N] "
     read -e RESPONSE
     if [ -z $RESPONSE ]; then
         RESPONSE=N
     fi
     if [ $RESPONSE = 'y' -o $RESPONSE = 'Y' ]; then
-        echo "Backing up .bashrc and modifying it..."
-        cp -p $HOME/.bashrc $HOME/.bashrc.orig
-        grep -v 'added-by-bootstrap-toolshelf' <$HOME/.bashrc > $HOME/.new_bashrc
+        echo "Backing up $BASHRC and modifying it..."
+        cp -p $BASHRC $BASHRC.orig
+        grep -v 'added-by-bootstrap-toolshelf' <$BASHRC > $HOME/.new_bashrc
         echo >>$HOME/.new_bashrc "$BASHRC1"
-        mv $HOME/.new_bashrc $HOME/.bashrc
+        mv $HOME/.new_bashrc $BASHRC
         echo "Done."
         echo
         echo "For your convenience, we'll also apply these startup commands"
@@ -147,7 +156,6 @@ bootstrap_toolshelf() {
         echo "told you to, you'll be able to start using toolshelf right"
         echo "away.  If, instead, you started it using 'bash', you'll have"
         echo "to start a new bash shell to start using toolshelf."
-        echo
 
         source $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF
     else
