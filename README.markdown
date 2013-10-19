@@ -1,9 +1,7 @@
 toolshelf
 =========
 
-**Version 0.0 -- subject to change radically**
-
-**in fact, it's probably broken at the moment**
+**Version 0.0 -- subject to change**
 
 `toolshelf` is a "package manager" which doesn't actually install any files.
 Instead, it stores the source trees of sundry packages in a single directory,
@@ -13,20 +11,23 @@ or Mercurial clones, or they can be source distributions from downloaded
 tarballs (which includes `.zip` archives).
 
 `toolshelf` requires that you use `bash` as your shell.  It also requires
-Python 2.7 to run the workhorse script.
+Python 2.6 or 2.7 to run the workhorse script.
 
 `toolshelf` is placed under an MIT-style license.
 
 Quick Start
 -----------
 
-1. Download [`bootstrap-toolshelf.sh`][].
-2. Start a `bash` shell (if you haven't already) and change to the directory
-   where you downloaded `bootstrap-toolshelf.sh`.
-3. Run `source bootstrap-toolshelf.sh`.
-4. Follow the instructions given to you by the script.
+1. Start a `bash` shell.
+2. Download [`bootstrap-toolshelf.sh`][], for example by running:
 
-[`bootstrap-toolshelf.sh`]: https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
+    wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
+
+3. Run:
+
+    source bootstrap-toolshelf.sh
+
+4. Follow the instructions given to you by the script.
 
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,
