@@ -18,16 +18,16 @@ Python 2.6 or 2.7 to run the workhorse script.
 Quick Start
 -----------
 
-1. Start a `bash` shell.
-2. Download [`bootstrap-toolshelf.sh`][], for example by running:
+* Start a `bash` shell.
+* Download `bootstrap-toolshelf.sh`, for example by running:
 
     wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
 
-3. Run:
+* Run:
 
     source bootstrap-toolshelf.sh
 
-4. Follow the instructions given to you by the script.
+* Follow the instructions given to you by the script.
 
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,
