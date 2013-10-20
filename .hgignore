@@ -5,3 +5,4 @@ syntax: glob
 syntax: regexp
 
 ^tmp-toolshelf-result.sh
+^local-cookies.catalog

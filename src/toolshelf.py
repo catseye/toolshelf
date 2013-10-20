@@ -337,14 +337,22 @@ def parse_source_spec(name):
 
 class Cookies(object):
     def __init__(self):
-        self.filename = os.path.join(
-            TOOLSHELF, '.toolshelf', 'cookies.catalog'
-        )
         self._hint_map = None
+        self.filenames = []
+
+    def add_file(self, filename):
+        """Will not work after hints have been loaded.
+        """
+        if os.path.exists(filename):
+            self.filenames.append(filename)
 
     def _load_hints(self):
         self._hint_map = {}
-        with open(self.filename, 'r') as file:
+        for filename in self.filenames:
+            self._load_hints_from_file(filename)
+
+    def _load_hints_from_file(self, filename):
+        with open(filename, 'r') as file:
             spec_key = None
             for line in file:
                 line = line.strip()
@@ -847,6 +855,12 @@ def main(args):
 
     chdir(TOOLSHELF)
     COOKIES = Cookies()
+    COOKIES.add_file(os.path.join(
+        TOOLSHELF, '.toolshelf', 'cookies.catalog'
+    ))
+    COOKIES.add_file(os.path.join(
+        TOOLSHELF, '.toolshelf', 'local-cookies.catalog'
+    ))
     LINK_FARM = LinkFarm(LINK_FARM_DIR)
 
     subcommand = args[0]

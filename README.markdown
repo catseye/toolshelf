@@ -1,7 +1,7 @@
 toolshelf
 =========
 
-**Version 0.0 -- subject to change**
+**Version 0.0 — subject to change**
 
 `toolshelf` is a "package manager" which doesn't actually install any files.
 Instead, it stores the source trees of sundry packages in a single directory,
@@ -60,7 +60,7 @@ Status
 ------
 
 While `toolshelf` works (try it out!), it is still a work in progress, so its
-usage may be somewhat chaotic for now -- you may have to wipe out your
+usage may be somewhat chaotic for now — you may have to wipe out your
 `$TOOLSHELF` directory, if a disruptive change is made in how source trees and
 their metadata are organized.
 
@@ -76,7 +76,7 @@ at and not so good at.
 
 I've always been a little disturbed by the practice of running something like
 `sudo make install` and having it write files into a whole bunch of places
-in your filesystem -- `/usr/bin` (or `/usr/local/bin` or `/usr/pkg/` depending
+in your filesystem — `/usr/bin` (or `/usr/local/bin` or `/usr/pkg/` depending
 on your OS), `/usr/lib`, and so forth, without even recording what it
 installed where.  If you ever want to get rid of what you installed, you're
 relying on the distribution's uninstall procedure (if any) to be correct.  If
@@ -88,7 +88,7 @@ So, I got into the habit of installing everything in my home directory.  At
 least then, I could blow away my home directory if I wanted to clean
 everything up.  For distributions that include a `configure` script or
 similar, this is usually as easy as specifying `--prefix=$HOME` as an argument
-to it -- then making sure `$HOME/bin` is on your path, and perhaps `$HOME/lib`
+to it — then making sure `$HOME/bin` is on your path, and perhaps `$HOME/lib`
 is added to your `LD_LIBRARY_PATH`.
 
 But even then, things in `$HOME/bin` can conflict with my personal scripts,
@@ -107,7 +107,7 @@ So I decided I should write `toolshelf`.
   can remove a source tree (or the whole kit and kaboodle) with a single
   `rm -rf`, and you know you got everything.
 
-* It encourages hackability.  The sources are there -- if you have a problem,
+* It encourages hackability.  The sources are there — if you have a problem,
   go edit them.  If they're in a repo, you can commit and branch and restore
   a previous version and whatever.  If you have push privleges for an upstream
   repo, you can send your changes off there.
@@ -117,7 +117,7 @@ So I decided I should write `toolshelf`.
 * It doesn't always work, and can't always work for every piece of software
   out there.
 
-* It's at its best for small, experimental software distributions -- the
+* It's at its best for small, experimental software distributions — the
   kind you might want to play with, but maybe not keep around forever.
   It's not designed for real meat-and-potatoes system software.  So, for
   example, if a package is written in Ruby, docking that package is not
@@ -125,7 +125,7 @@ So I decided I should write `toolshelf`.
   you to install Ruby if the package needs it.
 
 * The array of possible build tools that are used by small, experimental
-  software distributions is huge -- too large for `toolshelf`'s heuristics
+  software distributions is huge — too large for `toolshelf`'s heuristics
   to ever realistically encompass.  It handles the most common ones
   (`autoconf`, `make`, and the like.)
 
@@ -144,7 +144,7 @@ So I decided I should write `toolshelf`.
   and the resources will both be in the docked source, and it should find
   them.  Or, if it looks for them on a search path, that's also not so bad.
   But sometimes they look for resources relative to the current working
-  directory -- in which case there's little point being able to invoke the
+  directory — in which case there's little point being able to invoke the
   executable, from the search path, while in another directory.  (`toolshelf`
   may one day grow a feature to handle this.)  And if they look for resources
   in fixed locations, well, that's not so good, and there's not a lot one can
@@ -191,8 +191,18 @@ will clone a `git` repo from github to use as the source.  Similarly,
 
     toolshelf dock https://bitbucket.org/plato/the-republic
 
-will clone a Mercurial repo from Bitbucket.  And you can dock a vanilla,
-non-version-controlled tarball by saying
+will clone a Mercurial repo from Bitbucket.  ♦ It ought to be able to
+know that
+
+    toolshelf dock https://github.com/alincoln/Gettysburg-Address
+
+is *not* a Mercurial repo, but in fact a git repo, but it doesn't yet.
+♦ You ought to also be able to force the repo kind, i.e.
+
+    toolshelf dock --git https://git.example.org/hhesse/Steppenwolf
+    toolshelf dock --hg https://hg.example.org/jswift/amodestproposal
+
+And you can dock a vanilla, non-version-controlled tarball by saying
 
     toolshelf dock http://example.com/distfiles/foo-1.0.tar.gz
 
@@ -312,11 +322,11 @@ The use of the term "cookie" here is not like "HTTP cookie" or "magic cookie",
 but more like how it was used in Windows 3.1 (and may, for all I know, still
 be used in modern Windows.)  Such cookies informed the OS about how to deal
 with particular hardware for which the generic handling was not sufficient.
-This usage of the word is apparently derived from the word "kooky" -- that is,
+This usage of the word is apparently derived from the word "kooky" — that is,
 idiosyncratic and non-standard.
 
 In some ways, `toolshelf`'s cookies file is like the `Makefile`s used in
-FreeBSD's package system -- the information contained in it is similar.
+FreeBSD's package system — the information contained in it is similar.
 However, it is just a single file, and is parsed directly instead of being a
 `Makefile`.
 
@@ -330,8 +340,11 @@ Example of an entry in the cookies file:
       exclude_paths tests
       build_command ./configure --with-lighter-fluid --no-barbecue && make
 
-It should be possible to have a local cookies files that supplements
-`toolshelf`'s supplied cookies file, at some point.
+The global shared cookies file which ships with `toolshelf` is located at
+`$TOOLSHELF/.toolshelf/cookies.catalog`.  The file 
+`$TOOLSHELF/.toolshelf/local-cookies.catalog` can be created and edited by
+the user to supply their own local cookies; this file will not (and should not)
+be checked in to the `toolshelf` repo (it's in `.gitignore` and `.hgignore`.)
 
 #### Hints ####
 
@@ -411,8 +424,10 @@ The names of hints are as follows.
 Theory of Operation
 -------------------
 
-This section describes how it all works -- specifically, how typing
+This section describes how it all works — specifically, how typing
 `toolshelf` can seemingly magically alter your search paths.
+
+**Oh, this is almost all out of date.  Fix!**
 
 ### `bootstrap-toolshelf.sh` ###
 
@@ -440,14 +455,14 @@ The script `init.sh` initializes `toolshelf` for use; it is typically
 -   Defines a `bash` function called `toolshelf`, which does the following:
     -   It runs `$TOOLSHELF/toolshelf/toolshelf.py`, with the arguments that
         were passed to the `toolshelf` function, expecting it to output a
-        temporary file -- then it `source`s that temporary file and deletes
+        temporary file — then it `source`s that temporary file and deletes
         it.
 -   runs `toolshelf path rebuild`
 
 The `toolshelf` function and the `toolshelf.py` script, taken together,
 perform something which we could call the "shell-then-source trick".  In
 effect, it makes it possible for a "command" (really a `bash` function) to
-affect the environment of the user's current interactive shell -- something
+affect the environment of the user's current interactive shell — something
 an ordinarily invoked command cannot do.  This is what lets `toolshelf`
 immediately alter your search paths.
 

@@ -19,6 +19,9 @@ gh:catseye/VICE
 bb:catseye/yucca
   require_executables python
 
+bb:catseye/deturgenchry
+  require_executables ghc
+
 http://catseye.tc/dieter-1.0-2011.1214.zip
   rectify_permissions no
 
