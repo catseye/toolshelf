@@ -568,6 +568,28 @@ description of how well they work with the `toolshelf` model, and why.
 [`gh:kulp/tenyr`]: https://github.com/kulp/tenyr
 [`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`]: http://www.gnu.org/software/bison/bison.html
 
+Loose `toolshelf` Integration
+-----------------------------
+
+If you want to write a "toolshelf plugin", or more literally, any Python program
+that can optionally use functions from `toolshelf.py` when a toolshelf is in use,
+you can use the following code:
+
+    if 'TOOLSHELF' in os.environ and os.environ['TOOLSHELF']:
+        sys.path.insert(0, os.path.join(
+            os.environ['TOOLSHELF'], '.toolshelf', 'src'
+        ))
+        import toolshelf
+    else:
+        toolshelf = None
+
+Then later on...
+
+    if toolshelf:
+        toolshelf.stuff(...)
+
+More support (i.e. a cleaned up `toolshelf` module) for this coming soon. 
+
 Related Work
 ------------
 
