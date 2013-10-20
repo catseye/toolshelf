@@ -238,9 +238,18 @@ to pass the `@` or `@@` as a seperate argument on the command line, like:
 
 When referring to a source which is already docked, a single source
 specification may resolve to multiple sources.  Notably, the source
-specification `all` refers to all sources which are currently dockes.
+specification `all` refers to all sources which are currently docked:
 
-When referring to a source which is already docked, `toolshelf` allows
+    toolshelf build all
+
+Several commands take `all` to be the default if no source spec is given.
+
+To refer to all locally-docked source trees by a particular user, the
+following syntax may be used:
+
+    toolshelf build alincoln/all
+
+When referring to a single source which is already docked, `toolshelf` allows
 you to give just the source's base name, omitting the site name and the
 user name.  For example, to build the first source we docked above, you
 can say

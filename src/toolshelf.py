@@ -200,7 +200,9 @@ def expand_docked_specs(specs, default_all=False):
 
     A docked source specifier may take any of the following forms:
 
-      user/project           NYI from any host under this name
+      host/user/project          this particular host, user, project
+      user/project               from any host under this name
+      user/all               NYI all docked projects by this user
       project                    from any host & user under this name
       all                        all docked projects
 
@@ -213,7 +215,6 @@ def expand_docked_specs(specs, default_all=False):
         if name == 'all':
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
-                    # skip hidden dirs
                     continue
                 host_dirname = os.path.join(TOOLSHELF, host)
                 for user in os.listdir(host_dirname):
@@ -231,12 +232,20 @@ def expand_docked_specs(specs, default_all=False):
             project = match.group(2)
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
-                    # skip hidden dirs
                     continue
-                project_dirname = os.path.join(TOOLSHELF, host, user, project)
-                if not os.path.isdir(project_dirname):
-                    continue
-                new_specs.append('%s/%s/%s' % (host, user, project))            
+                user_dirname = os.path.join(TOOLSHELF, host, user)
+                if project == 'all':
+                    if os.path.isdir(user_dirname):
+                        for project in os.listdir(user_dirname):
+                            project_dirname = os.path.join(user_dirname, project)
+                            if not os.path.isdir(project_dirname):
+                                continue
+                            new_specs.append('%s/%s/%s' % (host, user, project))            
+                else:
+                    project_dirname = os.path.join(TOOLSHELF, host, user, project)
+                    if not os.path.isdir(project_dirname):
+                        continue
+                    new_specs.append('%s/%s/%s' % (host, user, project))            
         elif '/' not in name:
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):

@@ -19,6 +19,9 @@ gh:catseye/VICE
 bb:catseye/yucca
   require_executables python
 
+bb:catseye/etcha
+  require_executables javac
+
 bb:catseye/deturgenchry
   require_executables ghc
 
