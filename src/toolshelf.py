@@ -169,6 +169,7 @@ class DependencyError(ValueError):
 
 ### Helper Functions
 
+
 def is_executable(filename):
     basename = os.path.basename(filename)
     if basename in UNINTERESTING_EXECUTABLES:
@@ -179,6 +180,16 @@ def is_executable(filename):
 def run(*args, **kwargs):
     note("Running `%s`..." % ' '.join(args))
     subprocess.check_call(args, **kwargs)
+
+
+def get_it(command):
+    note("Running `%s`..." % command)
+    output = subprocess.Popen(
+        command, shell=True, stdout=subprocess.PIPE
+    ).communicate()[0]
+    if OPTIONS.verbose:
+        print output
+    return output
 
 
 def chdir(dirname):
@@ -753,6 +764,25 @@ class Source(object):
         if rectify_permissions == 'yes':
             self.rectify_executable_permissions()
 
+    def get_latest_release_tag(self):
+        """Return the tag most recently applied to this repository.
+        (hg only for now.)
+        
+        """
+        cwd = os.getcwd()
+        os.chdir(self.dir)
+    
+        latest_tag = None
+        for line in get_it("hg tags").split('\n'):
+            match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
+            if match:
+                tag = match.group(1)
+                if tag != 'tip' and latest_tag is None:
+                    latest_tag = tag
+    
+        os.chdir(cwd)
+        return latest_tag
+
 
 ### Helper
 
@@ -901,6 +931,65 @@ def bbuser(args):
         print 'bb:%s/%s' % (username, repo['slug'])
 
 
+def release(args):
+    """Create a distfile from the latest tag in a local version-controlled
+    source tree.
+    
+    """
+    cwd = os.getcwd()
+    specs = expand_docked_specs(args, default_all=False)
+    sources = Source.from_specs(specs)
+    for source in sources:
+        distro = source.project
+        repo_dir = source.dir
+        tag = source.get_latest_release_tag()
+        if not tag:
+            raise SystemError("Repository not tagged")
+        os.chdir(source.dir)
+        diff = get_it('hg diff -r %s -r tip -X .hgtags' % tag)
+        if diff:
+            raise SystemError("There are changes to mainline since latest tag")
+        os.chdir(cwd)
+
+        match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
+        if match:
+            v_maj = match.group(1)
+            v_min = match.group(2)
+            r_maj = match.group(3)
+            r_min = match.group(4)
+            filename = '%s-%s.%s-%s.%s.zip' % (
+                distro, v_maj, v_min, r_maj, r_min
+            )
+        else:
+            match = re.match(r'^rel_(\d+)_(\d+)$', tag)
+            if match:
+                v_maj = match.group(1)
+                v_min = match.group(2)
+                r_maj = "0"
+                r_min = "0"
+                filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
+            else:
+                raise ValueError("Not a release tag that I understand: %s" % tag)
+        print """\
+  - version: "%s.%s"
+    revision: "%s.%s"
+    url: http://catseye.tc/distfiles/%s
+""" % (v_maj, v_min, r_maj, r_min, filename)
+        full_filename = os.path.join(OPTIONS.distfiles_dir, filename)
+        if os.path.exists(full_filename):
+            run('unzip', '-v', full_filename)
+            raise SystemError("Distfile already exists: %s" % full_filename)
+        command = ['hg', 'archive', '-t', 'zip', '-r', tag]
+        for x in ('.hgignore', '.gitignore',
+                  '.hgtags', '.hg_archival.txt'):
+            command.append('-X')
+            command.append(x)
+        command.append(full_filename)
+        os.chdir(repo_dir)
+        run(*command)
+        os.chdir(cwd)
+
+
 SUBCOMMANDS = {
     'dock': dock,
     'pwd': pwd,
@@ -913,6 +1002,7 @@ SUBCOMMANDS = {
     'relink': relink,
     'ghuser': ghuser,
     'bbuser': bbuser,
+    'release': release,
 }
 
 
@@ -921,13 +1011,18 @@ def main(args):
 
     parser = optparse.OptionParser(__doc__)
 
+    parser.add_option("-B", "--no-build", dest="build",
+                      default=True, action="store_false",
+                      help="don't try to build sources during docking")
+    parser.add_option("--distfiles-dir",
+                      dest="distfiles_dir", metavar='DIR',
+                      default='../catseye.tc/distfiles',
+                      help="write distfiles into this directory "
+                           "(default: %default)")
     parser.add_option("-K", "--break-on-error", dest="break_on_error",
                       default=False, action="store_true",
                       help="abort if error occurs with a single "
                            "source when processing multiple sources")
-    parser.add_option("-B", "--no-build", dest="build",
-                      default=True, action="store_false",
-                      help="don't try to build sources during docking")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
