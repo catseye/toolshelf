@@ -827,6 +827,24 @@ def show_cmd(args):
                     print "BROKEN: %s is not an executable file" % filename
 
 
+def ghuser_cmd(args):
+    import requests
+    login = args[0]
+    user = args[1]
+    if login == 'none':
+        login = ''
+    else:
+        login = login + '@'
+    url = 'https://%sapi.github.com/users/%s/repos' % (login, user)
+    # TODO: parse the link header on the response:
+    # Link: <https://api.github.com/user/1134322/repos?page=2>; rel="next", <https://api.github.com/user/1134322/repos?page=4>; rel="last"
+    # and keep making more requests until you have them all
+    data = requests.get(url).json()
+    note(repr(data))
+    for x in data:
+        print 'gh:%s' % x['full_name']
+
+
 SUBCOMMANDS = {
     'dock': dock_cmd,
     'pwd': pwd_cmd,
@@ -837,6 +855,7 @@ SUBCOMMANDS = {
     'show': show_cmd,
     'disable': disable_cmd,
     'relink': relink_cmd,
+    'ghuser': ghuser_cmd,
 }
 
 
