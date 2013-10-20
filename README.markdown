@@ -451,8 +451,6 @@ Theory of Operation
 This section describes how it all works — specifically, how typing
 `toolshelf` can seemingly magically alter your search paths.
 
-**Oh, this is almost all out of date.  Fix!**
-
 ### `bootstrap-toolshelf.sh` ###
 
 The bootstrap script does a few things:
@@ -462,7 +460,7 @@ The bootstrap script does a few things:
 - It asks you where you want to store source trees for the packages you dock
   using toolshelf; it calls this `$TOOLSHELF`.  The default is
   `$HOME/toolshelf`.
-- It then clones the `toolshelf` git repo into `$TOOLSHELF/toolshelf`.
+- It then clones the `toolshelf` git repo into `$TOOLSHELF/.toolshelf`.
 - It then asks permission to modify your `.bashrc` (if you decline, you are
   asked to make these changes manually.)  It adds a line that `source`s
   `init.sh` (see below.)
@@ -476,42 +474,43 @@ The script `init.sh` initializes `toolshelf` for use; it is typically
 
 -   Takes a single command-line argument, which is the `toolshelf` directory,
     and exports it as the `TOOLSHELF` environment variable
--   Defines a `bash` function called `toolshelf`, which does the following:
-    -   It runs `$TOOLSHELF/toolshelf/toolshelf.py`, with the arguments that
-        were passed to the `toolshelf` function, expecting it to output a
-        temporary file — then it `source`s that temporary file and deletes
-        it.
--   runs `toolshelf path rebuild`
+-   Puts `$TOOLSHELF/.toolshelf/bin` (where the `toolshelf` executable lives)
+    and `$TOOLSHELF/.bin` (the link farm `toolshelf` will create) onto the
+    shell's executable search path (`$PATH`.)
+-   Defines a `bash` function called `toolshelf_cd`, which does the following:
+    -   It runs `toolshelf pwd`, with the arguments that were passed to the
+        `toolshelf_cd` function, in backticks.
+    -   It attempts to `cd` to the output of `toolshelf pwd`.
+    -   The `cd` is done in this bash function, because the `toolshelf`
+        executable itself can't affect the user's shell.
 
-The `toolshelf` function and the `toolshelf.py` script, taken together,
+The `toolshelf_cd` function and the `toolshelf.py` script, taken together,
 perform something which we could call the "shell-then-source trick".  In
 effect, it makes it possible for a "command" (really a `bash` function) to
 affect the environment of the user's current interactive shell — something
-an ordinarily invoked command cannot do.  This is what lets `toolshelf`
-immediately alter your search paths.
+an ordinarily invoked command cannot do.  This is what lets `toolshelf_cd`
+change your current working directory.
 
 In a shell which unlike `bash` does not support functions, this could also
 be done (somewhat more crudely) with an alias.
 
+### `toolshelf` ###
+
+The executable Python script `toolshelf` finds the `toolshelf.py` module,
+imports it, and runs the thing in it that does all the real work.
+
 ### `toolshelf.py` ###
 
-The Python script `toolshelf.py` is the workhorse:
+The Python module `toolshelf.py` is the workhorse:
 
 - It checks its arguments for an appropriate subcommand.
 - For the subcommand `dock`, it expects to find a source specifier.  It parses
   that specifier to determine where it should find that source.  It attempts
   to obtain that source (using `git clone` or whatever) and places the source
-  tree under a subdirectory (organized by user name or domain name) under
+  tree under a subdirectory (organized by domain name and user name) under
   `$TOOLSHELF`.  It then decides if the obtained source needs building, and if
-  so, builds it.  It then calls `toolshelf path rebuild` (internally) to
-  rebuild the path.
-- For the subcommand `path`, it checks for a further sub-subcommand.
-  If the sub-subcommand is `rebuild`, it reads the `PATH` environment variable,
-  removes all `$TOOLSHELF` entries from it, then traverses the source trees
-  under `$TOOLSHELF` looking for executable files, and places the directories
-  in which those executable files were found back into the `PATH`; then it
-  outputs the command `export PATH={{path}}`.  (`toolshelf.sh` `sources` this
-  to make the new path available to your shell immediately.)
+  so, builds it.  It then calls `toolshelf relink` (internally) to rebuild the
+  link farm.
 - It checks for other arguments as needed.  Since it's trivial to remove a
   package that has been docked, there might not be a `undock` subcommand.
 
