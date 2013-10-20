@@ -141,7 +141,12 @@ CWD = os.getcwd()
 
 ### Globals
 
-OPTIONS = None
+class DefaultOptions(object):
+    break_on_error = True
+    verbose = False
+    build = True
+
+OPTIONS = DefaultOptions()
 COOKIES = None
 LINK_FARM = None
 ERRORS = {}
@@ -506,7 +511,8 @@ class Source(object):
         self.project = project
         self.type = type
         self.hints = {}
-        COOKIES.apply_hints(self)
+        if COOKIES:
+            COOKIES.apply_hints(self)
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
@@ -828,11 +834,13 @@ def rectify(args):
 def relink(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
-    note("Adding the following executables to your link farm...")
-    for source in sources:
-        LINK_FARM.clean(prefix=source.dir)
-        for filename in source.linkable_executables():
-            LINK_FARM.create_link(filename)
+    # haha
+    if LINK_FARM:
+        note("Adding the following executables to your link farm...")
+        for source in sources:
+            LINK_FARM.clean(prefix=source.dir)
+            for filename in source.linkable_executables():
+                LINK_FARM.create_link(filename)
 
 
 def disable(args):
