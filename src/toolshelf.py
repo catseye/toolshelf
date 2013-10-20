@@ -127,6 +127,7 @@ CWD = os.getcwd()
 OPTIONS = None
 COOKIES = None
 LINK_FARM = None
+ERRORS = []
 
 
 ### Exceptions
@@ -136,7 +137,8 @@ class CommandLineSyntaxError(ValueError):
 
 
 class SourceSpecError(ValueError):
-    pass
+    def __str__(self):
+        return repr(self)
 
 
 class DependencyError(ValueError):
@@ -513,7 +515,12 @@ class Source(object):
     def from_specs(klass, names):
         sources = []
         for name in names:
-            sources += klass.from_spec(name)
+            try:
+                sources += klass.from_spec(name)
+            except Exception as e:
+                if OPTIONS.break_on_error:
+                    raise
+                ERRORS.append((name, str(e)))
         return sources
 
     @classmethod
@@ -730,17 +737,13 @@ class Source(object):
 
 def foreach_source(specs, fun, rebuild_paths=True):
     sources = Source.from_specs(specs)
-    exceptions = []
     for source in sources:
         try:
             fun(source)
         except Exception as e:
-            if OPTIONS.keep_going:
-                exceptions.append((source.name, str(e)))
-            else:
+            if OPTIONS.break_on_error:
                 raise
-    if exceptions:
-        raise ValueError(str(exceptions))
+            ERRORS.append((source.name, str(e)))
     if rebuild_paths:
         relink_cmd([s.name for s in sources])
 
@@ -883,9 +886,9 @@ def main(args):
 
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option("-k", "--keep-going", dest="keep_going",
+    parser.add_option("-K", "--break-on-error", dest="break_on_error",
                       default=False, action="store_true",
-                      help="don't abort if error occurs with a single "
+                      help="abort if error occurs with a single "
                            "source when processing multiple sources")
     parser.add_option("-B", "--no-build", dest="build",
                       default=True, action="store_false",
@@ -911,22 +914,18 @@ def main(args):
 
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
-        try:
-            SUBCOMMANDS[subcommand](args[1:])
-        except CommandLineSyntaxError as e:
-            sys.stderr.write(str(e) + '\n')
-            print "Usage: " + __doc__
-            sys.exit(2)
-        except SourceSpecError as e:
-            sys.stderr.write(repr(e) + '\n')
-            sys.exit(1)
-        except subprocess.CalledProcessError as e:
-            sys.stderr.write(str(e) + '\n')
-            sys.exit(e.returncode)
+        SUBCOMMANDS[subcommand](args[1:])
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
         sys.exit(2)
+    
+    if ERRORS:
+        for (name, error) in ERRORS:
+            sys.stderr.write(name + ':\n')
+            sys.stderr.write(str(error) + '\n\n')
+        sys.stderr.write('For usage, run `toolshelf --help`.\n')
+        sys.exit(1)
 
 
 if __name__ == '__main__':
