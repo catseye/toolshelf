@@ -501,7 +501,7 @@ class LinkFarm(object):
         filename = os.path.abspath(filename)
         linkname = os.path.basename(filename)
         linkname = os.path.join(self.dirname, linkname)
-        # XXX FOR NOW ONLY, trample existing links
+        # We do trample existing links
         if os.path.islink(linkname):
             os.unlink(linkname)
         symlink(filename, linkname)
@@ -784,6 +784,26 @@ class Source(object):
 
         os.chdir(cwd)
         return latest_tag
+
+    def find_likely_documents(self):
+        DOC_PATTERNS = (
+            r'^LICENSE$',
+            r'^UNLICENSE$',
+            r'^README',
+            r'^.*?\.markdown$',
+            r'^.*?\.md$',
+            r'^.*?\.txt$',
+            r'^.*?\.lhs$',
+        )
+        for root, dirnames, filenames in os.walk('.'):
+            if root.endswith(".hg"):
+                del dirnames[:]
+                continue
+            for filename in filenames:
+                for pattern in DOC_PATTERNS:
+                    if re.match(pattern, filename):
+                        yield os.path.join(root, filename)[2:]
+                        break
 
 
 ### Helper
@@ -1147,29 +1167,9 @@ def collectdocs(args):
     import yaml
     docdict = {}
 
-    DOC_PATTERNS = (
-        r'^LICENSE$',
-        r'^UNLICENSE$',
-        r'^README',
-        r'^.*?\.markdown$',
-        r'^.*?\.txt$',
-        r'^.*?\.lhs$',
-    )
-
     def collectdocs_it(source):
-        for root, dirnames, filenames in os.walk('.'):
-            if root.endswith(".hg"):
-                del dirnames[:]
-                continue
-            for filename in filenames:
-                for pattern in DOC_PATTERNS:
-                    if re.match(pattern, filename):
-                        path = os.path.join(root, filename)[2:]
-                        docdict.setdefault(source.name, []).append({
-                            'type': 'Document',
-                            'filename': path,
-                        })
-                        break
+        for path in source.find_likely_documents():
+            docdict.setdefault(source.name, []).append(path)
 
     foreach_source(
         expand_docked_specs(args), collectdocs_it
