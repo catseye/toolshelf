@@ -3,6 +3,24 @@ toolshelf
 
 **Version 0.0 — subject to change**
 
+First, the Metaphor
+-------------------
+
+Certain bulky technologies in your home — such as your washing machine and your
+refrigerator (let's call them appliances) — deserve to be *installed*.  You're
+not going to move them much, and they might have to be hooked up to the water
+pipes and so forth.
+
+But certain other, lighter technologies — such as your can opener and your 
+broom and dustpan (let's call them tools) — aren't "installed" anywhere.
+Instead, you simply store them somewhere (say, on a shelf) until they're needed.
+
+`toolshelf` applies this paradigm to software.  Because you should never need to
+*install* a can opener.
+
+Description
+-----------
+
 `toolshelf` is a "package manager" which doesn't actually install any files.
 Instead, it stores the source trees of sundry packages in a single directory,
 and manages your search paths to include the relevant subdirectories of those
