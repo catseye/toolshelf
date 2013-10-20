@@ -191,16 +191,13 @@ will clone a `git` repo from github to use as the source.  Similarly,
 
     toolshelf dock https://bitbucket.org/plato/the-republic
 
-will clone a Mercurial repo from Bitbucket.  ♦ It ought to be able to
-know that
+will clone a Mercurial repo from Bitbucket.  It does not know that
 
     toolshelf dock https://github.com/alincoln/Gettysburg-Address
 
-is *not* a Mercurial repo, but in fact a git repo, but it doesn't yet.
-♦ You ought to also be able to force the repo kind, i.e.
-
-    toolshelf dock --git https://git.example.org/hhesse/Steppenwolf
-    toolshelf dock --hg https://hg.example.org/jswift/amodestproposal
+is *not* a Mercurial repo, but in fact a git repo, so what it does in this
+case is to try cloning it with Mercurial first, then if that fails, it tries
+git.
 
 And you can dock a vanilla, non-version-controlled tarball by saying
 
@@ -215,8 +212,8 @@ contained in the root of the tar archive.  Which is frowned upon.)
 
 `toolshelf` understands a few shortcuts for Github and Bitbucket:
 
-    toolshelf dock gh:alincoln/Gettysburg-Address
-    toolshelf dock bb:plato/the-republic
+    toolshelf dock gh:hhesse/Steppenwolf
+    toolshelf dock bb:jswift/amodestproposal
 
 This syntax is called a _source specification_.  There are a few other source
 specifications you can use.  For example,

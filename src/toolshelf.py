@@ -316,7 +316,7 @@ def parse_source_spec(name):
         user = match.group(2)
         project = match.group(3)
         return dict(url=name, host=host, user=user, project=project,
-                    type='hg')
+                    type='hg-or-git')
 
     # local
     match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
@@ -565,6 +565,14 @@ class Source(object):
             run('git', 'clone', self.url)
         elif self.type == 'hg':
             run('hg', 'clone', self.url)
+        elif self.type == 'hg-or-git':
+            try:
+                # better would be to check hg's error output for
+                # 'Http Error 406'
+                run('hg', 'clone', self.url)
+            except subprocess.CalledProcessError:
+                note("`hg clone` failed, so trying git")
+                run('git', 'clone', self.url)
         elif self.distfile is not None:
             run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
             if not os.path.exists(self.distfile):
