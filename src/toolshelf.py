@@ -764,7 +764,7 @@ class Source(object):
         if rectify_permissions == 'yes':
             self.rectify_executable_permissions()
 
-    def get_latest_release_tag(self):
+    def get_latest_release_tag(self, tags={}):
         """Return the tag most recently applied to this repository.
         (hg only for now.)
         
@@ -777,9 +777,10 @@ class Source(object):
             match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
             if match:
                 tag = match.group(1)
+                tags[tag] = int(match.group(2))
                 if tag != 'tip' and latest_tag is None:
                     latest_tag = tag
-    
+
         os.chdir(cwd)
         return latest_tag
 
@@ -1067,6 +1068,80 @@ def lint(args):
     #)
 
 
+def survey(args):
+    """Generates a report summarizing various properties of the docked
+    source trees.  Sort of a "deep status".
+
+    """
+    cwd = os.getcwd()
+    repos = {}
+
+    def survey_it(source):
+        print source.name
+        os.chdir(source.dir)
+        dirty = get_it("hg st")
+        outgoing = ''
+        #if hg_outgoing:
+        #    outgoing = get_it("hg out")
+        #if 'no changes found' in outgoing:
+        #    outgoing = ''
+        tags = {}
+        latest_tag = source.get_latest_release_tag(tags)
+        due = ''
+        diff = ''
+        if latest_tag is None:
+            due = 'NEVER RELEASED'
+        else:
+            diff = get_it('hg diff -r %s -r tip -X .hgtags' % latest_tag)
+            if not diff:
+                due = ''
+            else:
+                due = "%d changesets (tip=%d, %s=%d)" % \
+                    ((tags['tip'] - tags[latest_tag]), tags['tip'],
+                     latest_tag, tags[latest_tag])
+        repos[source.name] = {
+            'dirty': dirty,
+            'outgoing': outgoing,
+            'tags': tags,
+            'latest_tag': latest_tag,
+            'due': due,
+            'diff': diff,
+        }
+        os.chdir(cwd)
+
+    foreach_source(
+        expand_docked_specs(args), survey_it
+    )
+
+    print '-----'
+    for repo in sorted(repos.keys()):
+        r = repos[repo]
+        if r['dirty'] or r['outgoing'] or r['due']:
+            print repo
+            if r['dirty']:
+                print r['dirty']
+            if r['outgoing']:
+                print r['outgoing']
+            if r['due']:
+                print "  DUE:", r['due']
+            print
+    print '-----'
+
+
+def test(args):
+    cwd = os.getcwd()
+
+    def test_it(source):
+        os.chdir(source.dir)
+        if os.path.exists(os.path.join(source.dir, 'test.sh')):
+            print get_it('./test.sh')
+        os.chdir(cwd)
+
+    foreach_source(
+        expand_docked_specs(args), test_it
+    )
+
+
 SUBCOMMANDS = {
     'dock': dock,
     'pwd': pwd,
@@ -1081,6 +1156,8 @@ SUBCOMMANDS = {
     'bbuser': bbuser,
     'release': release,
     'lint': lint,
+    'survey': survey,
+    'test': test,
 }
 
 
