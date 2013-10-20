@@ -25,8 +25,8 @@ bb:catseye/etcha
 bb:catseye/deturgenchry
   require_executables ghc
 
-http://catseye.tc/dieter-1.0-2011.1214.zip
-  rectify_permissions no
+http://catseye.tc/distfiles/dieter-1.0-2011.1214.zip
+  rectify_permissions yes
 
 gh:munificent/magpie
   exclude_paths dep

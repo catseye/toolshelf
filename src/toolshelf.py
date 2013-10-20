@@ -154,17 +154,6 @@ def is_executable(filename):
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
 
 
-def find_executables(dirname, index):
-    for name in os.listdir(dirname):
-        if name in ('.git', '.hg'):
-            continue
-        filename = os.path.join(dirname, name)
-        if is_executable(filename):
-            index.setdefault(dirname, []).append(name)
-        elif os.path.isdir(filename):
-            find_executables(filename, index)
-
-
 def run(*args, **kwargs):
     note("Running `%s`..." % ' '.join(args))
     subprocess.check_call(args, **kwargs)
@@ -691,40 +680,41 @@ class Source(object):
         return True
 
     def linkable_executables(self):
-        index = {}
-        find_executables(self.dir, index)  # dirname => [filenames]
-        for dirname in index:
-            if not self.may_use_path(dirname):
-                note("%s excluded from search path" % dirname)
+        for root, dirs, files in os.walk(self.dir):
+            if '.git' in dirs:
+                dirs.remove('.git')
+            if '.hg' in dirs:
+                dirs.remove('.hg')
+            if not self.may_use_path(root):
+                note("%s excluded from search path" % root)
+                dirs[:] = []
                 continue
-            note("  %s:" % dirname)
-            for filename in index[dirname]:
-                note("    %s" % filename)
-                yield os.path.join(dirname, filename)
+            for name in files:
+                filename = os.path.join(self.dir, root, name)
+                if is_executable(filename):
+                    note("    %s" % filename)
+                    yield filename
 
     def rectify_executable_permissions(self):
-        def traverse(dirname):
-            for name in os.listdir(dirname):
-                if name in ('.git', '.hg'):
-                    continue
-                filename = os.path.join(dirname, name)
-                if os.path.isdir(filename):
-                    traverse(filename)
+        for root, dirs, files in os.walk(self.dir):
+            if '.git' in dirs:
+                dirs.remove('.git')
+            if '.hg' in dirs:
+                dirs.remove('.hg')
+            for name in files:
+                filename = os.path.join(self.dir, root, name)
+                make_it_executable = False
+                pipe = subprocess.Popen(["file", filename],
+                                        stdout=subprocess.PIPE)
+                output = pipe.communicate()[0]
+                if 'executable' in output:
+                    make_it_executable = True
+                if make_it_executable:
+                    note("Making %s executable" % filename)
+                    subprocess.check_call(["chmod", "u+x", filename])
                 else:
-                    make_it_executable = False
-                    pipe = subprocess.Popen(["file", filename],
-                                            stdout=subprocess.PIPE)
-                    output = pipe.communicate()[0]
-                    if 'executable' in output:
-                        make_it_executable = True
-                    if make_it_executable:
-                        note("Making %s executable" % os.path.join(dirname, name))
-                        subprocess.check_call(["chmod", "u+x", filename])
-                    else:
-                        note("Making %s NON-executable" % os.path.join(dirname, name))
-                        subprocess.check_call(["chmod", "u-x", filename])
-
-        traverse(self.dir)
+                    note("Making %s NON-executable" % filename)
+                    subprocess.check_call(["chmod", "u-x", filename])
 
     def rectify_permissions_if_needed(self):
         rectify_permissions = 'no'
@@ -937,6 +927,8 @@ def main(args):
         try:
             SUBCOMMANDS[subcommand](args[1:])
         except Exception as e:
+            if OPTIONS.break_on_error:
+                raise
             ERRORS.setdefault(subcommand, []).append(str(e))
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
