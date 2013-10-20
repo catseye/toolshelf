@@ -127,7 +127,7 @@ CWD = os.getcwd()
 OPTIONS = None
 COOKIES = None
 LINK_FARM = None
-ERRORS = []
+ERRORS = {}
 
 
 ### Exceptions
@@ -520,7 +520,7 @@ class Source(object):
             except Exception as e:
                 if OPTIONS.break_on_error:
                     raise
-                ERRORS.append((name, str(e)))
+                ERRORS.setdefault(name, []).append(str(e))
         return sources
 
     @classmethod
@@ -743,7 +743,7 @@ def foreach_source(specs, fun, rebuild_paths=True):
         except Exception as e:
             if OPTIONS.break_on_error:
                 raise
-            ERRORS.append((source.name, str(e)))
+            ERRORS.setdefault(source.name, []).append(str(e))
     if rebuild_paths:
         relink_cmd([s.name for s in sources])
 
@@ -796,8 +796,8 @@ def pwd_cmd(args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
     if len(sources) != 1:
-        raise CommandLineSyntaxError(
-            "'pwd' subcommand requires exactly one source\n"
+        raise SourceSpecError(
+            "Could not resolve %s to a single unique source\n" % args
         )
     print sources[0].dir
 
@@ -858,13 +858,23 @@ def ghuser_cmd(args):
         if link is None:
             done = True
         else:
-            # Link: <https://api.github.com/user/1134322/repos?page=2>; rel="next", <https://api.github.com/user/1134322/repos?page=4>; rel="last"
             match = re.match(r'\<(.*?)\>\s*\;\s*rel\s*=\s*\"next\"', link)
             if not match:
                 note(link)
                 done = True
             else:
                 url = match.group(1)
+
+
+def bbuser_cmd(args):
+    # this only works for the logged-in user.  It would be great if...
+    # yeah.
+    from bitbucket.bitbucket import Bitbucket
+    (username, password) = args[0].split(':')
+    bb = Bitbucket(username, password)
+    success, repositories = bb.repository.all()
+    for repo in sorted(repositories):
+        print 'bb:%s/%s' % (username, repo['slug'])
 
 
 SUBCOMMANDS = {
@@ -878,6 +888,7 @@ SUBCOMMANDS = {
     'disable': disable_cmd,
     'relink': relink_cmd,
     'ghuser': ghuser_cmd,
+    'bbuser': bbuser_cmd,
 }
 
 
@@ -914,16 +925,22 @@ def main(args):
 
     subcommand = args[0]
     if subcommand in SUBCOMMANDS:
-        SUBCOMMANDS[subcommand](args[1:])
+        try:
+            SUBCOMMANDS[subcommand](args[1:])
+        except Exception as e:
+            ERRORS.setdefault(subcommand, []).append(str(e))
     else:
         sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
         print "Usage: " + __doc__
         sys.exit(2)
     
     if ERRORS:
-        for (name, error) in ERRORS:
+        sys.stderr.write('\nERRORS:\n\n')
+        for name in sorted(ERRORS.keys()):
             sys.stderr.write(name + ':\n')
-            sys.stderr.write(str(error) + '\n\n')
+            for msg in ERRORS[name]:
+                sys.stderr.write(msg + '\n')
+            sys.stderr.write('\n')
         sys.stderr.write('For usage, run `toolshelf --help`.\n')
         sys.exit(1)
 
