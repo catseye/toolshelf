@@ -72,6 +72,9 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Emit the name of the directory of the docked source (or exit with an
         error if there is no such source docked.)
     
+    rectify {<docked-source-spec>}
+        ...
+    
     ghuser <login> <username>
         Create (on standard output) a catalog for all of the given Github user's
         repositories.  The login is either 'username:password', which is your
@@ -87,6 +90,20 @@ import optparse
 import re
 import subprocess
 import sys
+
+
+# for now, we only export the basic commands to the rest of the world
+__all__ = [
+    'dock', 
+    'pwd',
+    'build',
+    'update',
+    'status',
+    'rectify',
+    'show',
+    'disable',
+    'relink',
+]
 
 
 ### Constants (per each run)
@@ -744,14 +761,14 @@ def foreach_source(specs, fun, rebuild_paths=True):
                 raise
             ERRORS.setdefault(source.name, []).append(str(e))
     if rebuild_paths:
-        relink_cmd([s.name for s in sources])
+        relink([s.name for s in sources])
 
 
 ### Subcommands
 
 
-def dock_cmd(args):
-    def dock(source):
+def dock(args):
+    def dock_it(source):
         if source.docked:
             print "%s already docked." % source.name
         else:
@@ -769,29 +786,29 @@ def dock_cmd(args):
             source.checkout()
             source.rectify_permissions_if_needed()
             source.build()
-    foreach_source(args, dock)
+    foreach_source(args, dock_it)
 
 
-def build_cmd(args):
+def build(args):
     foreach_source(
         expand_docked_specs(args), lambda(source): source.build()
     )
 
 
-def update_cmd(args):
+def update(args):
     def update(source):
         source.update()
         source.build()
     foreach_source(expand_docked_specs(args), update)
 
 
-def status_cmd(args):
+def status(args):
     foreach_source(
         expand_docked_specs(args), lambda(source): source.status()
     )
 
 
-def pwd_cmd(args):
+def pwd(args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
     if len(sources) != 1:
@@ -801,14 +818,14 @@ def pwd_cmd(args):
     print sources[0].dir
 
 
-def rectify_cmd(args):
+def rectify(args):
     specs = expand_docked_specs(args)
     sources = Source.from_specs(specs)
     for source in sources:
         source.rectify_permissions_if_needed()
 
 
-def relink_cmd(args):
+def relink(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     note("Adding the following executables to your link farm...")
@@ -818,14 +835,14 @@ def relink_cmd(args):
             LINK_FARM.create_link(filename)
 
 
-def disable_cmd(args):
+def disable(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     for source in sources:
         LINK_FARM.clean(prefix=source.dir)
 
 
-def show_cmd(args):
+def show(args):
     specs = expand_docked_specs(args, default_all=True)
     sources = Source.from_specs(specs)
     for source in sources:
@@ -837,7 +854,7 @@ def show_cmd(args):
                     print "BROKEN: %s is not an executable file" % filename
 
 
-def ghuser_cmd(args):
+def ghuser(args):
     import requests
     login = args[0]
     user = args[1]
@@ -865,7 +882,7 @@ def ghuser_cmd(args):
                 url = match.group(1)
 
 
-def bbuser_cmd(args):
+def bbuser(args):
     # this only works for the logged-in user.  It would be great if...
     # yeah.
     from bitbucket.bitbucket import Bitbucket
@@ -877,17 +894,17 @@ def bbuser_cmd(args):
 
 
 SUBCOMMANDS = {
-    'dock': dock_cmd,
-    'pwd': pwd_cmd,
-    'build': build_cmd,
-    'update': update_cmd,
-    'status': status_cmd,
-    'rectify': rectify_cmd,
-    'show': show_cmd,
-    'disable': disable_cmd,
-    'relink': relink_cmd,
-    'ghuser': ghuser_cmd,
-    'bbuser': bbuser_cmd,
+    'dock': dock,
+    'pwd': pwd,
+    'build': build,
+    'update': update,
+    'status': status,
+    'rectify': rectify,
+    'show': show,
+    'disable': disable,
+    'relink': relink,
+    'ghuser': ghuser,
+    'bbuser': bbuser,
 }
 
 

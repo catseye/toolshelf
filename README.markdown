@@ -575,6 +575,7 @@ If you want to write a "toolshelf plugin", or more literally, any Python program
 that can optionally use functions from `toolshelf.py` when a toolshelf is in use,
 you can use the following code:
 
+    import os
     if 'TOOLSHELF' in os.environ and os.environ['TOOLSHELF']:
         sys.path.insert(0, os.path.join(
             os.environ['TOOLSHELF'], '.toolshelf', 'src'
@@ -586,9 +587,10 @@ you can use the following code:
 Then later on...
 
     if toolshelf:
-        toolshelf.stuff(...)
+        toolshelf.dock(['gh:user/repo'])
 
-More support (i.e. a cleaned up `toolshelf` module) for this coming soon. 
+Note that toolshelf is in constant flux, even if it is a slow flux, so don't
+rely on this too heavily.
 
 Related Work
 ------------
