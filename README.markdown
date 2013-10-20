@@ -587,7 +587,8 @@ you can use the following code:
 Then later on...
 
     if toolshelf:
-        toolshelf.dock(['gh:user/repo'])
+        t = toolshelf.Toolshelf()
+        t.dock(['gh:user/repo'])
 
 Note that toolshelf is in constant flux, even if it is a slow flux, so don't
 rely on this too heavily.

@@ -93,18 +93,7 @@ import subprocess
 import sys
 
 
-# for now, we only export the basic commands to the rest of the world
-__all__ = [
-    'dock', 
-    'pwd',
-    'build',
-    'update',
-    'status',
-    'rectify',
-    'show',
-    'disable',
-    'relink',
-]
+__all__ = ['Toolshelf']
 
 
 ### Constants (per each run)
@@ -147,9 +136,8 @@ class DefaultOptions(object):
     verbose = False
     build = True
 
+# TODO: make not global (har)
 OPTIONS = DefaultOptions()
-COOKIES = None
-LINK_FARM = None
 ERRORS = {}
 
 
@@ -514,7 +502,7 @@ class LinkFarm(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                 type=None):
+                 type=None, cookies=None):
         self.url = url
         if not host:
             raise ValueError('no host supplied')
@@ -523,8 +511,10 @@ class Source(object):
         self.project = project
         self.type = type
         self.hints = {}
-        if COOKIES:
-            COOKIES.apply_hints(self)
+        if not cookies:
+            raise ValueError('no cookies given')
+        if cookies:
+            cookies.apply_hints(self)
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
@@ -533,7 +523,7 @@ class Source(object):
                  self.project, self.type, self.hints))
 
     @classmethod
-    def from_catalog(klass, filename):
+    def from_catalog(klass, filename, cookies):
         note('Reading catalog %s' % filename)
         sources = []
         with open(filename, 'r') as file:
@@ -541,23 +531,24 @@ class Source(object):
                 line = line.strip()
                 if line == '' or line.startswith('#'):
                     continue
-                sources += Source.from_spec(line)
+                sources += Source.from_spec(line, cookies)
         return sources
 
     @classmethod
-    def from_specs(klass, names):
+    def from_specs(klass, names, cookies):
         sources = []
         for name in names:
             try:
-                sources += klass.from_spec(name)
+                sources += klass.from_spec(name, cookies)
             except Exception as e:
                 if OPTIONS.break_on_error:
                     raise
+                # allow injecting this one?
                 ERRORS.setdefault(name, []).append(str(e))
         return sources
 
     @classmethod
-    def from_spec(klass, name):
+    def from_spec(klass, name, cookies):
         """Parse an external source specifier and return a list of
         Source objects.
 
@@ -572,11 +563,12 @@ class Source(object):
             filename = os.path.join(
                 TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
             )
-            return klass.from_catalog(filename)
+            return klass.from_catalog(filename, cookies)
         if name.startswith('@'):
-            return klass.from_catalog(os.path.join(CWD, name[1:]))
+            return klass.from_catalog(os.path.join(CWD, name[1:]), cookies)
 
         kwargs = parse_source_spec(name)
+        kwargs['cookies'] = cookies
         return [Source(**kwargs)]
 
     @property
@@ -806,404 +798,393 @@ class Source(object):
                         break
 
 
-### Helper
+### Toolshelf object (Subcommands)
 
 
-def foreach_source(specs, fun, rebuild_paths=True):
-    cwd = os.getcwd()
-    sources = Source.from_specs(specs)
-    for source in sources:
-        os.chdir(source.dir)
-        try:
-            fun(source)
-        except Exception as e:
-            if OPTIONS.break_on_error:
-                raise
-            ERRORS.setdefault(source.name, []).append(str(e))
-        finally:
-            os.chdir(cwd)
-    if rebuild_paths:
-        relink([s.name for s in sources])
+class Toolshelf(object):
+    def __init__(self, options=DefaultOptions(), cookies=None,
+                       link_farm=LinkFarm(LINK_FARM_DIR), errors=ERRORS):
+        self.options = options
+        if cookies is None:
+            cookies = Cookies()
+            cookies.add_file(os.path.join(
+                TOOLSHELF, '.toolshelf', 'cookies.catalog'
+            ))
+            cookies.add_file(os.path.join(
+                TOOLSHELF, '.toolshelf', 'local-cookies.catalog'
+            ))
+        self.cookies = cookies
+        self.link_farm = link_farm
+        self.errors = errors
 
+    def foreach_source(self, specs, fun, rebuild_paths=True):
+        cwd = os.getcwd()
+        sources = Source.from_specs(specs, self.cookies)
+        for source in sources:
+            os.chdir(source.dir)
+            try:
+                fun(source)
+            except Exception as e:
+                if self.options.break_on_error:
+                    raise
+                self.errors.setdefault(source.name, []).append(str(e))
+            finally:
+                os.chdir(cwd)
+        if rebuild_paths:
+            self.relink([s.name for s in sources])
 
-### Subcommands
-
-
-def dock(args):
-    def dock_it(source):
-        if source.docked:
-            print "%s already docked." % source.name
+    def run_command(self, subcommand, args):
+        cmd = getattr(self, subcommand, None)
+        if cmd is not None:
+            try:
+                cmd(args)
+            except Exception as e:
+                if self.options.break_on_error:
+                    raise
+                self.errors.setdefault(subcommand, []).append(str(e))
         else:
-            require_executables = source.hints.get(
-                'require_executables', None
-            )
-            if require_executables:
-                p = Path()
-                for executable in require_executables.split(' '):
-                    if not p.which(executable):
-                        raise DependencyError(
-                            '%s requires `%s` not found on search path' %
-                            (source.name, executable)
-                        )
-            source.checkout()
-            source.rectify_permissions_if_needed()
-            source.build()
-    foreach_source(args, dock_it)
+            sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
+            print "Usage: " + __doc__
+            sys.exit(2)
 
-
-def build(args):
-    foreach_source(
-        expand_docked_specs(args), lambda(source): source.build()
-    )
-
-
-def update(args):
-    def update(source):
-        source.update()
-        source.build()
-    foreach_source(expand_docked_specs(args), update)
-
-
-def status(args):
-    foreach_source(
-        expand_docked_specs(args), lambda(source): source.status()
-    )
-
-
-def pwd(args):
-    specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    if len(sources) != 1:
-        raise SourceSpecError(
-            "Could not resolve %s to a single unique source\n" % args
+    def dock(self, args):
+        def dock_it(source):
+            if source.docked:
+                print "%s already docked." % source.name
+            else:
+                require_executables = source.hints.get(
+                    'require_executables', None
+                )
+                if require_executables:
+                    p = Path()
+                    for executable in require_executables.split(' '):
+                        if not p.which(executable):
+                            raise DependencyError(
+                                '%s requires `%s` not found on search path' %
+                                (source.name, executable)
+                            )
+                source.checkout()
+                source.rectify_permissions_if_needed()
+                source.build()
+        self.foreach_source(args, dock_it)
+    
+    def build(self, args):
+        self.foreach_source(
+            expand_docked_specs(args), lambda(source): source.build()
         )
-    print sources[0].dir
+    
+    def update(self, args):
+        def update(source):
+            source.update()
+            source.build()
+        self.foreach_source(expand_docked_specs(args), update)
 
+    def status(self, args):
+        self.foreach_source(
+            expand_docked_specs(args), lambda(source): source.status()
+        )
 
-def rectify(args):
-    specs = expand_docked_specs(args)
-    sources = Source.from_specs(specs)
-    for source in sources:
-        source.rectify_permissions_if_needed()
-
-
-def relink(args):
-    specs = expand_docked_specs(args, default_all=True)
-    sources = Source.from_specs(specs)
-    # haha
-    if LINK_FARM:
+    def pwd(self, args):
+        specs = expand_docked_specs(args)
+        sources = Source.from_specs(specs, self.cookies)
+        if len(sources) != 1:
+            raise SourceSpecError(
+                "Could not resolve %s to a single unique source\n" % args
+            )
+        print sources[0].dir
+    
+    def rectify(self, args):
+        specs = expand_docked_specs(args)
+        sources = Source.from_specs(specs, self.cookies)
+        for source in sources:
+            source.rectify_permissions_if_needed()
+    
+    def relink(self, args):
+        specs = expand_docked_specs(args, default_all=True)
+        sources = Source.from_specs(specs, self.cookies)
         note("Adding the following executables to your link farm...")
         for source in sources:
-            LINK_FARM.clean(prefix=source.dir)
+            self.link_farm.clean(prefix=source.dir)
             for filename in source.linkable_executables():
-                LINK_FARM.create_link(filename)
-
-
-def disable(args):
-    specs = expand_docked_specs(args, default_all=True)
-    sources = Source.from_specs(specs)
-    for source in sources:
-        LINK_FARM.clean(prefix=source.dir)
-
-
-def show(args):
-    specs = expand_docked_specs(args, default_all=True)
-    sources = Source.from_specs(specs)
-    for source in sources:
-        for (linkname, filename) in LINK_FARM.links():
-            if filename.startswith(source.dir):
-                print "%s -> %s" % (os.path.basename(linkname), filename)
-                if (not os.path.isfile(filename) or
-                    not os.access(filename, os.X_OK)):
-                    print "BROKEN: %s is not an executable file" % filename
-
-
-def ghuser(args):
-    import requests
-    login = args[0]
-    user = args[1]
-    if login == 'none':
-        login = ''
-    else:
-        login = login + '@'
-    url = 'https://%sapi.github.com/users/%s/repos' % (login, user)
+                self.link_farm.create_link(filename)
     
-    done = False
-    while not done:
-        response = requests.get(url)
-        data = response.json()
-        for x in data:
-            print 'gh:%s' % x['full_name']
-        link = response.headers.get('Link', None)
-        if link is None:
-            done = True
+    def disable(self, args):
+        specs = expand_docked_specs(args, default_all=True)
+        sources = Source.from_specs(specs, self.cookies)
+        for source in sources:
+            self.link_farm.clean(prefix=source.dir)
+    
+    def show(self, args):
+        specs = expand_docked_specs(args, default_all=True)
+        sources = Source.from_specs(specs, self.cookies)
+        for source in sources:
+            for (linkname, filename) in self.link_farm.links():
+                if filename.startswith(source.dir):
+                    print "%s -> %s" % (os.path.basename(linkname), filename)
+                    if (not os.path.isfile(filename) or
+                        not os.access(filename, os.X_OK)):
+                        print "BROKEN: %s is not an executable file" % filename
+    
+    def ghuser(self, args):
+        import requests
+        login = args[0]
+        user = args[1]
+        if login == 'none':
+            login = ''
         else:
-            match = re.match(r'\<(.*?)\>\s*\;\s*rel\s*=\s*\"next\"', link)
-            if not match:
-                note(link)
+            login = login + '@'
+        url = 'https://%sapi.github.com/users/%s/repos' % (login, user)
+        
+        done = False
+        while not done:
+            response = requests.get(url)
+            data = response.json()
+            for x in data:
+                print 'gh:%s' % x['full_name']
+            link = response.headers.get('Link', None)
+            if link is None:
                 done = True
             else:
-                url = match.group(1)
-
-
-def bbuser(args):
-    # this only works for the logged-in user.  It would be great if...
-    # yeah.
-    from bitbucket.bitbucket import Bitbucket
-    (username, password) = args[0].split(':')
-    bb = Bitbucket(username, password)
-    success, repositories = bb.repository.all()
-    for repo in sorted(repositories):
-        print 'bb:%s/%s' % (username, repo['slug'])
-
-
-def release(args):
-    """Create a distfile from the latest tag in a local version-controlled
-    source tree.
+                match = re.match(r'\<(.*?)\>\s*\;\s*rel\s*=\s*\"next\"', link)
+                if not match:
+                    note(link)
+                    done = True
+                else:
+                    url = match.group(1)
     
-    """
-    cwd = os.getcwd()
-    specs = expand_docked_specs(args, default_all=False)
-    sources = Source.from_specs(specs)
-    for source in sources:
-        distro = source.project
-        tag = source.get_latest_release_tag()
-        if not tag:
-            raise SystemError("Repository not tagged")
-        os.chdir(source.dir)
-        diff = get_it('hg diff -r %s -r tip -X .hgtags' % tag)
-        if diff:
-            raise SystemError("There are changes to mainline since latest tag")
-        os.chdir(cwd)
-
-        match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
-        if match:
-            v_maj = match.group(1)
-            v_min = match.group(2)
-            r_maj = match.group(3)
-            r_min = match.group(4)
-            filename = '%s-%s.%s-%s.%s.zip' % (
-                distro, v_maj, v_min, r_maj, r_min
-            )
-        else:
-            match = re.match(r'^rel_(\d+)_(\d+)$', tag)
+    def bbuser(self, args):
+        # this only works for the logged-in user.  It would be great if...
+        # yeah.
+        from bitbucket.bitbucket import Bitbucket
+        (username, password) = args[0].split(':')
+        bb = Bitbucket(username, password)
+        success, repositories = bb.repository.all()
+        for repo in sorted(repositories):
+            print 'bb:%s/%s' % (username, repo['slug'])
+    
+    def release(self, args):
+        """Create a distfile from the latest tag in a local version-controlled
+        source tree.
+        
+        """
+        cwd = os.getcwd()
+        specs = expand_docked_specs(args, default_all=False)
+        sources = Source.from_specs(specs, self.cookies)
+        for source in sources:
+            distro = source.project
+            tag = source.get_latest_release_tag()
+            if not tag:
+                raise SystemError("Repository not tagged")
+            os.chdir(source.dir)
+            diff = get_it('hg diff -r %s -r tip -X .hgtags' % tag)
+            if diff:
+                raise SystemError("There are changes to mainline since latest tag")
+            os.chdir(cwd)
+    
+            match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
             if match:
                 v_maj = match.group(1)
                 v_min = match.group(2)
-                r_maj = "0"
-                r_min = "0"
-                filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
+                r_maj = match.group(3)
+                r_min = match.group(4)
+                filename = '%s-%s.%s-%s.%s.zip' % (
+                    distro, v_maj, v_min, r_maj, r_min
+                )
             else:
-                raise ValueError("Not a release tag that I understand: %s" % tag)
-        print """\
+                match = re.match(r'^rel_(\d+)_(\d+)$', tag)
+                if match:
+                    v_maj = match.group(1)
+                    v_min = match.group(2)
+                    r_maj = "0"
+                    r_min = "0"
+                    filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
+                else:
+                    raise ValueError("Not a release tag that I understand: %s" % tag)
+            print """\
   - version: "%s.%s"
     revision: "%s.%s"
     url: http://catseye.tc/distfiles/%s
 """ % (v_maj, v_min, r_maj, r_min, filename)
-        full_filename = os.path.join(OPTIONS.distfiles_dir, filename)
-        if os.path.exists(full_filename):
-            run('unzip', '-v', full_filename)
-            raise SystemError("Distfile already exists: %s" % full_filename)
-        command = ['hg', 'archive', '-t', 'zip', '-r', tag]
-        for x in ('.hgignore', '.gitignore',
-                  '.hgtags', '.hg_archival.txt'):
-            command.append('-X')
-            command.append(x)
-        command.append(full_filename)
-        os.chdir(source.dir)
-        run(*command)
-        os.chdir(cwd)
-
-
-def lint(args):
-    """Check that the layouts of distributions conform to some
-    distribution organization guidelines.  If these are not guidelines that
-    you use, you can take this with a grain of salt.
-
-    """
-    problems = {}
-
-    OK_ROOT_FILES = (
-        'LICENSE', 'UNLICENSE',
-        'README.markdown', 'TODO.markdown', 'HISTORY.markdown',
-        'test.sh', 'clean.sh',
-        'make.sh', 'make-cygwin.sh', 'Makefile',
-        '.hgtags', '.hgignore', '.gitignore',
-    )
-    OK_ROOT_DIRS = (
-        'bin', 'contrib', 'demo', 'dialect',
-        'disk', 'doc', 'ebin', 'eg', 'images',
-        'impl', 'lib', 'priv', 'script',
-        'src', 'tests',
-        '.hg',
-    )
-
-    def lint_it(source):
-        prob = []
-        if not os.path.exists('README.markdown'):
-            prob.append("No README.markdown")
-        if not os.path.exists('LICENSE') and not os.path.exists('UNLICENSE'):
-            prob.append("No LICENSE or UNLICENSE")
-        if os.path.exists('LICENSE') and os.path.exists('UNLICENSE'):
-            prob.append("Both LICENSE and UNLICENSE")
-        for root, dirnames, filenames in os.walk('.'):
-            if root.endswith(".hg"):
-                del dirnames[:]
+            full_filename = os.path.join(self.options.distfiles_dir, filename)
+            if os.path.exists(full_filename):
+                run('unzip', '-v', full_filename)
+                raise SystemError("Distfile already exists: %s" % full_filename)
+            command = ['hg', 'archive', '-t', 'zip', '-r', tag]
+            for x in ('.hgignore', '.gitignore',
+                      '.hgtags', '.hg_archival.txt'):
+                command.append('-X')
+                command.append(x)
+            command.append(full_filename)
+            os.chdir(source.dir)
+            run(*command)
+            os.chdir(cwd)
+    
+    def lint(self, args):
+        """Check that the layouts of distributions conform to some
+        distribution organization guidelines.  If these are not guidelines that
+        you use, you can take this with a grain of salt.
+    
+        """
+        problems = {}
+    
+        OK_ROOT_FILES = (
+            'LICENSE', 'UNLICENSE',
+            'README.markdown', 'TODO.markdown', 'HISTORY.markdown',
+            'test.sh', 'clean.sh',
+            'make.sh', 'make-cygwin.sh', 'Makefile',
+            '.hgtags', '.hgignore', '.gitignore',
+        )
+        OK_ROOT_DIRS = (
+            'bin', 'contrib', 'demo', 'dialect',
+            'disk', 'doc', 'ebin', 'eg', 'images',
+            'impl', 'lib', 'priv', 'script',
+            'src', 'tests',
+            '.hg',
+        )
+    
+        def lint_it(source):
+            prob = []
+            if not os.path.exists('README.markdown'):
+                prob.append("No README.markdown")
+            if not os.path.exists('LICENSE') and not os.path.exists('UNLICENSE'):
+                prob.append("No LICENSE or UNLICENSE")
+            if os.path.exists('LICENSE') and os.path.exists('UNLICENSE'):
+                prob.append("Both LICENSE and UNLICENSE")
+            for root, dirnames, filenames in os.walk('.'):
+                if root.endswith(".hg"):
+                    del dirnames[:]
+                    continue
+                if root == '.':
+                    root_files = []
+                    for filename in filenames:
+                        if filename not in OK_ROOT_FILES:
+                            root_files.append(filename)
+                    if root_files:
+                        prob.append(
+                            "Junk files in root: %s" % root_files
+                        )
+    
+                    root_dirs = []
+                    for dirname in dirnames:
+                        if dirname not in OK_ROOT_DIRS:
+                            root_dirs.append(dirname)
+                    if root_dirs:
+                        prob.append(
+                            "Junk dirs in root: %s" % root_dirs
+                        )
+            problems[source.dir] = prob
+    
+        self.foreach_source(
+            expand_docked_specs(args), lint_it
+        )
+    
+        problematic_count = 0
+        for d in sorted(problems.keys()):
+            if not problems[d]:
                 continue
-            if root == '.':
-                root_files = []
-                for filename in filenames:
-                    if filename not in OK_ROOT_FILES:
-                        root_files.append(filename)
-                if root_files:
-                    prob.append(
-                        "Junk files in root: %s" % root_files
-                    )
-
-                root_dirs = []
-                for dirname in dirnames:
-                    if dirname not in OK_ROOT_DIRS:
-                        root_dirs.append(dirname)
-                if root_dirs:
-                    prob.append(
-                        "Junk dirs in root: %s" % root_dirs
-                    )
-        problems[source.dir] = prob
-
-    foreach_source(
-        expand_docked_specs(args), lint_it
-    )
-
-    problematic_count = 0
-    for d in sorted(problems.keys()):
-        if not problems[d]:
-            continue
-        print d
-        print '-' * len(d)
-        print
-        for problem in problems[d]:
-            print "* %s" % problem
-        print
-        problematic_count += 1
-
-    #print "Linted %d clones, problems in %d of them." % (
-    #    count, problematic_count
-    #)
-
-
-def survey(args):
-    """Generates a report summarizing various properties of the docked
-    source trees.  Sort of a "deep status".
-
-    """
-    repos = {}
-
-    def survey_it(source):
-        print source.name
-        dirty = get_it("hg st")
-        outgoing = ''
-        #if hg_outgoing:
-        #    outgoing = get_it("hg out")
-        #if 'no changes found' in outgoing:
-        #    outgoing = ''
-        tags = {}
-        latest_tag = source.get_latest_release_tag(tags)
-        due = ''
-        diff = ''
-        if latest_tag is None:
-            due = 'NEVER RELEASED'
-        else:
-            diff = get_it('hg diff -r %s -r tip -X .hgtags' % latest_tag)
-            if not diff:
-                due = ''
-            else:
-                due = "%d changesets (tip=%d, %s=%d)" % \
-                    ((tags['tip'] - tags[latest_tag]), tags['tip'],
-                     latest_tag, tags[latest_tag])
-        repos[source.name] = {
-            'dirty': dirty,
-            'outgoing': outgoing,
-            'tags': tags,
-            'latest_tag': latest_tag,
-            'due': due,
-            'diff': diff,
-        }
-
-    foreach_source(
-        expand_docked_specs(args), survey_it
-    )
-
-    print '-----'
-    for repo in sorted(repos.keys()):
-        r = repos[repo]
-        if r['dirty'] or r['outgoing'] or r['due']:
-            print repo
-            if r['dirty']:
-                print r['dirty']
-            if r['outgoing']:
-                print r['outgoing']
-            if r['due']:
-                print "  DUE:", r['due']
+            print d
+            print '-' * len(d)
             print
-    print '-----'
+            for problem in problems[d]:
+                print "* %s" % problem
+            print
+            problematic_count += 1
+    
+        #print "Linted %d clones, problems in %d of them." % (
+        #    count, problematic_count
+        #)
+    
+    def survey(self, args):
+        """Generates a report summarizing various properties of the docked
+        source trees.  Sort of a "deep status".
+    
+        """
+        repos = {}
+    
+        def survey_it(source):
+            print source.name
+            dirty = get_it("hg st")
+            outgoing = ''
+            #if hg_outgoing:
+            #    outgoing = get_it("hg out")
+            #if 'no changes found' in outgoing:
+            #    outgoing = ''
+            tags = {}
+            latest_tag = source.get_latest_release_tag(tags)
+            due = ''
+            diff = ''
+            if latest_tag is None:
+                due = 'NEVER RELEASED'
+            else:
+                diff = get_it('hg diff -r %s -r tip -X .hgtags' % latest_tag)
+                if not diff:
+                    due = ''
+                else:
+                    due = "%d changesets (tip=%d, %s=%d)" % \
+                        ((tags['tip'] - tags[latest_tag]), tags['tip'],
+                         latest_tag, tags[latest_tag])
+            repos[source.name] = {
+                'dirty': dirty,
+                'outgoing': outgoing,
+                'tags': tags,
+                'latest_tag': latest_tag,
+                'due': due,
+                'diff': diff,
+            }
+    
+        self.foreach_source(
+            expand_docked_specs(args), survey_it
+        )
+    
+        print '-----'
+        for repo in sorted(repos.keys()):
+            r = repos[repo]
+            if r['dirty'] or r['outgoing'] or r['due']:
+                print repo
+                if r['dirty']:
+                    print r['dirty']
+                if r['outgoing']:
+                    print r['outgoing']
+                if r['due']:
+                    print "  DUE:", r['due']
+                print
+        print '-----'
 
+    def test(self, args):
+        def test_it(source):
+            if os.path.exists(os.path.join(source.dir, 'test.sh')):
+                print get_it('./test.sh')
+    
+        self.foreach_source(
+            expand_docked_specs(args), test_it
+        )
 
-def test(args):
-    def test_it(source):
-        if os.path.exists(os.path.join(source.dir, 'test.sh')):
-            print get_it('./test.sh')
-
-    foreach_source(
-        expand_docked_specs(args), test_it
-    )
-
-
-def collectdocs(args):
-    """Looks for documentation in local repository clones and writes out
-    a files that can be used to update the Documentation nodes in the
-    Chrysoberyl data.
-
-    """
-    import yaml
-    docdict = {}
-
-    def collectdocs_it(source):
-        for path in source.find_likely_documents():
-            docdict.setdefault(source.name, []).append(path)
-
-    foreach_source(
-        expand_docked_specs(args), collectdocs_it
-    )
-
-    output_filename = 'docs.yaml'
-    with codecs.open(output_filename, 'w', 'utf-8') as file:
-        file.write('# encoding: UTF-8\n')
-        file.write('# AUTOMATICALLY GENERATED BY chrysoberyl.py\n')
-        file.write(yaml.dump(docdict, Dumper=yaml.Dumper, default_flow_style=False))
-
-
-SUBCOMMANDS = {
-    'dock': dock,
-    'pwd': pwd,
-    'build': build,
-    'update': update,
-    'status': status,
-    'rectify': rectify,
-    'show': show,
-    'disable': disable,
-    'relink': relink,
-    'ghuser': ghuser,
-    'bbuser': bbuser,
-    'release': release,
-    'lint': lint,
-    'survey': survey,
-    'test': test,
-    'collectdocs': collectdocs,
-}
+    def collectdocs(self, args):
+        """Looks for documentation in local repository clones and writes out
+        a files that can be used to update the Documentation nodes in the
+        Chrysoberyl data.
+    
+        """
+        import yaml
+        docdict = {}
+    
+        def collectdocs_it(source):
+            for path in source.find_likely_documents():
+                docdict.setdefault(source.name, []).append(path)
+    
+        self.foreach_source(
+            expand_docked_specs(args), collectdocs_it
+        )
+    
+        output_filename = 'docs.yaml'
+        with codecs.open(output_filename, 'w', 'utf-8') as file:
+            file.write('# encoding: UTF-8\n')
+            file.write('# AUTOMATICALLY GENERATED BY chrysoberyl.py\n')
+            file.write(yaml.dump(docdict, Dumper=yaml.Dumper, default_flow_style=False))
 
 
 def main(args):
-    global OPTIONS, COOKIES, LINK_FARM
+    global OPTIONS
 
     parser = optparse.OptionParser(__doc__)
 
@@ -1228,33 +1209,14 @@ def main(args):
         print "Usage: " + __doc__
         sys.exit(2)
 
-    COOKIES = Cookies()
-    COOKIES.add_file(os.path.join(
-        TOOLSHELF, '.toolshelf', 'cookies.catalog'
-    ))
-    COOKIES.add_file(os.path.join(
-        TOOLSHELF, '.toolshelf', 'local-cookies.catalog'
-    ))
-    LINK_FARM = LinkFarm(LINK_FARM_DIR)
+    t = Toolshelf(options=OPTIONS)
 
-    subcommand = args[0]
-    if subcommand in SUBCOMMANDS:
-        try:
-            SUBCOMMANDS[subcommand](args[1:])
-        except Exception as e:
-            if OPTIONS.break_on_error:
-                raise
-            ERRORS.setdefault(subcommand, []).append(str(e))
-    else:
-        sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
-        print "Usage: " + __doc__
-        sys.exit(2)
-    
-    if ERRORS:
+    t.run_command(args[0], args[1:])
+    if t.errors:
         sys.stderr.write('\nERRORS:\n\n')
-        for name in sorted(ERRORS.keys()):
+        for name in sorted(t.errors.keys()):
             sys.stderr.write(name + ':\n')
-            for msg in ERRORS[name]:
+            for msg in t.errors[name]:
                 sys.stderr.write(msg + '\n')
             sys.stderr.write('\n')
         sys.stderr.write('For usage, run `toolshelf --help`.\n')
