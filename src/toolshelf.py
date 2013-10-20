@@ -71,6 +71,14 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     pwd <docked-source-spec>
         Emit the name of the directory of the docked source (or exit with an
         error if there is no such source docked.)
+    
+    ghuser <login> <username>
+        Create (on standard output) a catalog for all of the given Github user's
+        repositories.  The login is either 'username:password', which is your
+        Github login, not necessarily the target user's, and which is used to
+        log in to the Github API, or 'none', in which the Github API will be
+        used anonymously.  Note that this command is experimental and its
+        syntax will likely change.
 """
 
 import errno
@@ -836,13 +844,24 @@ def ghuser_cmd(args):
     else:
         login = login + '@'
     url = 'https://%sapi.github.com/users/%s/repos' % (login, user)
-    # TODO: parse the link header on the response:
-    # Link: <https://api.github.com/user/1134322/repos?page=2>; rel="next", <https://api.github.com/user/1134322/repos?page=4>; rel="last"
-    # and keep making more requests until you have them all
-    data = requests.get(url).json()
-    note(repr(data))
-    for x in data:
-        print 'gh:%s' % x['full_name']
+    
+    done = False
+    while not done:
+        response = requests.get(url)
+        data = response.json()
+        for x in data:
+            print 'gh:%s' % x['full_name']
+        link = response.headers.get('Link', None)
+        if link is None:
+            done = True
+        else:
+            # Link: <https://api.github.com/user/1134322/repos?page=2>; rel="next", <https://api.github.com/user/1134322/repos?page=4>; rel="last"
+            match = re.match(r'\<(.*?)\>\s*\;\s*rel\s*=\s*\"next\"', link)
+            if not match:
+                note(link)
+                done = True
+            else:
+                url = match.group(1)
 
 
 SUBCOMMANDS = {
