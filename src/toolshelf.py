@@ -210,11 +210,12 @@ def expand_docked_specs(specs, default_all=False):
 
     A docked source specifier may take any of the following forms:
 
-      host/user/project          this particular host, user, project
-      user/project               from any host under this name
-      user/all               NYI all docked projects by this user
-      project                    from any host & user under this name
-      all                        all docked projects
+    1. host/user/project          this particular host, user, project
+    2. host/user/all              all docked projects by this user on this host
+    3. user/project               from any host under this name
+    4. user/all                   all docked projects by this user
+    5. project                    from any host & user under this name
+    6. all                        all docked projects
 
     """
     if default_all and specs == []:
@@ -222,7 +223,7 @@ def expand_docked_specs(specs, default_all=False):
     new_specs = []
     for name in specs:
         match = re.match(r'^([^/]*)/([^/]*)$', name)
-        if name == 'all':
+        if name == 'all':  # case 6
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
                     continue
@@ -237,26 +238,26 @@ def expand_docked_specs(specs, default_all=False):
             break
         elif name.startswith('@'):
             new_specs.append(name)
-        elif match:
+        elif match:  # case 3 or 4
             user = match.group(1)
             project = match.group(2)
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
                     continue
                 user_dirname = os.path.join(TOOLSHELF, host, user)
-                if project == 'all':
+                if project == 'all':  # case 4
                     if os.path.isdir(user_dirname):
                         for project in os.listdir(user_dirname):
                             project_dirname = os.path.join(user_dirname, project)
                             if not os.path.isdir(project_dirname):
                                 continue
                             new_specs.append('%s/%s/%s' % (host, user, project))            
-                else:
+                else:  # case 3
                     project_dirname = os.path.join(TOOLSHELF, host, user, project)
                     if not os.path.isdir(project_dirname):
                         continue
                     new_specs.append('%s/%s/%s' % (host, user, project))            
-        elif '/' not in name:
+        elif '/' not in name:  # case 5
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
                     # skip hidden dirs
@@ -268,8 +269,17 @@ def expand_docked_specs(specs, default_all=False):
                         if project == name:
                             new_specs.append('%s/%s/%s' %
                                              (host, user, project))
-        else:
-            new_specs.append(name)
+        else:  # case 1 or 2
+            (host, user, project) = name.split('/')
+            if project == 'all':  # case 2
+                user_dirname = os.path.join(TOOLSHELF, host, user)
+                for project in os.listdir(user_dirname):
+                    project_dirname = os.path.join(user_dirname, project)
+                    if not os.path.isdir(project_dirname):
+                        continue
+                    new_specs.append('%s/%s/%s' % (host, user, project))
+            else:  # case 1
+                new_specs.append(name)
 
     note('Resolved source specs to %r' % new_specs)
     return new_specs
@@ -637,6 +647,8 @@ class Source(object):
         output = None
         if os.path.isdir('.git'):
             output = get_it('git status')
+            if 'working directory clean' in output:
+                output = ''
         elif os.path.isdir('.hg'):
             output = get_it('hg status')
         if output:
