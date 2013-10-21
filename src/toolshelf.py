@@ -1169,13 +1169,37 @@ class Toolshelf(object):
         print '-----'
 
     def test(self, args):
+        stats = {
+            'sources': 0,
+            'no_tests': 0,
+            'pass': 0,
+            'fail': 0
+        }
         def test_it(source):
+            stats['sources'] += 1
             if os.path.exists(os.path.join(source.dir, 'test.sh')):
-                print get_it('./test.sh')
+                process = subprocess.Popen(
+                    './test.sh', shell=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                (std_output, std_error) = process.communicate()
+                sys.stdout.write(std_output)
+                sys.stdout.write(std_error)
+                if process.returncode == 0:
+                    stats['pass'] += 1
+                else:
+                    stats['fail'] += 1
+            else:
+                stats['no_tests'] += 1
     
         self.foreach_source(
             expand_docked_specs(args), test_it
         )
+        
+        print "Total docked sources tested:   %s" % stats['sources']
+        print "Total passing:                 %s" % stats['pass']
+        print "Total failures:                %s" % stats['fail']
+        print "Total missing (obvious) tests: %s" % stats['no_tests']
 
     def collectdocs(self, args):
         """Looks for documentation in local repository clones and writes out

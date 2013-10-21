@@ -513,6 +513,7 @@ The Python module `toolshelf.py` is the workhorse:
   link farm.
 - It checks for other arguments as needed.  Since it's trivial to remove a
   package that has been docked, there might not be a `undock` subcommand.
+  (Actually there should be one that rebuilds the link farm afterwards.)
 
 Case Studies
 ------------
