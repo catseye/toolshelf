@@ -9,5 +9,8 @@ export PATH="$TOOLSHELF/.toolshelf/bin:$TOOLSHELF/.bin:$PATH"
 # but a bash function can utilize `toolshelf` to do so.  Since this is a very handy
 # function of toolshelf, you may wish to make a short alias for this, e.g. `thcd`.
 function toolshelf_cd {
-    cd `$TOOLSHELF/.toolshelf/bin/toolshelf pwd $*`
+    DIR=`$TOOLSHELF/.toolshelf/bin/toolshelf pwd $*`
+    if [ ! -z $DIR ]; then
+        cd $DIR
+    fi
 }

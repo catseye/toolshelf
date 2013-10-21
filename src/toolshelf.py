@@ -821,7 +821,10 @@ class Toolshelf(object):
         cwd = os.getcwd()
         sources = Source.from_specs(specs, self.cookies)
         for source in sources:
-            os.chdir(source.dir)
+            if os.path.isdir(source.dir):
+                os.chdir(source.dir)
+            else:
+                os.chdir(TOOLSHELF)
             try:
                 fun(source)
             except Exception as e:
@@ -889,7 +892,9 @@ class Toolshelf(object):
         sources = Source.from_specs(specs, self.cookies)
         if len(sources) != 1:
             raise SourceSpecError(
-                "Could not resolve %s to a single unique source\n" % args
+                "Could not resolve %s to a single unique source (%s)" % (
+                    args, [s.dir for s in sources]
+                )
             )
         print sources[0].dir
     
