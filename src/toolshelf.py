@@ -634,10 +634,14 @@ class Source(object):
 
     def status(self):
         chdir(self.dir)
+        output = None
         if os.path.isdir('.git'):
-            run('git', 'status')
+            output = get_it('git status')
         elif os.path.isdir('.hg'):
-            run('hg', 'status')
+            output = get_it('hg status')
+        if output:
+            print self.dir
+            print output
 
     def may_use_path(self, dirname):
         only_paths = self.hints.get('only_paths', None)
