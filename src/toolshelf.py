@@ -138,7 +138,6 @@ class DefaultOptions(object):
 
 # TODO: make not global (har)
 OPTIONS = DefaultOptions()
-ERRORS = {}
 
 
 ### Exceptions
@@ -176,7 +175,7 @@ def get_it(command):
     output = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE
     ).communicate()[0]
-    if OPTIONS.verbose:
+    if OPTIONS.verbose:  # FIX
         print output
     return output
 
@@ -202,7 +201,7 @@ def symlink(sourcename, linkname):
 
 
 def note(msg):
-    if OPTIONS.verbose:
+    if OPTIONS.verbose:  # FIX
         print "*", msg
 
 
@@ -522,55 +521,6 @@ class Source(object):
                 (self.url, self.host, self.user,
                  self.project, self.type, self.hints))
 
-    @classmethod
-    def from_catalog(klass, filename, cookies):
-        note('Reading catalog %s' % filename)
-        sources = []
-        with open(filename, 'r') as file:
-            for line in file:
-                line = line.strip()
-                if line == '' or line.startswith('#'):
-                    continue
-                sources += Source.from_spec(line, cookies)
-        return sources
-
-    @classmethod
-    def from_specs(klass, names, cookies):
-        sources = []
-        for name in names:
-            try:
-                sources += klass.from_spec(name, cookies)
-            except Exception as e:
-                if OPTIONS.break_on_error:
-                    raise
-                # allow injecting this one?
-                ERRORS.setdefault(name, []).append(str(e))
-        return sources
-
-    @classmethod
-    def from_spec(klass, name, cookies):
-        """Parse an external source specifier and return a list of
-        Source objects.
-
-        An external source specifier may take any of the forms listed
-        in parse_source_spec's docstring, as well as the following:
-
-          @local/file/name           read list of sources from file
-          @@foo                      read list in .toolshelf/catalog/foo
-
-        """
-        if name.startswith('@@'):
-            filename = os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
-            )
-            return klass.from_catalog(filename, cookies)
-        if name.startswith('@'):
-            return klass.from_catalog(os.path.join(CWD, name[1:]), cookies)
-
-        kwargs = parse_source_spec(name)
-        kwargs['cookies'] = cookies
-        return [Source(**kwargs)]
-
     @property
     def distfile(self):
         if self.type in ('zip', 'tgz', 'tar.gz'):
@@ -645,7 +595,7 @@ class Source(object):
             raise NotImplementedError(self.type)
 
     def build(self):
-        if not OPTIONS.build:
+        if not OPTIONS.build:  # FIX
             note("SKIPPING build of %s" % self.name)
             return
         note("Building %s..." % self.dir)
@@ -803,7 +753,7 @@ class Source(object):
 
 class Toolshelf(object):
     def __init__(self, options=DefaultOptions(), cookies=None,
-                       link_farm=LinkFarm(LINK_FARM_DIR), errors=ERRORS):
+                       link_farm=LinkFarm(LINK_FARM_DIR), errors=None):
         self.options = options
         if cookies is None:
             cookies = Cookies()
@@ -815,11 +765,58 @@ class Toolshelf(object):
             ))
         self.cookies = cookies
         self.link_farm = link_farm
+        if errors is None:
+            errors = {}
         self.errors = errors
+
+    def make_sources_from_catalog(self, filename):
+        note('Reading catalog %s' % filename)
+        sources = []
+        with open(filename, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line == '' or line.startswith('#'):
+                    continue
+                sources += self.make_sources_from_spec(line)
+        return sources
+
+    def make_sources_from_specs(self, names):
+        sources = []
+        for name in names:
+            try:
+                sources += self.make_sources_from_spec(name)
+            except Exception as e:
+                if self.options.break_on_error:
+                    raise
+                self.errors.setdefault(name, []).append(str(e))
+        return sources
+
+    def make_sources_from_spec(self, name):
+        """Parse an external source specifier and return a list of
+        Source objects.
+
+        An external source specifier may take any of the forms listed
+        in parse_source_spec's docstring, as well as the following:
+
+          @local/file/name           read list of sources from file
+          @@foo                      read list in .toolshelf/catalog/foo
+
+        """
+        if name.startswith('@@'):
+            filename = os.path.join(
+                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+            )
+            return self.make_sources_from_catalog(filename)
+        if name.startswith('@'):
+            return self.make_sources_from_catalog(os.path.join(CWD, name[1:]))
+
+        kwargs = parse_source_spec(name)
+        kwargs['cookies'] = self.cookies
+        return [Source(**kwargs)]
 
     def foreach_source(self, specs, fun, rebuild_paths=True):
         cwd = os.getcwd()
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         for source in sources:
             if os.path.isdir(source.dir):
                 os.chdir(source.dir)
@@ -889,7 +886,7 @@ class Toolshelf(object):
 
     def pwd(self, args):
         specs = expand_docked_specs(args)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         if len(sources) != 1:
             raise SourceSpecError(
                 "Could not resolve %s to a single unique source (%s)" % (
@@ -900,13 +897,13 @@ class Toolshelf(object):
     
     def rectify(self, args):
         specs = expand_docked_specs(args)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         for source in sources:
             source.rectify_permissions_if_needed()
     
     def relink(self, args):
         specs = expand_docked_specs(args, default_all=True)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         note("Adding the following executables to your link farm...")
         for source in sources:
             self.link_farm.clean(prefix=source.dir)
@@ -915,13 +912,13 @@ class Toolshelf(object):
     
     def disable(self, args):
         specs = expand_docked_specs(args, default_all=True)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         for source in sources:
             self.link_farm.clean(prefix=source.dir)
     
     def show(self, args):
         specs = expand_docked_specs(args, default_all=True)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         for source in sources:
             for (linkname, filename) in self.link_farm.links():
                 if filename.startswith(source.dir):
@@ -974,7 +971,7 @@ class Toolshelf(object):
         """
         cwd = os.getcwd()
         specs = expand_docked_specs(args, default_all=False)
-        sources = Source.from_specs(specs, self.cookies)
+        sources = self.make_sources_from_specs(specs)
         for source in sources:
             distro = source.project
             tag = source.get_latest_release_tag()
