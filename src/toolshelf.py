@@ -833,7 +833,7 @@ class Toolshelf(object):
     def foreach_source(self, specs, fun, rebuild_paths=True):
         cwd = os.getcwd()
         sources = self.make_sources_from_specs(specs)
-        for source in sources:
+        for source in sorted(sources, key=str):
             if os.path.isdir(source.dir):
                 os.chdir(source.dir)
             else:
@@ -1172,7 +1172,7 @@ class Toolshelf(object):
         stats = {
             'sources': 0,
             'no_tests': 0,
-            'pass': 0,
+            'passes': [],
             'fails': []
         }
         def test_it(source):
@@ -1183,12 +1183,13 @@ class Toolshelf(object):
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
                 (std_output, std_error) = process.communicate()
-                sys.stdout.write(std_output)
-                sys.stdout.write(std_error)
+                if self.options.verbose:
+                    sys.stdout.write(std_output)
+                    sys.stdout.write(std_error)
                 if process.returncode == 0:
-                    stats['pass'] += 1
+                    stats['passes'].append(source)
                 else:
-                    stats['fails'].append(source.dir)
+                    stats['fails'].append(source)
             else:
                 stats['no_tests'] += 1
     
@@ -1198,9 +1199,12 @@ class Toolshelf(object):
         
         print "Total docked sources tested:   %s" % stats['sources']
         print "Total without obvious tests:   %s" % stats['no_tests']
-        print "Total passing:                 %s" % stats['pass']
+        print "Total passing:                 %s" % len(stats['passes'])
+        if self.options.verbose:
+            print [s.name for s in stats['passes']]
         print "Total failures:                %s" % len(stats['fails'])
-        print stats['fails']
+        if self.options.verbose:
+            print [s.name for s in stats['fails']]
 
     def collectdocs(self, args):
         """Looks for documentation in local repository clones and writes out
