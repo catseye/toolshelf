@@ -638,7 +638,7 @@ class Source(object):
             if os.path.isfile('configure'):
                 run('./configure')
 
-            if os.path.isfile('Makefile'):
+            if os.path.isfile('Makefile') or os.path.isfile('makefile'):
                 run('make')
             elif os.path.isfile('src/Makefile'):
                 chdir('src')
