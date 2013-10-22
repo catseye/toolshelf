@@ -1173,7 +1173,7 @@ class Toolshelf(object):
             'sources': 0,
             'no_tests': 0,
             'pass': 0,
-            'fail': 0
+            'fails': []
         }
         def test_it(source):
             stats['sources'] += 1
@@ -1188,7 +1188,7 @@ class Toolshelf(object):
                 if process.returncode == 0:
                     stats['pass'] += 1
                 else:
-                    stats['fail'] += 1
+                    stats['fails'].append(source.dir)
             else:
                 stats['no_tests'] += 1
     
@@ -1197,9 +1197,10 @@ class Toolshelf(object):
         )
         
         print "Total docked sources tested:   %s" % stats['sources']
+        print "Total without obvious tests:   %s" % stats['no_tests']
         print "Total passing:                 %s" % stats['pass']
-        print "Total failures:                %s" % stats['fail']
-        print "Total missing (obvious) tests: %s" % stats['no_tests']
+        print "Total failures:                %s" % len(stats['fails'])
+        print stats['fails']
 
     def collectdocs(self, args):
         """Looks for documentation in local repository clones and writes out
