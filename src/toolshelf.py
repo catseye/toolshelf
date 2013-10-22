@@ -217,7 +217,8 @@ def expand_docked_specs(specs, default_all=False):
     3. user/project               from any host under this name
     4. user/all                   all docked projects by this user
     5. project                    from any host & user under this name
-    6. all                        all docked projects
+    6. proj+                      the first project found that starts w/'proj'
+    7. all                        all docked projects
 
     """
     if default_all and specs == []:
@@ -225,7 +226,7 @@ def expand_docked_specs(specs, default_all=False):
     new_specs = []
     for name in specs:
         match = re.match(r'^([^/]*)/([^/]*)$', name)
-        if name == 'all':  # case 6
+        if name == 'all':  # case 7
             for host in os.listdir(TOOLSHELF):
                 if host.startswith('.'):
                     continue
@@ -259,18 +260,26 @@ def expand_docked_specs(specs, default_all=False):
                     if not os.path.isdir(project_dirname):
                         continue
                     new_specs.append('%s/%s/%s' % (host, user, project))            
-        elif '/' not in name:  # case 5
-            for host in os.listdir(TOOLSHELF):
-                if host.startswith('.'):
-                    # skip hidden dirs
-                    continue
-                host_dirname = os.path.join(TOOLSHELF, host)
-                for user in os.listdir(host_dirname):
-                    user_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(user_dirname):
-                        if project == name:
-                            new_specs.append('%s/%s/%s' %
-                                             (host, user, project))
+        elif '/' not in name:  # cases 5 and 6
+            try:
+                for host in os.listdir(TOOLSHELF):
+                    if host.startswith('.'):
+                        # skip hidden dirs
+                        continue
+                    host_dirname = os.path.join(TOOLSHELF, host)
+                    for user in os.listdir(host_dirname):
+                        user_dirname = os.path.join(host_dirname, user)
+                        for project in os.listdir(user_dirname):
+                            if project == name:
+                                new_specs.append('%s/%s/%s' %
+                                                 (host, user, project))
+                            if (name.endswith('+') and
+                                project.startswith(name[:-1])):
+                                new_specs.append('%s/%s/%s' %
+                                                 (host, user, project))                            
+                                raise StopIteration
+            except StopIteration:
+                pass
         else:  # case 1 or 2
             (host, user, project) = name.split('/')
             if project == 'all':  # case 2
