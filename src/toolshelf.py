@@ -1006,7 +1006,7 @@ class Toolshelf(object):
                 raise SystemError("Repository not tagged")
             os.chdir(source.dir)
             diff = get_it('hg diff -r %s -r tip -X .hgtags' % tag)
-            if diff:
+            if diff and not self.options.force:
                 raise SystemError("There are changes to mainline since latest tag")
             os.chdir(cwd)
     
@@ -1047,6 +1047,7 @@ class Toolshelf(object):
             os.chdir(source.dir)
             run(*command)
             os.chdir(cwd)
+            run('unzip', '-v', full_filename)
     
     def lint(self, args):
         """Check that the layouts of distributions conform to some
@@ -1249,9 +1250,13 @@ def main(args):
     parser.add_option("-B", "--no-build", dest="build",
                       default=True, action="store_false",
                       help="don't try to build sources during docking")
+    parser.add_option("-f", "--force",
+                      default=False, action="store_true",
+                      help="subvert any safety mechanisms and just do "
+                           "the thing regardless of the consequences")
     parser.add_option("--distfiles-dir",
                       dest="distfiles_dir", metavar='DIR',
-                      default='../catseye.tc/distfiles',
+                      default='../catseye_tc/catseye.tc/distfiles',
                       help="write distfiles into this directory "
                            "(default: %default)")
     parser.add_option("-K", "--break-on-error", dest="break_on_error",
