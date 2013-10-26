@@ -25,6 +25,9 @@ bb:catseye/etcha
 bb:catseye/deturgenchry
   require_executables ghc
 
+bb:catseye/amiga-gondola
+  exclude_paths dh0 workbench-cache
+
 http://catseye.tc/distfiles/dieter-1.0-2011.1214.zip
   rectify_permissions yes
 
