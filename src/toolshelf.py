@@ -1105,9 +1105,10 @@ class Toolshelf(object):
             problems[source.dir] = prob
     
         self.foreach_source(
-            expand_docked_specs(args), lint_it
+            expand_docked_specs(args), lint_it,
+            rebuild_paths=False
         )
-    
+
         problematic_count = 0
         for d in sorted(problems.keys()):
             if not problems[d]:
@@ -1163,9 +1164,10 @@ class Toolshelf(object):
             }
     
         self.foreach_source(
-            expand_docked_specs(args), survey_it
+            expand_docked_specs(args), survey_it,
+            rebuild_paths=False
         )
-    
+
         print '-----'
         for repo in sorted(repos.keys()):
             r = repos[repo]
@@ -1206,7 +1208,8 @@ class Toolshelf(object):
                 stats['no_tests'] += 1
     
         self.foreach_source(
-            expand_docked_specs(args), test_it
+            expand_docked_specs(args), test_it,
+            rebuild_paths=False
         )
         
         print "Total docked sources tested:   %s" % stats['sources']
