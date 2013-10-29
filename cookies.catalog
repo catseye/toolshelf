@@ -12,9 +12,20 @@ gh:darius/ichbins
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
 
-gh:catseye/VICE
-  only_paths src
-  build_command autogen.sh && ./configure --enable-gnomeui && make
+# 1. it would be nice to be able to vary this by OS, so it could be
+#    'make linux' under linux, etc.
+# 2. it would be nice to have this be a wildcard, like
+#    'http://www.lua.org/ftp/lua-*'
+
+http://www.lua.org/ftp/lua-5.2.2.tar.gz
+  build_command make ansi
+
+http://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz
+  rectify_permissions yes
+  exclude_paths doc build bx_debug bios
+
+http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
+  build_command ./configure --enable-gnomeui --prefix=`pwd` && make && make install
 
 bb:catseye/yucca
   require_executables python
