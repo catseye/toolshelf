@@ -43,18 +43,25 @@ bootstrap_toolshelf() {
 
     OK=1
 
-    BASHRC=''
+    SHELL_PROFILE=''
+    if [ -e $HOME/.profile ]; then
+        SHELL_PROFILE="$HOME/.profile"
+    fi
     if [ -e $HOME/.bashrc ]; then
-        BASHRC="$HOME/.bashrc"
+        SHELL_PROFILE="$HOME/.bashrc"
     fi
     if [ -e $HOME/.bash_profile ]; then
-        BASHRC="$HOME/.bash_profile"
+        SHELL_PROFILE="$HOME/.bash_profile"
     fi
 
-    if [ -z $BASHRC ]; then
-        echo "***NOTE: You do not appear to have either a ~/.bashrc or"
-        echo "a ~/.bash_profile."
-        echo "toolshelf assumes you are using bash as your shell."
+    if [ -z $SHELL_PROFILE ]; then
+        echo "***NOTE: You do not appear to have a shell profile file"
+        echo "(couldn't find ~/.bashrc, nor ~/.bash_profile, nor ~/.profile.)"
+        echo
+        echo "This script (and toolshelf generally) assumes you are"
+        echo "using a POSIX-shell-based shell, such as bash or dash,"
+        echo "as your current interactive shell."
+        echo
         echo "Please rectify this situation if you wish to use"
         echo "toolshelf, then re-source this script."
         echo
@@ -94,7 +101,7 @@ bootstrap_toolshelf() {
     echo "it will be created.)"
     echo
     echo -n "Directory? [${DEFAULT_TOOLSHELF}] "
-    read -e TOOLSHELF
+    read TOOLSHELF
     if [ -z $TOOLSHELF ]; then
         TOOLSHELF=${DEFAULT_TOOLSHELF}
     fi
@@ -104,12 +111,16 @@ bootstrap_toolshelf() {
     if [ -e $TOOLSHELF ]; then
         # TODO: actually loop here
         echo "Warning!  That directory already exists!"
+        echo
+        echo "This script won't delete it, but may have problems"
+        echo "using it, if there is already stuff inside it."
+        echo
         echo "If you would like to use it, type something here."
         echo "Otherwise press Ctrl-C to stop this script,"
         echo "re-source it, and make a different selection."
         echo
         echo -n "What'll it be? [continue] "
-        read -e CONFIRM
+        read CONFIRM
     fi
 
     mkdir -p $TOOLSHELF
@@ -125,39 +136,40 @@ bootstrap_toolshelf() {
 
     cd $ORIGDIR
 
-    BASHRC1="source $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF >/dev/null 2>&1 # added-by-bootstrap-toolshelf"
+    LINE1=". $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF >/dev/null 2>&1 # added-by-bootstrap-toolshelf"
 
-    echo "Now we'd like to add the following line to your $BASHRC file:"
+    echo "Now we'd like to add the following line to your ${SHELL_PROFILE} file:"
     echo
-    echo "  $BASHRC1"
+    echo "  $LINE1"
     echo
-    echo "Your current $BASHRC will be backed up first (to $BASHRC.orig),"
+    echo "Your current ${SHELL_PROFILE} will be backed up first (to ${SHELL_PROFILE}.orig),"
     echo "and any lines currently containing 'added-by-bootstrap-toolshelf'"
     echo "will be removed first."
     echo
-    echo "If you don't want this script to touch your $BASHRC file, you"
+    echo "If you don't want this script to touch your ${SHELL_PROFILE} file, you"
     echo "may decline (but you'll have to add this line yourself.)"
     echo
-    echo -n "Modify the file $BASHRC? [y/N] "
-    read -e RESPONSE
+    echo -n "Modify the file ${SHELL_PROFILE}? [y/N] "
+    read RESPONSE
     if [ -z $RESPONSE ]; then
         RESPONSE=N
     fi
     if [ $RESPONSE = 'y' -o $RESPONSE = 'Y' ]; then
-        echo "Backing up $BASHRC and modifying it..."
-        cp -p $BASHRC $BASHRC.orig
-        grep -v 'added-by-bootstrap-toolshelf' <$BASHRC > $HOME/.new_bashrc
-        echo >>$HOME/.new_bashrc "$BASHRC1"
-        mv $HOME/.new_bashrc $BASHRC
+        echo "Backing up ${SHELL_PROFILE} and modifying it..."
+        cp -p ${SHELL_PROFILE} ${SHELL_PROFILE}.orig
+        NEWFILE="$HOME/.tmp_new_profile_$$"
+        grep -v 'added-by-bootstrap-toolshelf' <${SHELL_PROFILE} > ${NEWFILE}
+        echo >>${NEWFILE} "$LINE1"
+        mv ${NEWFILE} ${SHELL_PROFILE}
         echo "Done."
         echo
         echo "For your convenience, we'll also apply these startup commands"
         echo "right now.  If you 'source'd this script like the instructions"
         echo "told you to, you'll be able to start using toolshelf right"
-        echo "away.  If, instead, you started it using 'bash', you'll have"
-        echo "to start a new bash shell to start using toolshelf."
+        echo "away.  If, instead, you started it using 'sh' or 'bash' or similar,"
+        echo "you'll have to start a new shell to start using toolshelf."
 
-        source $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF
+        . $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF
     else
         echo "That's totally fine; please make these changes yourself."
         echo "Then start a new bash shell to start using toolshelf."
