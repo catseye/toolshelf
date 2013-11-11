@@ -124,6 +124,8 @@ bootstrap_toolshelf() {
     fi
 
     mkdir -p $TOOLSHELF
+    # TODO: check if $TOOLSHELF/.toolshelf already exists
+    # TODO: prompt for where to clone toolshelf from
     echo "Proceeding to clone the toolshelf repo from github..."
     ORIGDIR=`pwd`
     cd $TOOLSHELF
@@ -136,7 +138,7 @@ bootstrap_toolshelf() {
 
     cd $ORIGDIR
 
-    LINE1=". $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF >/dev/null 2>&1 # added-by-bootstrap-toolshelf"
+    LINE1=". $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF # added-by-bootstrap-toolshelf"
 
     echo "Now we'd like to add the following line to your ${SHELL_PROFILE} file:"
     echo
