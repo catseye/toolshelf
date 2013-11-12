@@ -28,28 +28,47 @@ trees.  The source trees are typically the working directories of local `git`
 or Mercurial clones, or they can be source distributions from downloaded
 tarballs (which includes `.zip` archives).
 
-`toolshelf` requires that you use `bash` as your shell.  It also requires
-Python 2.6 or 2.7 to run the workhorse script.
+`toolshelf` is mainly written in Python, and requires Python 2.6 or 2.7 to
+run.  It also requires the presence of those tools it needs to use to get
+and build what it asks for.  Obviously, the less you ask for, the less it
+needs, but at least some of the following will be helpful:
+
+*   `git` or `hg` (Mercurial)
+*   `wget`
+*   `tar` and `gzip` and/or `bzip2`
+*   `unzip`
+*   `make`
+
+One of the more useful parts of `toolshelf` is not written in Python; it
+is instaed a shell function called `toolshelf_cd`, which lets you quickly
+change directory into any of the source trees you have docked.  This
+function should work in any POSIX-compliant shell, including but not
+limited to `bash`, `dash`, and `ash`.  If you use some other shell, you
+can still use `toolshelf`, but you may miss out on the extremely handy
+`toolshelf_cd` function.
 
 `toolshelf` is placed under an MIT-style license.
 
 Quick Start
 -----------
 
-* Start a `bash` shell.
-* Download [`bootstrap-toolshelf.sh`][], for example by running:
+*   Start a shell.  (On some OS'es, this means "Open a Terminal window.")
+    
+*   Download [`bootstrap-toolshelf.sh`][], for example by running:
   
-      wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
-  
-  (If you don't have `wget` installed, `curl` should also work.)
-  
-* Run:
-
-      source bootstrap-toolshelf.sh
-
-* Follow the instructions given to you by the script.
+        wget https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
+    
+    (If you don't have `wget` installed, `curl` should also work.)
+    
+*   Run:
+        . ./bootstrap-toolshelf.sh
+    
+*   Follow the instructions given to you by the script.
 
 [`bootstrap-toolshelf.sh`]: https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
+
+(If you don't want to use the bootstrap script, it's not very difficult to
+get toolshelf up and running manually; see below for instructions.)
 
 Now, you can dock (this is the word `toolshelf` uses instead of "install")
 any source that `toolshelf` can handle, simply by typing, for example,
@@ -73,6 +92,33 @@ the packages you've docked using it, simply
 (For removal to be completely complete, you'd also want to remove the commands
 that `bootstrap-toolshelf.sh` added to your `.bashrc`.  But if your `$TOOLSHELF`
 directory doesn't exist, they won't run anyway.)
+
+Manual Setup
+------------
+
+*   Decide where you want your toolshelf sources to be kept.  I keep mine
+    in a directory called `toolshelf` in my home directory.  In the following
+    examples, I'll use `/home/user/toolshelf`.
+    
+*   Make this directory:
+    
+        mkdir -p /home/user/toolshelf
+    
+*   Clone the `toolshelf` repo into `.toolshelf` in it, perhaps like so:
+    
+        git clone https://github.com/catseye/toolshelf /home/user/toolshelf/.toolshelf
+    
+    If you prefer, you could use Mercurial and clone it from Bitbucket.
+    Or get a zip of the `toolshelf` distribution, and unzip it to there.  Any
+    of these options should be fine.
+
+*   Add the following line to your `.profile`, or `.bash_profile`, or
+    `.bashrc`, or the startup script for whatever POSIX-compliant shell
+    you use:
+    
+        . /home/user/toolshelf/.toolshelf/init.sh /home/user/toolshelf/
+
+*   Start a new shell and test that it works.
 
 Status
 ------
@@ -461,38 +507,36 @@ The bootstrap script does a few things:
   using toolshelf; it calls this `$TOOLSHELF`.  The default is
   `$HOME/toolshelf`.
 - It then clones the `toolshelf` git repo into `$TOOLSHELF/.toolshelf`.
-- It then asks permission to modify your `.bashrc` (if you decline, you are
-  asked to make these changes manually.)  It adds a line that `source`s
-  `init.sh` (see below.)
+- It then asks permission to modify your `.profile` or equivalent shell
+  startup script.  If you decline, you are asked to make these changes
+  manually.  It adds a line that sources (using `.`) `init.sh` (see below.)
 - Finally, it `source`s `init.sh` itself, so that `toolshelf` is available
   immediately after bootstrapping (you don't need to start a new shell.)
 
 ### `init.sh` ###
 
 The script `init.sh` initializes `toolshelf` for use; it is typically
-`source`d from within `.bashrc`.  This is what it does:
+sourced (using `.`) from within `.profile` (or equivalent shell startup
+script.)  This is what it does:
 
 -   Takes a single command-line argument, which is the `toolshelf` directory,
     and exports it as the `TOOLSHELF` environment variable
 -   Puts `$TOOLSHELF/.toolshelf/bin` (where the `toolshelf` executable lives)
     and `$TOOLSHELF/.bin` (the link farm `toolshelf` will create) onto the
     shell's executable search path (`$PATH`.)
--   Defines a `bash` function called `toolshelf_cd`, which does the following:
+-   Defines a shell function called `toolshelf_cd`, which does the following:
     -   It runs `toolshelf pwd`, with the arguments that were passed to the
         `toolshelf_cd` function, in backticks.
     -   It attempts to `cd` to the output of `toolshelf pwd`.
-    -   The `cd` is done in this bash function, because the `toolshelf`
+    -   The `cd` is done in this shell function, because the `toolshelf`
         executable itself can't affect the user's shell.
 
 The `toolshelf_cd` function and the `toolshelf.py` script, taken together,
 perform something which we could call the "shell-then-source trick".  In
-effect, it makes it possible for a "command" (really a `bash` function) to
+effect, it makes it possible for a "command" (really a shell function) to
 affect the environment of the user's current interactive shell — something
 an ordinarily invoked command cannot do.  This is what lets `toolshelf_cd`
 change your current working directory.
-
-In a shell which unlike `bash` does not support functions, this could also
-be done (somewhat more crudely) with an alias.
 
 ### `toolshelf` ###
 
