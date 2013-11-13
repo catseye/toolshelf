@@ -116,7 +116,7 @@ UNINTERESTING_EXECUTABLES = (
     # trying to build anything else after that point :)
     'make', 'ant', 'mkdir', 'mv', 'rm',
     'git', 'hg', 'wget','unzip', 'tar',
-    'cat', 'which',
+    'cat', 'which', 'install',
 )
 
 HINT_NAMES = (
