@@ -22,8 +22,8 @@
 
 # toolshelf.py:
 
-# Does the heavy lifting involved in docking sources and creating links to
-# the relevant executables in a link farm.
+# Manages the retrieving, docking and building of sources, and creating
+# symlinks to the relevant executables in a link farm.
 
 # Still largely under construction.
 
@@ -308,6 +308,7 @@ def parse_source_spec(name):
       http[s]://host.dom/.../user/repo       Mercurial
       http[s]://host.dom/.../distfile.tgz    |
       http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
+      http[s]://host.dom/.../distfile.tar.bz2| archive ("tarball")
       http[s]://host.dom/.../distfile.zip    |
       gh:user/project            short for git://github.com/...
       bb:user/project            short for https://bitbucket.org/...
@@ -352,7 +353,7 @@ def parse_source_spec(name):
                     type='git')
 
     match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
-                     r'\.(zip|tgz|tar\.gz)$', name)
+                     r'\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
     if match:
         host = match.group(1)
         project = match.group(2)
@@ -544,7 +545,7 @@ class Source(object):
 
     @property
     def distfile(self):
-        if self.type in ('zip', 'tgz', 'tar.gz'):
+        if self.type in ('zip', 'tgz', 'tar.gz', 'tar.bz2'):
             return os.path.join(TOOLSHELF, '.distfiles',
                                 '%s.%s' % (self.project, self.type))
         else:
@@ -598,6 +599,9 @@ class Source(object):
             elif self.type in ('tgz', 'tar.gz'):
                 # TODO: use modern command line arguments to tar
                 run('tar', 'zxvf', self.distfile)
+            elif self.type in ('tar.bz2'):
+                # TODO: use modern command line arguments to tar
+                run('tar', 'jxvf', self.distfile)
 
             files = os.listdir(extract_dir)
             if len(files) == 1:
@@ -636,9 +640,9 @@ class Source(object):
                 not os.path.isfile('configure')):
                 run('./autogen.sh')
             if os.path.isfile('configure'):
-                run('./configure')
-
-            if os.path.isfile('Makefile') or os.path.isfile('makefile'):
+                run("./configure --prefix='%s' && make && make install" %
+                    self.dir)
+            elif os.path.isfile('Makefile') or os.path.isfile('makefile'):
                 run('make')
             elif os.path.isfile('src/Makefile'):
                 chdir('src')
