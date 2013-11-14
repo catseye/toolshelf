@@ -113,10 +113,10 @@ Manual Setup
     of these options should be fine.
 
 *   Add the following line to your `.profile`, or `.bash_profile`, or
-    `.bashrc`, or the startup script for whatever POSIX-compliant shell
-    you use:
+    `.bashrc`, or the startup script for whatever POSIX-compliant Bourne
+    shell-alike you use:
     
-        . /home/user/toolshelf/.toolshelf/init.sh /home/user/toolshelf/
+        export TOOLSHELF=/home/user/toolshelf/ && . /home/user/toolshelf/.toolshelf/init.sh
 
 *   Start a new shell and test that it works.
 

@@ -138,7 +138,7 @@ bootstrap_toolshelf() {
 
     cd $ORIGDIR
 
-    LINE1=". $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF # added-by-bootstrap-toolshelf"
+    LINE1="export TOOLSHELF=/home/unico/toolshelf && . $TOOLSHELF/.toolshelf/init.sh # added-by-bootstrap-toolshelf"
 
     echo "Now we'd like to add the following line to your ${SHELL_PROFILE} file:"
     echo
