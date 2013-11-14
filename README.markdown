@@ -79,10 +79,14 @@ When that completes, you can run `reptyr` by simply typing
 
     reptyr
 
-Convenient!  And if you ever want to get rid of `reptyr` from your system,
-simply run
+Convenient!  And if you ever want to get rid of (almost) all trace of `reptyr`
+from your system, simply run
 
     rm -rf $TOOLSHELF/nelhage/reptyr
+
+(For removal to be completely complete, you'd also want to run
+`toolshelf relink all`, to remove the now-broken symbolic links to the
+executable(s) that were in `$TOOLSHELF/nelhage/reptyr`.)
 
 And, if you want to get rid of (almost) all trace of `toolshelf` and all of
 the packages you've docked using it, simply
@@ -98,7 +102,11 @@ Manual Setup
 
 *   Decide where you want your toolshelf sources to be kept.  I keep mine
     in a directory called `toolshelf` in my home directory.  In the following
-    examples, I'll use `/home/user/toolshelf`.
+    examples, I'll use `/home/user/toolshelf`.  It is strongly recommended
+    that this pathname not contain any spaces or other characters which
+    normally require escaping for the shell; even if `toolshelf` handles all
+    these cases correctly, there's a fair chance any random source that you
+    dock won't.
     
 *   Make this directory:
     

@@ -100,6 +100,12 @@ bootstrap_toolshelf() {
     echo "store its source trees.  (If it does not yet exist,"
     echo "it will be created.)"
     echo
+    echo "It is strongly recommended that this pathname not"
+    echo "contain any spaces or other characters which"
+    echo "normally require escaping for the shell; even if"
+    echo "toolshelf handles all these cases correctly, there's"
+    echo "a fair chance any random source that you dock won't."
+    echo
     echo -n "Directory? [${DEFAULT_TOOLSHELF}] "
     read TOOLSHELF
     if [ -z $TOOLSHELF ]; then

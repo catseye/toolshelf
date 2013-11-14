@@ -640,7 +640,7 @@ class Source(object):
                 not os.path.isfile('configure')):
                 run('./autogen.sh')
             if os.path.isfile('configure'):
-                run('./configure', "--prefix='%s'" % self.dir)
+                run('./configure', "--prefix=%s" % self.dir)
                 run('make')
                 run('make', 'install')
             elif os.path.isfile('Makefile') or os.path.isfile('makefile'):
