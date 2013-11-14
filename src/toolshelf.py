@@ -306,10 +306,14 @@ def parse_source_spec(name):
       git://host.dom/.../user/repo.git       git
       http[s]://host.dom/.../user/repo.git   git
       http[s]://host.dom/.../user/repo       Mercurial
-      http[s]://host.dom/.../distfile.tgz    |
-      http[s]://host.dom/.../distfile.tar.gz | archive ("tarball")
-      http[s]://host.dom/.../distfile.tar.bz2| archive ("tarball")
-      http[s]://host.dom/.../distfile.zip    |
+      http[s]://host.dom/.../distfile.tgz    \
+      http[s]://host.dom/.../distfile.tar.gz | remotely hosted archive
+      http[s]://host.dom/.../distfile.tar.bz2| ("distfile" or "tarball")
+      http[s]://host.dom/.../distfile.zip    /
+      path/to/.../distfile.tgz               \
+      path/to/.../distfile.tar.gz            | local distfile
+      path/to/.../distfile.tar.bz2           |
+      path/to/.../distfile.zip               /
       gh:user/project            short for git://github.com/...
       bb:user/project            short for https://bitbucket.org/...
 
@@ -369,7 +373,16 @@ def parse_source_spec(name):
         return dict(url=name, host=host, user=user, project=project,
                     type='hg-or-git')
 
-    # local
+    # local distfile
+    match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
+    if match:
+        host = match.group(1)
+        project = match.group(2)
+        ext = match.group(3)
+        return dict(url=name, host='localhost', user='distfile',
+                    project=project, type=ext, local=True)
+
+    # already docked
     match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
     if match:
         host = match.group(1)
@@ -523,7 +536,7 @@ class LinkFarm(object):
 
 class Source(object):
     def __init__(self, url=None, host=None, user=None, project=None,
-                 type=None, cookies=None):
+                 type=None, local=False, cookies=None):
         self.url = url
         if not host:
             raise ValueError('no host supplied')
@@ -531,6 +544,7 @@ class Source(object):
         self.user = user or 'distfile'
         self.project = project
         self.type = type
+        self.local = local
         self.hints = {}
         if not cookies:
             raise ValueError('no cookies given')
@@ -539,9 +553,9 @@ class Source(object):
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
-                "project=%r, type=%r, hints=%r)" %
+                "project=%r, type=%r, local=%r, hints=%r)" %
                 (self.url, self.host, self.user,
-                 self.project, self.type, self.hints))
+                 self.project, self.type, self.local, self.hints))
 
     @property
     def distfile(self):
@@ -588,7 +602,10 @@ class Source(object):
         elif self.distfile is not None:
             run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
             if not os.path.exists(self.distfile):
-                run('wget', '-nc', '-O', self.distfile, self.url)
+                if self.local:
+                    run('cp', self.url, self.distfile)
+                else:
+                    run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
                 TOOLSHELF, '.extract_' + self.project
             )
