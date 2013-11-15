@@ -63,3 +63,8 @@ git://factorcode.org/git/factor.git
 
 gh:joyent/node
   exclude_paths deps
+
+gh:poeschko/Mathics
+  exclude_paths mathics/web/media
+
+    

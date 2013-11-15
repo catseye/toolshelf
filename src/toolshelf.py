@@ -58,6 +58,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Temporarily remove the links to executables in the given docked projects
         from your link farm.  A subsequent `relink` will restore them.
         If no source specs are given, all docked sources will apply.
+        (Note: currently insufficient; everything else needs to be relinked)
 
     show {<docked-source-spec>}
         Display the links that have been put on your linked farm for the
@@ -109,10 +110,11 @@ UNINTERESTING_EXECUTABLES = (
     'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
     'build.pl', 'make.pl', 'install.pl', 'test.pl',
     'configure', 'config.status', 'config.sub', 'config.guess',
-    'missing', 'mkinstalldirs', 'install-sh', 'autogen.sh', 'ltmain.sh',
+    'missing', 'mkinstalldirs', 'install-sh', 'autogen.sh',
+    'ltmain.sh', 'depcomp', 'libtool',
     '.gitignore', '__init__.py', 'setup.py',
-    'Makefile', 'make-bindist.sh', 'index.html',
-    'run', 'runme', 'buildme', 'compile',
+    'Makefile', 'make-bindist.sh', 'index.html', 'project.pbxproj',
+    'run', 'runme', 'buildme', 'compile', 'doit.sh',
     # these executables are not considered "interesting" because if you happen
     # to dock a source which builds an executable by one of these names and
     # toolshelf puts it on the path, you may just have a *wee* problem when
@@ -520,10 +522,8 @@ class LinkFarm(object):
             yield (fullfilename, source)
 
     def get_link(self, filename):
-        filename = os.path.abspath(filename)
-        filename = os.path.realpath(filename)
-        linkname = os.path.basename(filename)
-        linkname = os.path.join(self.dirname, linkname)
+        filename = os.path.realpath(os.path.abspath(filename))
+        linkname = os.path.join(self.dirname, os.path.basename(filename))
         if not os.path.islink(linkname):
             return None
         source = os.readlink(linkname)
@@ -535,6 +535,8 @@ class LinkFarm(object):
         # We do trample existing links
         if os.path.islink(linkname):
             note("Trampling existing link %s" % linkname)
+            note("  was: %s" % os.readlink(linkname))
+            note("  now: %s" % filename)
             os.unlink(linkname)
         symlink(filename, linkname)
 
