@@ -104,17 +104,23 @@ TOOLSHELF = os.environ.get('TOOLSHELF')
 BIN_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
 LIB_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.lib')
 
-# TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
-    'build.sh', 'make.sh', 'clean.sh', 'install.sh', 'test.sh',
-    'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
-    'build.pl', 'make.pl', 'install.pl', 'test.pl',
-    'configure', 'config.status', 'config.sub', 'config.guess',
-    'missing', 'mkinstalldirs', 'install-sh', 'autogen.sh',
-    'ltmain.sh', 'depcomp', 'libtool',
-    '.gitignore', '__init__.py', 'setup.py',
-    'Makefile', 'make-bindist.sh', 'index.html', 'project.pbxproj',
-    'run', 'runme', 'buildme', 'compile', 'doit.sh',
+    '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
+    '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf)',
+    '.*?(\.so|\.pbxproj|\.c|\.cpp|\.h|\.java)',
+    '(make|build|compile|clean|install|mkdep)(-cygwin)?(\.sh|\.pl|\.py)?',
+    '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.pl|\.py)?',
+    '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.pl|\.py)?',
+    '(test|testme|runtests)(-cygwin)?(\.sh|\.pl|\.py)?',
+    # autoconf and automake and libtool stuff
+    'config\.status', 'config\.sub', 'config\.guess',
+    'missing', 'mkinstalldirs', 'install-sh',
+    'ltmain\.sh', 'depcomp', 'libtool',
+    # "project files" that sometimes have the executable bit set
+    '(README|INSTALL|COPYING|LICENSE|AUTHORS|authors)',
+    'Makefile', '\.gitignore', '\.hgignore', 'Rakefile',
+    # if they're just digits, they're probably not all that interesting
+    '\d\d?\d?\d?(\.sh|\.pl|\.py)?',
     # these executables are not considered "interesting" because if you happen
     # to dock a source which builds an executable by one of these names and
     # toolshelf puts it on the path, you may just have a *wee* problem when
@@ -167,10 +173,9 @@ class DependencyError(ValueError):
 
 def is_executable(filename):
     basename = os.path.basename(filename)
-    if basename in UNINTERESTING_EXECUTABLES:
-        return False
-    if basename.endswith('.so'):
-        return False
+    for pattern in UNINTERESTING_EXECUTABLES:
+        if re.match('^' + pattern + '$', basename):
+            return False
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
 
 
