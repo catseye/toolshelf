@@ -100,8 +100,8 @@ __all__ = ['Toolshelf']
 
 TOOLSHELF = os.environ.get('TOOLSHELF')
 
-# TODO: there will eventually be multiple link farms (.lib, etc)
-LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
+BIN_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
+LIB_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.lib')
 
 # TODO: these should be regexes
 UNINTERESTING_EXECUTABLES = (
@@ -109,7 +109,10 @@ UNINTERESTING_EXECUTABLES = (
     'build-cygwin.sh', 'make-cygwin.sh', 'install-cygwin.sh',
     'build.pl', 'make.pl', 'install.pl', 'test.pl',
     'configure', 'config.status', 'config.sub', 'config.guess',
-    'missing', 'mkinstalldirs', 'install-sh', 'autogen.sh',
+    'missing', 'mkinstalldirs', 'install-sh', 'autogen.sh', 'ltmain.sh',
+    '.gitignore', '__init__.py', 'setup.py',
+    'Makefile', 'make-bindist.sh', 'index.html',
+    'run', 'runme', 'buildme', 'compile',
     # these executables are not considered "interesting" because if you happen
     # to dock a source which builds an executable by one of these names and
     # toolshelf puts it on the path, you may just have a *wee* problem when
@@ -164,7 +167,14 @@ def is_executable(filename):
     basename = os.path.basename(filename)
     if basename in UNINTERESTING_EXECUTABLES:
         return False
+    if basename.endswith('.so'):
+        return False
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
+
+
+def is_shared_object(filename):
+    match = re.match('^.*?\.so$', filename)
+    return os.path.isfile(filename) and match and os.access(filename, os.X_OK)
 
 
 def run(*args, **kwargs):
@@ -521,10 +531,10 @@ class LinkFarm(object):
 
     def create_link(self, filename):
         filename = os.path.abspath(filename)
-        linkname = os.path.basename(filename)
-        linkname = os.path.join(self.dirname, linkname)
+        linkname = os.path.join(self.dirname, os.path.basename(filename))
         # We do trample existing links
         if os.path.islink(linkname):
+            note("Trampling existing link %s" % linkname)
             os.unlink(linkname)
         symlink(filename, linkname)
 
@@ -705,7 +715,7 @@ class Source(object):
                     return False
         return True
 
-    def linkable_executables(self):
+    def linkable_files(self, predicate):
         for root, dirs, files in os.walk(self.dir):
             if '.git' in dirs:
                 dirs.remove('.git')
@@ -717,7 +727,7 @@ class Source(object):
                 continue
             for name in files:
                 filename = os.path.join(self.dir, root, name)
-                if is_executable(filename):
+                if predicate(filename):
                     note("    %s" % filename)
                     yield filename
 
@@ -802,7 +812,9 @@ class Source(object):
 
 class Toolshelf(object):
     def __init__(self, options=DefaultOptions(), cookies=None,
-                       link_farm=LinkFarm(LINK_FARM_DIR), errors=None):
+                       bin_link_farm=LinkFarm(BIN_LINK_FARM_DIR),
+                       lib_link_farm=LinkFarm(LIB_LINK_FARM_DIR),
+                       errors=None):
         self.options = options
         if cookies is None:
             cookies = Cookies()
@@ -813,7 +825,8 @@ class Toolshelf(object):
                 TOOLSHELF, '.toolshelf', 'local-cookies.catalog'
             ))
         self.cookies = cookies
-        self.link_farm = link_farm
+        self.bin_link_farm = bin_link_farm
+        self.lib_link_farm = lib_link_farm
         if errors is None:
             errors = {}
         self.errors = errors
@@ -955,15 +968,19 @@ class Toolshelf(object):
         sources = self.make_sources_from_specs(specs)
         note("Adding the following executables to your link farm...")
         for source in sources:
-            self.link_farm.clean(prefix=source.dir)
-            for filename in source.linkable_executables():
-                self.link_farm.create_link(filename)
+            self.bin_link_farm.clean(prefix=source.dir)
+            for filename in source.linkable_files(is_executable):
+                self.bin_link_farm.create_link(filename)
+            self.lib_link_farm.clean(prefix=source.dir)
+            for filename in source.linkable_files(is_shared_object):
+                self.lib_link_farm.create_link(filename)
     
     def disable(self, args):
         specs = expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
-            self.link_farm.clean(prefix=source.dir)
+            self.bin_link_farm.clean(prefix=source.dir)
+            self.lib_link_farm.clean(prefix=source.dir)
     
     def show(self, args):
         specs = expand_docked_specs(args, default_all=True)
