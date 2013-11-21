@@ -8,6 +8,11 @@ http://www.cpan.org/src/5.0/perl-5.18.1.tar.gz
 http://www.lua.org/ftp/lua-5.2.2.tar.gz
 
 http://www.nano-editor.org/dist/v2.2/nano-2.2.6.tar.gz
+
+# TODO: this will need special handling of some sort, because ordinarily
+# we consider an executable called 'make' to be uninteresting...
+http://ftp.gnu.org/gnu/make/make-4.0.tar.gz
+
 http://mama.indstate.edu/users/ice/tree/src/tree-1.6.0.tgz
 http://leapfrog.freeshell.org/stuff/realpath_1.tgz
 http://ftp.gnu.org/gnu/patch/patch-2.7.1.tar.gz
