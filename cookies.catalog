@@ -12,6 +12,9 @@ gh:darius/ichbins
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
 
+http://nmap.org/dist/nmap-6.40.tar.bz2
+  build_command ./configure --with-liblua=`toolshelf pwd lua-5.2.2` --prefix=`pwd` && make && make install
+
 # 1. it would be nice to be able to vary this by OS, so it could be
 #    'make linux' under linux, etc.
 # 2. it would be nice to have this be a wildcard, like
@@ -22,7 +25,7 @@ http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
 #    'lua-5.*'
 
 http://www.lua.org/ftp/lua-5.2.2.tar.gz
-  build_command make ansi
+  build_command make ansi && make INSTALL_TOP=`pwd` install
 
 http://www.cpan.org/src/5.0/perl-5.18.1.tar.gz
   build_command ./Configure -des -Dprefix=`pwd` && make && make install
