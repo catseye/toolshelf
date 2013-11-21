@@ -993,7 +993,7 @@ class Toolshelf(object):
         specs = expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
-            for (linkname, filename) in self.link_farm.links():
+            for (linkname, filename) in self.bin_link_farm.links():
                 if filename.startswith(source.dir):
                     print "%s -> %s" % (os.path.basename(linkname), filename)
                     if (not os.path.isfile(filename) or
