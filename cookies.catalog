@@ -41,7 +41,7 @@ http://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz
   exclude_paths doc build bx_debug bios
 
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
-  build_command ./configure --enable-gnomeui --prefix=`pwd` && make && make install
+  build_command ./configure --enable-gnomeui --prefix=`pwd` && make && make install && ln -s lib64 lib
 
 bb:catseye/yucca
   require_executables python
