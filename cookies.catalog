@@ -15,6 +15,12 @@ http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
 http://nmap.org/dist/nmap-6.40.tar.bz2
   build_command ./configure --with-liblua=`toolshelf pwd lua-5.2.2` --prefix=`pwd` && make && make install
 
+http://leapfrog.freeshell.org/stuff/realpath_1.tgz
+  build_command ln -s realpath.pl realpath
+
+http://www.colordiff.org/colordiff-1.0.13.tar.gz
+  build_command ln -s cdiff.sh cdiff && ln -s colordiff.pl colordiff
+
 # 1. it would be nice to be able to vary this by OS, so it could be
 #    'make linux' under linux, etc.
 # 2. it would be nice to have this be a wildcard, like
