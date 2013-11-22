@@ -1,19 +1,34 @@
+### Frotz and Inform
 http://sourceforge.net/projects/frotz/files/frotz/2.43/frotz-2.43d.tar.gz
 http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.32.1.tar.gz
 
+### VICE
+### see cookies.catalog for build command.  requires at least the following:
+#     *   g++
+#     *   libxaw7 (?? do i need this if it's gtk-enabled?
+#     *   libgtk2.0-dev
+#     *   libasound2-dev
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
 
+### QEMU and Bochs
 http://wiki.qemu-project.org/download/qemu-1.6.1.tar.bz2
 # http://git.qemu.org/qemu.git
 http://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz
 
-### for DOSBox!
+### DOSBox, including SDL 1.2 libraries
 http://www.libsdl.org/release/SDL-1.2.15.tar.gz
 ### not for DOSBox... not yet...
 # http://www.libsdl.org/release/SDL2-2.0.1.tar.gz
-
 ### there have been patches since 0.74 for building under gcc 4.x, but no
 ### official release incorporating them, yet.
 # http://sourceforge.net/projects/dosbox/files/dosbox/0.74/dosbox-0.74.tar.gz
 ### so we use this mirror on github instead:
 https://github.com/Henne/dosbox-svn
+
+### E-UAE
+### requires a bunch of Gnome/GTK stuff
+### doesn't work for me under toolshelf, yet
+http://www.rcdrummond.net/uae/e-uae-0.8.29-WIP4/e-uae-0.8.29-WIP4.tar.bz2
+
+### Stella
+http://prdownloads.sourceforge.net/stella/stella-3.9.2-src.tar.gz
