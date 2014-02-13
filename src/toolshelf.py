@@ -331,7 +331,7 @@ def parse_source_spec(name):
       path/to/.../distfile.tar.gz            | local distfile
       path/to/.../distfile.tar.bz2           |
       path/to/.../distfile.zip               /
-      gh:user/project            short for git://github.com/...
+      gh:user/project            short for https://github.com/...
       bb:user/project            short for https://bitbucket.org/...
 
     If problems are encountered while parsing the source spec,
@@ -343,7 +343,7 @@ def parse_source_spec(name):
     # TODO: make these configurable
     match = re.match(r'^gh:(.*?)\/(.*?)$', name)
     if match:
-        name = 'git://github.com/%s/%s.git' % (
+        name = 'https://github.com/%s/%s.git' % (
             match.group(1), match.group(2)
         )
     match = re.match(r'^ghh:(.*?)\/(.*?)$', name)
