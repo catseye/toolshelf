@@ -1,4 +1,4 @@
-# Copyright (c)2012-2013 Chris Pressey, Cat's Eye Technologies
+# Copyright (c)2012-2014 Chris Pressey, Cat's Eye Technologies
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -113,7 +113,7 @@ bootstrap_toolshelf() {
     fi
     echo
     echo "You selected: $TOOLSHELF"
-    
+
     if [ -e $TOOLSHELF ]; then
         # TODO: actually loop here
         echo "Warning!  That directory already exists!"
@@ -139,18 +139,19 @@ bootstrap_toolshelf() {
         cp -Rp $HOME/checkout/toolshelf .toolshelf
     else
         # TODO: check the return code of git here
-        git clone git://github.com/catseye/toolshelf.git .toolshelf
+        git clone https://github.com/catseye/toolshelf .toolshelf
     fi
 
     cd $ORIGDIR
 
-    LINE1="export TOOLSHELF=/home/unico/toolshelf && . $TOOLSHELF/.toolshelf/init.sh # added-by-bootstrap-toolshelf"
+    LINE1="export TOOLSHELF=$TOOLSHELF && . "'$'"TOOLSHELF/.toolshelf/init.sh # added-by-bootstrap-toolshelf"
 
     echo "Now we'd like to add the following line to your ${SHELL_PROFILE} file:"
     echo
     echo "  $LINE1"
     echo
-    echo "Your current ${SHELL_PROFILE} will be backed up first (to ${SHELL_PROFILE}.orig),"
+    echo "Your current ${SHELL_PROFILE} will be backed up first"
+    echo "(to ${SHELL_PROFILE}.orig),"
     echo "and any lines currently containing 'added-by-bootstrap-toolshelf'"
     echo "will be removed first."
     echo
