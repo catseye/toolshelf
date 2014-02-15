@@ -5,9 +5,9 @@ http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.32
 ### VICE
 ### see cookies.catalog for build command.  requires at least the following:
 #     *   g++
-#     *   libxaw7 (?? do i need this if it's gtk-enabled?
 #     *   libgtk2.0-dev
-#     *   libasound2-dev
+#     *   libvte-dev
+#     *   libasound2-dev (builds without this, but has no audio)
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
 
 ### QEMU and Bochs
@@ -23,7 +23,7 @@ http://www.libsdl.org/release/SDL-1.2.15.tar.gz
 ### official release incorporating them, yet.
 # http://sourceforge.net/projects/dosbox/files/dosbox/0.74/dosbox-0.74.tar.gz
 ### so we use this mirror on github instead:
-https://github.com/Henne/dosbox-svn
+gh:Henne/dosbox-svn
 
 ### E-UAE
 ### requires a bunch of Gnome/GTK stuff
