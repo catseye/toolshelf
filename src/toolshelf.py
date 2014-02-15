@@ -118,7 +118,7 @@ UNINTERESTING_EXECUTABLES = (
     'ltmain\.sh', 'depcomp', 'libtool',
     # "project files" that sometimes have the executable bit set
     '(README|INSTALL|COPYING|LICENSE|AUTHORS|authors|CHANGELOG)',
-    'Makefile', '\.gitignore', '\.hgignore', 'Rakefile',
+    'Makefile(\.am)?', '\.gitignore', '\.hgignore', 'Rakefile',
     # if they're just digits, they're probably not all that interesting
     '\d\d?\d?\d?(\.sh|\.pl|\.py)?',
     # these executables are not considered "interesting" because if you happen

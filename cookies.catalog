@@ -9,6 +9,9 @@ gh:kulp/tenyr
 gh:darius/ichbins
   exclude_paths tests
 
+bb:durin42/hg-git
+  exclude_paths tests
+
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
 
@@ -17,6 +20,10 @@ http://nmap.org/dist/nmap-6.40.tar.bz2
 
 http://leapfrog.freeshell.org/stuff/realpath_1.tgz
   build_command ln -s realpath.pl realpath
+
+# needs libreadline-dev
+http://utopia.knoware.nl/~hlub/uck/rlwrap/rlwrap-0.37.tar.gz
+  exclude_paths test
 
 http://www.colordiff.org/colordiff-1.0.13.tar.gz
   build_command ln -s cdiff.sh cdiff && ln -s colordiff.pl colordiff
@@ -75,5 +82,3 @@ gh:joyent/node
 
 gh:poeschko/Mathics
   exclude_paths mathics/web/media
-
-    
