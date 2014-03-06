@@ -175,7 +175,6 @@ def makedirs(dirname):
         else:
             raise
 
-
 ### Classes
 
 class Cookies(object):
@@ -646,10 +645,10 @@ class Toolshelf(object):
     ### making Sources from specs ###
 
     def expand_docked_specs(self, specs):
-        """Convert a docked source specifier into a full source specifier.
-        
+        """Convert docked source specifiers into expanded source specifiers.
+
         A docked source specifier may take any of the following forms:
-        
+
         1. host/user/project          this particular host, user, project
         2. host/user/all              all docked projects by this user on this host
         3. user/project               from any host under this name
@@ -657,7 +656,8 @@ class Toolshelf(object):
         5. project                    from any host & user under this name
         6. proj+                      the first project found that starts w/'proj'
         7. all                        all docked projects
-        
+        8. .                          the docked project (if any) in the cwd
+
         """
         new_specs = []
         for name in specs:
@@ -675,6 +675,17 @@ class Toolshelf(object):
                                 continue
                             new_specs.append('%s/%s/%s' % (host, user, project))
                 break
+            elif name == '.':  # case 8
+                path = self.cwd
+                tsdir = os.path.join(
+                    path, '..', '..', '..', '.toolshelf'
+                )
+                if os.path.isdir(tsdir):
+                    path, project = os.path.split(path)
+                    path, user = os.path.split(path)
+                    path, host = os.path.split(path)
+                    new_specs.append('%s/%s/%s' % (host, user, project))
+                # else complain with an error!
             elif name.startswith('@'):
                 new_specs.append(name)
             elif match:  # case 3 or 4
