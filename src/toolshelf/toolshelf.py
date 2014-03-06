@@ -149,9 +149,6 @@ class DefaultOptions(object):
     verbose = False
     build = True
 
-# TODO: make not global (har)
-OPTIONS = DefaultOptions()
-
 
 ### Exceptions
 
@@ -1008,8 +1005,6 @@ class Toolshelf(object):
 
 
 def main(args):
-    global OPTIONS
-
     parser = optparse.OptionParser(__doc__)
 
     parser.add_option("-B", "--no-build", dest="build",
@@ -1033,12 +1028,12 @@ def main(args):
                       default=False, action="store_true",
                       help="report steps taken to standard output")
 
-    (OPTIONS, args) = parser.parse_args(args)
+    (options, args) = parser.parse_args(args)
     if len(args) == 0:
         print "Usage: " + __doc__
         sys.exit(2)
 
-    t = Toolshelf(options=OPTIONS)
+    t = Toolshelf(options=options)
 
     t.run_command(args[0], args[1:])
     if t.errors:
