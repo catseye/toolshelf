@@ -223,10 +223,8 @@ class Cookies(object):
                         break
                 if found_hint or line == '' or line.startswith('#'):
                     continue
-                spec = self.shelf.parse_source_spec(line)
-                spec_key = os.path.join(
-                    spec['host'], spec['user'], spec['project']
-                )
+                source = self.shelf.make_source_from_spec(line)
+                spec_key = source.name
                 self._hint_map.setdefault(spec_key, {})
 
     @property
@@ -619,6 +617,35 @@ class Toolshelf(object):
             errors = {}
         self.errors = errors
 
+    ### utility methods ###
+
+    def run(self, *args, **kwargs):
+        self.note("Running `%s`..." % ' '.join(args))
+        subprocess.check_call(args, **kwargs)
+
+    def get_it(self, command):
+        self.note("Running `%s`..." % command)
+        output = subprocess.Popen(
+            command, shell=True, stdout=subprocess.PIPE
+        ).communicate()[0]
+        if self.options.verbose:
+            print output
+        return output
+
+    def note(self, msg):
+        if self.options.verbose:
+            print "*", msg
+
+    def chdir(self, dirname):
+        self.note("Changing dir to `%s`..." % dirname)
+        os.chdir(dirname)
+    
+    def symlink(self, sourcename, linkname):
+        self.note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
+        os.symlink(sourcename, linkname)
+
+    ### making Sources from specs ###
+
     def expand_docked_specs(self, specs):
         """Convert a docked source specifier into a full source specifier.
         
@@ -705,12 +732,12 @@ class Toolshelf(object):
         self.note('Resolved source specs to %r' % new_specs)
         return new_specs
 
-    def parse_source_spec(self, name):
-        """Parse a full source specifier and return a dictionary
-        of fields suitable for creating a Source object with.
-    
-        An full source specifier may take any of the following forms:
-    
+    def make_source_from_spec(self, name):
+        """Parse a single expanded source specifier and return a single
+        Source object.
+
+        An expanded source specifier may take any of the following forms:
+
           host/user/project          local source, already docked
           git://host.dom/.../user/repo.git       git
           http[s]://host.dom/.../user/repo.git   git
@@ -725,12 +752,12 @@ class Toolshelf(object):
           path/to/.../distfile.zip               /
           gh:user/project            short for https://github.com/...
           bb:user/project            short for https://bitbucket.org/...
-    
+
         If problems are encountered while parsing the source spec,
         an exception will be raised.
-    
+
         """
-    
+
         # resolve name shorthands
         # TODO: make these configurable
         match = re.match(r'^gh:(.*?)\/(.*?)$', name)
@@ -743,49 +770,49 @@ class Toolshelf(object):
             name = 'https://bitbucket.org/%s/%s' % (
                 match.group(1), match.group(2)
             )
-    
+
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            return dict(url=name, host=host, user=user, project=project,
-                        type='git')
-    
+            return Source(self, url=name, host=host, user=user, project=project,
+                          type='git')
+
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            return dict(url=name, host=host, user=user, project=project,
-                        type='git')
-    
+            return Source(self, url=name, host=host, user=user, project=project,
+                          type='git')
+ 
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
                          r'\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
             ext = match.group(3)
-            return dict(url=name, host=host, user='distfile', project=project,
-                        type=ext)
-    
+            return Source(self, url=name, host=host, user='distfile',
+                          project=project, type=ext)
+ 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
         if match:
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            return dict(url=name, host=host, user=user, project=project,
-                        type='hg-or-git')
-    
+            return Source(self, url=name, host=host, user=user, project=project,
+                          type='hg-or-git')
+ 
         # local distfile
         match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
             ext = match.group(3)
-            return dict(url=name, host='localhost', user='distfile',
-                        project=project, type=ext, local=True)
-    
+            return Source(self, url=name, host='localhost', user='distfile',
+                          project=project, type=ext, local=True)
+ 
         # already docked
         match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
         if match:
@@ -794,47 +821,11 @@ class Toolshelf(object):
             project = match.group(3)
             if os.path.isdir(os.path.join(self.dir, host, user, project)):
                 # TODO divine type
-                return dict(url='', host=host, user=user, project=project,
-                            type='unknown')
+                return Source(self, url='', host=host, user=user,
+                              project=project, type='unknown')
             raise SourceSpecError("Source '%s' not docked" % name)
-    
+ 
         raise SourceSpecError("Couldn't parse source spec '%s'" % name)
-
-    def run(self, *args, **kwargs):
-        self.note("Running `%s`..." % ' '.join(args))
-        subprocess.check_call(args, **kwargs)
-
-    def get_it(self, command):
-        self.note("Running `%s`..." % command)
-        output = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE
-        ).communicate()[0]
-        if self.options.verbose:
-            print output
-        return output
-
-    def note(self, msg):
-        if self.options.verbose:
-            print "*", msg
-
-    def chdir(self, dirname):
-        self.note("Changing dir to `%s`..." % dirname)
-        os.chdir(dirname)
-    
-    def symlink(self, sourcename, linkname):
-        self.note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
-        os.symlink(sourcename, linkname)
-
-    def make_sources_from_catalog(self, filename):
-        self.note('Reading catalog %s' % filename)
-        sources = []
-        with open(filename, 'r') as file:
-            for line in file:
-                line = line.strip()
-                if line == '' or line.startswith('#'):
-                    continue
-                sources += self.make_sources_from_spec(line)
-        return sources
 
     def make_sources_from_specs(self, names):
         sources = []
@@ -852,7 +843,7 @@ class Toolshelf(object):
         Source objects.
 
         An external source specifier may take any of the forms listed
-        in parse_source_spec's docstring, as well as the following:
+        in make_source_from_spec's docstring, as well as the following:
 
           @local/file/name           read list of sources from file
           @@foo                      read list in .toolshelf/catalog/foo
@@ -868,8 +859,20 @@ class Toolshelf(object):
                 os.path.join(self.cwd, name[1:])
             )
 
-        kwargs = self.parse_source_spec(name)
-        return [Source(self, **kwargs)]
+        return [self.make_source_from_spec(name)]
+
+    def make_sources_from_catalog(self, filename):
+        self.note('Reading catalog %s' % filename)
+        sources = []
+        with open(filename, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line == '' or line.startswith('#'):
+                    continue
+                sources += self.make_sources_from_spec(line)
+        return sources
+
+    ### processing sources ###
 
     def foreach_source(self, specs, fun, rebuild_paths=True):
         sources = self.make_sources_from_specs(specs)
@@ -914,6 +917,8 @@ class Toolshelf(object):
             sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
             print "Usage: " + __doc__
             sys.exit(2)
+
+    ### intrinsic subcommands ###
 
     def dock(self, args):
         def dock_it(source):
