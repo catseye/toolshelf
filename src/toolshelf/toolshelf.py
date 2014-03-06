@@ -448,13 +448,21 @@ class Source(object):
                 self.shelf.run('make')
 
     def update(self):
+        """Returns True if there were changes, False if there were none.
+
+        """
         self.shelf.chdir(self.dir)
+        old_head_ref = self.head_ref()
         if os.path.isdir('.git'):
             self.shelf.run('git', 'pull')
         elif os.path.isdir('.hg'):
             self.shelf.run('hg', 'pull', '-u')
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Can't update a non-version-controlled Source"
+            )
+        new_head_ref = self.head_ref()
+        return old_head_ref != new_head_ref
 
     def status(self):
         self.shelf.chdir(self.dir)
@@ -469,6 +477,20 @@ class Source(object):
             print self.dir
             print output
 
+    ### utility methods ###
+
+    def head_ref(self):
+        self.shelf.chdir(self.dir)
+        output = None
+        if os.path.isdir('.git'):
+            return self.shelf.get_it('git rev-parse HEAD')
+        elif os.path.isdir('.hg'):
+            return self.shelf.get_it('hg id')
+        else:
+            raise NotImplementedError(
+                "Can't get head ref of a non-version-controlled Source"
+            )
+        
     def may_use_path(self, dirname):
         only_paths = self.hints.get('only_paths', None)
         if only_paths:
@@ -1002,11 +1024,12 @@ class Toolshelf(object):
         )
 
     def update(self, args):
-        def update(source):
-            source.update()
-            source.build()
+        def update_it(source):
+            was_changed = source.update()
+            if was_changed:
+                source.build()
         self.foreach_specced_source(
-            self.expand_docked_specs(args), update,
+            self.expand_docked_specs(args), update_it,
             rebuild_paths=True
         )
 
