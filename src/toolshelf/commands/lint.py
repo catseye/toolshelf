@@ -56,8 +56,7 @@ def lint(shelf, args):
         problems[source.dir] = prob
 
     shelf.foreach_source(
-        shelf.expand_docked_specs(args), lint_it,
-        rebuild_paths=False
+        shelf.expand_docked_specs(args), lint_it
     )
 
     problematic_count = 0

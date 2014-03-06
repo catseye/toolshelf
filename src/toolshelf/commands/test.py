@@ -28,8 +28,7 @@ def test(shelf, args):
             stats['no_tests'] += 1
 
     shelf.foreach_source(
-        shelf.expand_docked_specs(args), test_it,
-        rebuild_paths=False
+        shelf.expand_docked_specs(args), test_it
     )
     
     print "Total docked sources tested:   %s" % stats['sources']

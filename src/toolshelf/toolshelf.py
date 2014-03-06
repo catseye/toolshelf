@@ -874,7 +874,7 @@ class Toolshelf(object):
 
     ### processing sources ###
 
-    def foreach_source(self, specs, fun, rebuild_paths=True):
+    def foreach_source(self, specs, fun, rebuild_paths=False):
         sources = self.make_sources_from_specs(specs)
         for source in sorted(sources, key=str):
             if os.path.isdir(source.dir):
@@ -939,18 +939,22 @@ class Toolshelf(object):
                 source.checkout()
                 source.rectify_permissions_if_needed()
                 source.build()
-        self.foreach_source(args, dock_it)
+        self.foreach_source(args, dock_it, rebuild_paths=True)
     
     def build(self, args):
         self.foreach_source(
-            self.expand_docked_specs(args), lambda(source): source.build()
+            self.expand_docked_specs(args), lambda(source): source.build(),
+            rebuild_paths=True
         )
     
     def update(self, args):
         def update(source):
             source.update()
             source.build()
-        self.foreach_source(self.expand_docked_specs(args), update)
+        self.foreach_source(
+            self.expand_docked_specs(args), update,
+            rebuild_paths=True
+        )
 
     def status(self, args):
         self.foreach_source(
@@ -971,6 +975,7 @@ class Toolshelf(object):
     def rectify(self, args):
         specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
+        # XXX why is this not foreach_source?
         for source in sources:
             source.rectify_permissions_if_needed()
     

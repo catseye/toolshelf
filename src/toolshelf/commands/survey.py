@@ -37,8 +37,7 @@ def survey(shelf, args):
         }
 
     shelf.foreach_source(
-        shelf.expand_docked_specs(args), survey_it,
-        rebuild_paths=False
+        shelf.expand_docked_specs(args), survey_it
     )
 
     print '-----'
