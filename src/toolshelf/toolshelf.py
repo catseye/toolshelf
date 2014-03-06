@@ -317,7 +317,7 @@ class LinkFarm(object):
 
 class Source(object):
     def __init__(self, shelf, url=None, host=None, user=None, project=None,
-                 type=None, local=False, cookies=None):
+                 type=None, local=False):
         self.shelf = shelf
         self.url = url
         if not host:
@@ -328,10 +328,7 @@ class Source(object):
         self.type = type
         self.local = local
         self.hints = {}
-        if not cookies:
-            raise ValueError('no cookies given')
-        if cookies:
-            cookies.apply_hints(self)
+        self.shelf.cookies.apply_hints(self)
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
@@ -872,7 +869,6 @@ class Toolshelf(object):
             )
 
         kwargs = self.parse_source_spec(name)
-        kwargs['cookies'] = self.cookies
         return [Source(self, **kwargs)]
 
     def foreach_source(self, specs, fun, rebuild_paths=True):
