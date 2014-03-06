@@ -397,11 +397,9 @@ class Source(object):
             if self.type == 'zip':
                 self.shelf.run('unzip', self.distfile)
             elif self.type in ('tgz', 'tar.gz'):
-                # TODO: use modern command line arguments to tar
-                self.shelf.run('tar', 'zxvf', self.distfile)
+                self.shelf.run('tar', '-z', '-x', '-v', '-f', self.distfile)
             elif self.type == 'tar.bz2':
-                # TODO: use modern command line arguments to tar
-                self.shelf.run('tar', 'jxvf', self.distfile)
+                self.shelf.run('tar', '-j', '-x', '-v', '-f', self.distfile)
 
             files = os.listdir(extract_dir)
             if len(files) == 1:
