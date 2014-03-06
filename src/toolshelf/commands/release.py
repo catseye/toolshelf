@@ -15,11 +15,11 @@ def release(shelf, args):
         tag = source.get_latest_release_tag()
         if not tag:
             raise SystemError("Repository not tagged")
-        os.chdir(source.dir)
+        shelf.chdir(source.dir)
         diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % tag)
         if diff and not shelf.options.force:
             raise SystemError("There are changes to mainline since latest tag")
-        os.chdir(cwd)
+        shelf.chdir(cwd)
 
         match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
         if match:
@@ -55,7 +55,7 @@ def release(shelf, args):
             command.append('-X')
             command.append(x)
         command.append(full_filename)
-        os.chdir(source.dir)
+        shelf.chdir(source.dir)
         shelf.run(*command)
-        os.chdir(cwd)
+        shelf.chdir(cwd)
         shelf.run('unzip', '-v', full_filename)

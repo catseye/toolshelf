@@ -97,12 +97,9 @@ import sys
 __all__ = ['Toolshelf']
 
 
-### Constants (per each run)
+### Constants
 
 TOOLSHELF = os.environ.get('TOOLSHELF')
-
-BIN_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.bin')
-LIB_LINK_FARM_DIR = os.path.join(TOOLSHELF, '.lib')
 
 UNINTERESTING_EXECUTABLES = (
     '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
@@ -542,7 +539,7 @@ class Source(object):
     @property
     def distfile(self):
         if self.type in ('zip', 'tgz', 'tar.gz', 'tar.bz2'):
-            return os.path.join(TOOLSHELF, '.distfiles',
+            return os.path.join(self.shelf.dir, '.distfiles',
                                 '%s.%s' % (self.project, self.type))
         else:
             return None
@@ -553,7 +550,7 @@ class Source(object):
 
     @property
     def user_dir(self):
-        return os.path.join(TOOLSHELF, self.host, self.user)
+        return os.path.join(self.shelf.dir, self.host, self.user)
 
     @property
     def dir(self):
@@ -582,14 +579,15 @@ class Source(object):
                 self.shelf.note("`hg clone` failed, so trying git")
                 self.shelf.run('git', 'clone', self.url)
         elif self.distfile is not None:
-            self.shelf.run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
+            self.shelf.run('mkdir', '-p',
+                           os.path.join(self.shelf.dir, '.distfiles'))
             if not os.path.exists(self.distfile):
                 if self.local:
                     self.shelf.run('cp', self.url, self.distfile)
                 else:
                     self.shelf.run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
-                TOOLSHELF, '.extract_' + self.project
+                self.shelf.dir, '.extract_' + self.project
             )
             self.shelf.run('mkdir', '-p', extract_dir)
             self.shelf.chdir(extract_dir)
@@ -783,21 +781,22 @@ class Source(object):
 
 
 class Toolshelf(object):
-    def __init__(self, options=DefaultOptions(), cookies=None,
+    def __init__(self, directory, options=DefaultOptions(), cookies=None,
                        bin_link_farm=None, lib_link_farm=None,
                        errors=None):
+        self.dir = directory
         self.options = options
         if bin_link_farm is None:
-            bin_link_farm = LinkFarm(self, BIN_LINK_FARM_DIR)
+            bin_link_farm = LinkFarm(self, os.path.join(self.dir, '.bin'))
         if lib_link_farm is None:
-            lib_link_farm = LinkFarm(self, LIB_LINK_FARM_DIR)
+            lib_link_farm = LinkFarm(self, os.path.join(self.dir, '.lib'))
         if cookies is None:
             cookies = Cookies(self)
             cookies.add_file(os.path.join(
-                TOOLSHELF, '.toolshelf', 'cookies.catalog'
+                self.dir, '.toolshelf', 'cookies.catalog'
             ))
             cookies.add_file(os.path.join(
-                TOOLSHELF, '.toolshelf', 'local-cookies.catalog'
+                self.dir, '.toolshelf', 'local-cookies.catalog'
             ))
         self.cookies = cookies
         self.bin_link_farm = bin_link_farm
@@ -869,7 +868,7 @@ class Toolshelf(object):
         """
         if name.startswith('@@'):
             filename = os.path.join(
-                TOOLSHELF, '.toolshelf', 'catalog', name[2:] + '.catalog'
+                self.dir, '.toolshelf', 'catalog', name[2:] + '.catalog'
             )
             return self.make_sources_from_catalog(filename)
         if name.startswith('@'):
@@ -886,7 +885,7 @@ class Toolshelf(object):
             if os.path.isdir(source.dir):
                 os.chdir(source.dir)
             else:
-                os.chdir(TOOLSHELF)
+                os.chdir(self.dir)
             try:
                 fun(source)
             except Exception as e:
@@ -1033,7 +1032,7 @@ def main(args):
         print "Usage: " + __doc__
         sys.exit(2)
 
-    t = Toolshelf(options=options)
+    t = Toolshelf(TOOLSHELF, options=options)
 
     t.run_command(args[0], args[1:])
     if t.errors:
