@@ -153,12 +153,20 @@ class DependencyError(ValueError):
 ### Helper Functions
 
 
-def is_executable(filename):
+def is_interesting(filename):
     basename = os.path.basename(filename)
     for pattern in UNINTERESTING_EXECUTABLES:
         if re.match('^' + pattern + '$', basename):
             return False
+    return True
+
+
+def is_executable(filename):
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
+
+
+def is_interesting_executable(filename):
+    return is_interesting(filename) and is_executable(filename)
 
 
 def is_shared_object(filename):
@@ -261,8 +269,6 @@ class Path(object):
         found = []
         for component in self.components:
             full_filename = os.path.join(component, filename)
-            # TODO: this only looks for "interesting" executables...
-            # should look for any
             if is_executable(full_filename):
                 found.append(full_filename)
         return found
@@ -506,10 +512,16 @@ class Source(object):
                 dirs.remove('.hg')
             for name in files:
                 filename = os.path.join(self.dir, root, name)
+                # if it's not 'interesting', just skip it, so we don't
+                # have to call 'file' so many times.  it won't be put on
+                # the path anyway, whether it's executable or not.
+                if not is_interesting(filename):
+                    continue
                 make_it_executable = False
                 pipe = subprocess.Popen(["file", filename],
                                         stdout=subprocess.PIPE)
                 output = pipe.communicate()[0]
+                self.shelf.note(output)
                 if 'executable' in output:
                     make_it_executable = True
                 if make_it_executable:
@@ -1003,7 +1015,7 @@ class Toolshelf(object):
         self.note("Adding the following executables to your link farm...")
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
-            for filename in source.linkable_files(is_executable):
+            for filename in source.linkable_files(is_interesting_executable):
                 self.bin_link_farm.create_link(filename)
             self.lib_link_farm.clean(prefix=source.dir)
             for filename in source.linkable_files(is_shared_object):
