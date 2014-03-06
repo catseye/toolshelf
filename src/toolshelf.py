@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c)2012-2013 Chris Pressey, Cat's Eye Technologies
+# Copyright (c)2012-2014 Chris Pressey, Cat's Eye Technologies
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     dock {<external-source-spec>}
         Obtain source trees from a remote source, build executables for
         them as needed, and make links to those executables in a link
-        farm which is on your executable search path.  Implies `build`.
+        farm which is on your executable search path.  Implies `build`
+        unless the --no-build option is given.
 
     build {<docked-source-spec>}
         Build (or re-build) the executables for the given docked sources.
@@ -44,7 +45,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     update {<docked-source-spec>}
         Pull the latest revision of the given docked sources from each's
         upstream repository (which is always the external source from which
-        it was originally docked.)  Implies `build`.  (But shouldn't.)
+        it was originally docked.)  Implies `build` unless the --no-build
+        option is given.
 
     status {<docked-source-spec>}
         Show the `hg status` or `git status`, as appropriate, in their
@@ -64,18 +66,17 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Display the links that have been put on your linked farm for the
         given docked sources.  Also show the executables those links point to.
         Will also report any broken links and may, in the future, list any
-        executables it shadows or is shadowed by.  (Pipe the output into grep
-        to narrow this report down.  In fact, `ls -l $TOOLSHELF/.bin` will
-        get you most of this information, when a colour listing is output,
-        so it's tempting to just replace it with that...)
+        executables it shadows or is shadowed by.
 
     pwd <docked-source-spec>
         Emit the name of the directory of the docked source (or exit with an
         error if there is no such source docked.)
-    
+
     rectify {<docked-source-spec>}
-        ...
-    
+        Traverses the file trees of the given docked source and modifies the
+        permissions of files, removing or adding the executable bit based on
+        whether toolshelf thinks the file should really be executable or not.
+
     ghuser <login> <username>
         Create (on standard output) a catalog for all of the given Github user's
         repositories.  The login is either 'username:password', which is your
@@ -342,11 +343,6 @@ def parse_source_spec(name):
     # resolve name shorthands
     # TODO: make these configurable
     match = re.match(r'^gh:(.*?)\/(.*?)$', name)
-    if match:
-        name = 'https://github.com/%s/%s.git' % (
-            match.group(1), match.group(2)
-        )
-    match = re.match(r'^ghh:(.*?)\/(.*?)$', name)
     if match:
         name = 'https://github.com/%s/%s.git' % (
             match.group(1), match.group(2)
@@ -1298,7 +1294,8 @@ def main(args):
 
     parser.add_option("-B", "--no-build", dest="build",
                       default=True, action="store_false",
-                      help="don't try to build sources during docking")
+                      help="don't try to build sources during docking "
+                           "and updating")
     parser.add_option("-f", "--force",
                       default=False, action="store_true",
                       help="subvert any safety mechanisms and just do "
