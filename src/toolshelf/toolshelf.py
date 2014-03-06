@@ -188,95 +188,6 @@ def makedirs(dirname):
             raise
 
 
-def expand_docked_specs(specs, default_all=False):
-    """Convert a docked source specifier into a full source specifier.
-
-    A docked source specifier may take any of the following forms:
-
-    1. host/user/project          this particular host, user, project
-    2. host/user/all              all docked projects by this user on this host
-    3. user/project               from any host under this name
-    4. user/all                   all docked projects by this user
-    5. project                    from any host & user under this name
-    6. proj+                      the first project found that starts w/'proj'
-    7. all                        all docked projects
-
-    """
-    if default_all and specs == []:
-        specs = ['all']
-    new_specs = []
-    for name in specs:
-        match = re.match(r'^([^/]*)/([^/]*)$', name)
-        if name == 'all':  # case 7
-            for host in os.listdir(TOOLSHELF):
-                if host.startswith('.'):
-                    continue
-                host_dirname = os.path.join(TOOLSHELF, host)
-                for user in os.listdir(host_dirname):
-                    user_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(user_dirname):
-                        project_dirname = os.path.join(user_dirname, project)
-                        if not os.path.isdir(project_dirname):
-                            continue
-                        new_specs.append('%s/%s/%s' % (host, user, project))
-            break
-        elif name.startswith('@'):
-            new_specs.append(name)
-        elif match:  # case 3 or 4
-            user = match.group(1)
-            project = match.group(2)
-            for host in os.listdir(TOOLSHELF):
-                if host.startswith('.'):
-                    continue
-                user_dirname = os.path.join(TOOLSHELF, host, user)
-                if project == 'all':  # case 4
-                    if os.path.isdir(user_dirname):
-                        for project in os.listdir(user_dirname):
-                            project_dirname = os.path.join(user_dirname, project)
-                            if not os.path.isdir(project_dirname):
-                                continue
-                            new_specs.append('%s/%s/%s' % (host, user, project))            
-                else:  # case 3
-                    project_dirname = os.path.join(TOOLSHELF, host, user, project)
-                    if not os.path.isdir(project_dirname):
-                        continue
-                    new_specs.append('%s/%s/%s' % (host, user, project))            
-        elif '/' not in name:  # cases 5 and 6
-            try:
-                for host in os.listdir(TOOLSHELF):
-                    if host.startswith('.'):
-                        # skip hidden dirs
-                        continue
-                    host_dirname = os.path.join(TOOLSHELF, host)
-                    for user in os.listdir(host_dirname):
-                        user_dirname = os.path.join(host_dirname, user)
-                        for project in os.listdir(user_dirname):
-                            if project == name:
-                                new_specs.append('%s/%s/%s' %
-                                                 (host, user, project))
-                            if (name.endswith('+') and
-                                project.startswith(name[:-1])):
-                                new_specs.append('%s/%s/%s' %
-                                                 (host, user, project))                            
-                                raise StopIteration
-            except StopIteration:
-                pass
-        else:  # case 1 or 2
-            (host, user, project) = name.split('/')
-            if project == 'all':  # case 2
-                user_dirname = os.path.join(TOOLSHELF, host, user)
-                for project in os.listdir(user_dirname):
-                    project_dirname = os.path.join(user_dirname, project)
-                    if not os.path.isdir(project_dirname):
-                        continue
-                    new_specs.append('%s/%s/%s' % (host, user, project))
-            else:  # case 1
-                new_specs.append(name)
-
-    #note('Resolved source specs to %r' % new_specs)
-    return new_specs
-
-
 def parse_source_spec(name):
     """Parse a full source specifier and return a dictionary
     of fields suitable for creating a Source object with.
@@ -806,7 +717,92 @@ class Toolshelf(object):
         self.errors = errors
 
     def expand_docked_specs(self, specs, default_all=False):
-        return expand_docked_specs(specs, default_all=default_all)
+        """Convert a docked source specifier into a full source specifier.
+        
+        A docked source specifier may take any of the following forms:
+        
+        1. host/user/project          this particular host, user, project
+        2. host/user/all              all docked projects by this user on this host
+        3. user/project               from any host under this name
+        4. user/all                   all docked projects by this user
+        5. project                    from any host & user under this name
+        6. proj+                      the first project found that starts w/'proj'
+        7. all                        all docked projects
+        
+        """
+        if default_all and specs == []:
+            specs = ['all']
+        new_specs = []
+        for name in specs:
+            match = re.match(r'^([^/]*)/([^/]*)$', name)
+            if name == 'all':  # case 7
+                for host in os.listdir(TOOLSHELF):
+                    if host.startswith('.'):
+                        continue
+                    host_dirname = os.path.join(TOOLSHELF, host)
+                    for user in os.listdir(host_dirname):
+                        user_dirname = os.path.join(host_dirname, user)
+                        for project in os.listdir(user_dirname):
+                            project_dirname = os.path.join(user_dirname, project)
+                            if not os.path.isdir(project_dirname):
+                                continue
+                            new_specs.append('%s/%s/%s' % (host, user, project))
+                break
+            elif name.startswith('@'):
+                new_specs.append(name)
+            elif match:  # case 3 or 4
+                user = match.group(1)
+                project = match.group(2)
+                for host in os.listdir(TOOLSHELF):
+                    if host.startswith('.'):
+                        continue
+                    user_dirname = os.path.join(TOOLSHELF, host, user)
+                    if project == 'all':  # case 4
+                        if os.path.isdir(user_dirname):
+                            for project in os.listdir(user_dirname):
+                                project_dirname = os.path.join(user_dirname, project)
+                                if not os.path.isdir(project_dirname):
+                                    continue
+                                new_specs.append('%s/%s/%s' % (host, user, project))            
+                    else:  # case 3
+                        project_dirname = os.path.join(TOOLSHELF, host, user, project)
+                        if not os.path.isdir(project_dirname):
+                            continue
+                        new_specs.append('%s/%s/%s' % (host, user, project))            
+            elif '/' not in name:  # cases 5 and 6
+                try:
+                    for host in os.listdir(TOOLSHELF):
+                        if host.startswith('.'):
+                            # skip hidden dirs
+                            continue
+                        host_dirname = os.path.join(TOOLSHELF, host)
+                        for user in os.listdir(host_dirname):
+                            user_dirname = os.path.join(host_dirname, user)
+                            for project in os.listdir(user_dirname):
+                                if project == name:
+                                    new_specs.append('%s/%s/%s' %
+                                                     (host, user, project))
+                                if (name.endswith('+') and
+                                    project.startswith(name[:-1])):
+                                    new_specs.append('%s/%s/%s' %
+                                                     (host, user, project))                            
+                                    raise StopIteration
+                except StopIteration:
+                    pass
+            else:  # case 1 or 2
+                (host, user, project) = name.split('/')
+                if project == 'all':  # case 2
+                    user_dirname = os.path.join(TOOLSHELF, host, user)
+                    for project in os.listdir(user_dirname):
+                        project_dirname = os.path.join(user_dirname, project)
+                        if not os.path.isdir(project_dirname):
+                            continue
+                        new_specs.append('%s/%s/%s' % (host, user, project))
+                else:  # case 1
+                    new_specs.append(name)
+        
+        self.note('Resolved source specs to %r' % new_specs)
+        return new_specs
 
     def run(self, *args, **kwargs):
         self.note("Running `%s`..." % ' '.join(args))
@@ -941,22 +937,22 @@ class Toolshelf(object):
     
     def build(self, args):
         self.foreach_source(
-            expand_docked_specs(args), lambda(source): source.build()
+            self.expand_docked_specs(args), lambda(source): source.build()
         )
     
     def update(self, args):
         def update(source):
             source.update()
             source.build()
-        self.foreach_source(expand_docked_specs(args), update)
+        self.foreach_source(self.expand_docked_specs(args), update)
 
     def status(self, args):
         self.foreach_source(
-            expand_docked_specs(args), lambda(source): source.status()
+            self.expand_docked_specs(args), lambda(source): source.status()
         )
 
     def pwd(self, args):
-        specs = expand_docked_specs(args)
+        specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         if len(sources) != 1:
             raise SourceSpecError(
@@ -967,13 +963,13 @@ class Toolshelf(object):
         print sources[0].dir
     
     def rectify(self, args):
-        specs = expand_docked_specs(args)
+        specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             source.rectify_permissions_if_needed()
     
     def relink(self, args):
-        specs = expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
         self.note("Adding the following executables to your link farm...")
         for source in sources:
@@ -985,14 +981,14 @@ class Toolshelf(object):
                 self.lib_link_farm.create_link(filename)
     
     def disable(self, args):
-        specs = expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             self.lib_link_farm.clean(prefix=source.dir)
     
     def show(self, args):
-        specs = expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             for (linkname, filename) in self.bin_link_farm.links():
