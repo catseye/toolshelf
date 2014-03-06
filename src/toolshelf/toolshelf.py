@@ -99,8 +99,6 @@ __all__ = ['Toolshelf']
 
 ### Constants
 
-TOOLSHELF = os.environ.get('TOOLSHELF')
-
 UNINTERESTING_EXECUTABLES = (
     '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
     '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf)',
@@ -596,9 +594,10 @@ class Source(object):
 
 
 class Toolshelf(object):
-    def __init__(self, directory, options=DefaultOptions(), cookies=None,
-                       bin_link_farm=None, lib_link_farm=None,
-                       errors=None):
+    def __init__(self, directory=None, options=DefaultOptions(), cookies=None,
+                       bin_link_farm=None, lib_link_farm=None, errors=None):
+        if directory is None:
+            directory = os.environ.get('TOOLSHELF')
         self.dir = directory
         self.options = options
         if bin_link_farm is None:
@@ -640,10 +639,10 @@ class Toolshelf(object):
         for name in specs:
             match = re.match(r'^([^/]*)/([^/]*)$', name)
             if name == 'all':  # case 7
-                for host in os.listdir(TOOLSHELF):
+                for host in os.listdir(self.dir):
                     if host.startswith('.'):
                         continue
-                    host_dirname = os.path.join(TOOLSHELF, host)
+                    host_dirname = os.path.join(self.dir, host)
                     for user in os.listdir(host_dirname):
                         user_dirname = os.path.join(host_dirname, user)
                         for project in os.listdir(user_dirname):
@@ -657,10 +656,10 @@ class Toolshelf(object):
             elif match:  # case 3 or 4
                 user = match.group(1)
                 project = match.group(2)
-                for host in os.listdir(TOOLSHELF):
+                for host in os.listdir(self.dir):
                     if host.startswith('.'):
                         continue
-                    user_dirname = os.path.join(TOOLSHELF, host, user)
+                    user_dirname = os.path.join(self.dir, host, user)
                     if project == 'all':  # case 4
                         if os.path.isdir(user_dirname):
                             for project in os.listdir(user_dirname):
@@ -669,17 +668,17 @@ class Toolshelf(object):
                                     continue
                                 new_specs.append('%s/%s/%s' % (host, user, project))            
                     else:  # case 3
-                        project_dirname = os.path.join(TOOLSHELF, host, user, project)
+                        project_dirname = os.path.join(self.dir, host, user, project)
                         if not os.path.isdir(project_dirname):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))            
             elif '/' not in name:  # cases 5 and 6
                 try:
-                    for host in os.listdir(TOOLSHELF):
+                    for host in os.listdir(self.dir):
                         if host.startswith('.'):
                             # skip hidden dirs
                             continue
-                        host_dirname = os.path.join(TOOLSHELF, host)
+                        host_dirname = os.path.join(self.dir, host)
                         for user in os.listdir(host_dirname):
                             user_dirname = os.path.join(host_dirname, user)
                             for project in os.listdir(user_dirname):
@@ -696,7 +695,7 @@ class Toolshelf(object):
             else:  # case 1 or 2
                 (host, user, project) = name.split('/')
                 if project == 'all':  # case 2
-                    user_dirname = os.path.join(TOOLSHELF, host, user)
+                    user_dirname = os.path.join(self.dir, host, user)
                     for project in os.listdir(user_dirname):
                         project_dirname = os.path.join(user_dirname, project)
                         if not os.path.isdir(project_dirname):
@@ -795,7 +794,7 @@ class Toolshelf(object):
             host = match.group(1)
             user = match.group(2)
             project = match.group(3)
-            if os.path.isdir(os.path.join(TOOLSHELF, host, user, project)):
+            if os.path.isdir(os.path.join(self.dir, host, user, project)):
                 # TODO divine type
                 return dict(url='', host=host, user=user, project=project,
                             type='unknown')
@@ -1027,7 +1026,7 @@ def main(args):
         print "Usage: " + __doc__
         sys.exit(2)
 
-    t = Toolshelf(TOOLSHELF, options=options)
+    t = Toolshelf(options=options)
 
     t.run_command(args[0], args[1:])
     if t.errors:
