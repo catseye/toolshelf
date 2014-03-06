@@ -203,9 +203,9 @@ class Cookies(object):
             self._load_hints_from_file(filename)
 
     def _load_hints_from_file(self, filename):
-        with open(filename, 'r') as file:
+        with open(filename, 'r') as hints_file:
             spec_key = None
-            for line in file:
+            for line in hints_file:
                 line = line.strip()
                 found_hint = False
                 for hint_name in HINT_NAMES:
@@ -252,18 +252,18 @@ class Path(object):
     def __init__(self, value=None):
         if value is None:
             value = os.environ['PATH']
-        self.components = [dir.strip() for dir in value.split(':')]
+        self.components = [d.strip() for d in value.split(':')]
 
     def write(self, result):
         value = ':'.join(self.components)
         result.write("export PATH='%s'\n" % value)
 
     def remove_components_by_prefix(self, prefix):
-        self.components = [dir for dir in self.components
-                           if not dir.startswith(prefix)]
+        self.components = [d for d in self.components
+                           if not d.startswith(prefix)]
 
-    def add_component(self, dir):
-        self.components.insert(0, dir)
+    def add_component(self, directory):
+        self.components.insert(0, directory)
 
     def which(self, filename):
         found = []
@@ -660,11 +660,11 @@ class Toolshelf(object):
         A docked source specifier may take any of the following forms:
 
         1. host/user/project          this particular host, user, project
-        2. host/user/all              all docked projects by this user on this host
+        2. host/user/all              all docked projects by this user & host
         3. user/project               from any host under this name
         4. user/all                   all docked projects by this user
         5. project                    from any host & user under this name
-        6. proj+                      the first project found that starts w/'proj'
+        6. proj+                      first project found that starts w/'proj'
         7. all                        all docked projects
         8. .                          the docked project (if any) in the cwd
 
@@ -680,7 +680,8 @@ class Toolshelf(object):
                     for user in os.listdir(host_dirname):
                         user_dirname = os.path.join(host_dirname, user)
                         for project in os.listdir(user_dirname):
-                            project_dirname = os.path.join(user_dirname, project)
+                            project_dirname = os.path.join(user_dirname,
+                                                           project)
                             if not os.path.isdir(project_dirname):
                                 continue
                             new_specs.append('%s/%s/%s' % (host, user, project))
@@ -708,12 +709,17 @@ class Toolshelf(object):
                     if project == 'all':  # case 4
                         if os.path.isdir(user_dirname):
                             for project in os.listdir(user_dirname):
-                                project_dirname = os.path.join(user_dirname, project)
+                                project_dirname = os.path.join(user_dirname,
+                                                               project)
                                 if not os.path.isdir(project_dirname):
                                     continue
-                                new_specs.append('%s/%s/%s' % (host, user, project))
+                                new_specs.append('%s/%s/%s' %
+                                    (host, user, project)
+                                )
                     else:  # case 3
-                        project_dirname = os.path.join(self.dir, host, user, project)
+                        project_dirname = os.path.join(
+                            self.dir, host, user, project
+                        )
                         if not os.path.isdir(project_dirname):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))
