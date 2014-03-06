@@ -622,7 +622,7 @@ class Toolshelf(object):
             errors = {}
         self.errors = errors
 
-    def expand_docked_specs(self, specs, default_all=False):
+    def expand_docked_specs(self, specs):
         """Convert a docked source specifier into a full source specifier.
         
         A docked source specifier may take any of the following forms:
@@ -636,8 +636,6 @@ class Toolshelf(object):
         7. all                        all docked projects
         
         """
-        if default_all and specs == []:
-            specs = ['all']
         new_specs = []
         for name in specs:
             match = re.match(r'^([^/]*)/([^/]*)$', name)
@@ -895,6 +893,11 @@ class Toolshelf(object):
         if rebuild_paths:
             self.relink([s.name for s in sources])
 
+    def default_to_all(self, specs):
+        if specs == []:
+            specs = ['all']
+        return specs
+
     def run_command(self, subcommand, args):
         try:
             module = __import__("toolshelf.commands.%s" % subcommand,
@@ -971,7 +974,7 @@ class Toolshelf(object):
             source.rectify_permissions_if_needed()
     
     def relink(self, args):
-        specs = self.expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
         self.note("Adding the following executables to your link farm...")
         for source in sources:
@@ -983,14 +986,14 @@ class Toolshelf(object):
                 self.lib_link_farm.create_link(filename)
     
     def disable(self, args):
-        specs = self.expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             self.lib_link_farm.clean(prefix=source.dir)
     
     def show(self, args):
-        specs = self.expand_docked_specs(args, default_all=True)
+        specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             for (linkname, filename) in self.bin_link_farm.links():
