@@ -121,7 +121,7 @@ UNINTERESTING_EXECUTABLES = (
     # toolshelf puts it on the path, you may just have a *wee* problem when
     # trying to build anything else after that point :)
     'make', 'ant', 'mkdir', 'mv', 'rm',
-    'git', 'hg', 'wget','unzip', 'tar',
+    'git', 'hg', 'wget', 'unzip', 'tar',
     'cat', 'which', 'install',
 )
 
@@ -393,7 +393,7 @@ class Source(object):
             elif self.type in ('tgz', 'tar.gz'):
                 # TODO: use modern command line arguments to tar
                 self.shelf.run('tar', 'zxvf', self.distfile)
-            elif self.type in ('tar.bz2'):
+            elif self.type == 'tar.bz2':
                 # TODO: use modern command line arguments to tar
                 self.shelf.run('tar', 'jxvf', self.distfile)
 
@@ -536,10 +536,10 @@ class Source(object):
     def get_latest_release_tag(self, tags={}):
         """Return the tag most recently applied to this repository.
         (hg only for now.)
-        
+
         """
         self.shelf.chdir(self.dir)
-    
+
         latest_tag = None
         for line in self.shelf.get_it("hg tags").split('\n'):
             match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
@@ -637,7 +637,7 @@ class Toolshelf(object):
     def chdir(self, dirname):
         self.note("Changing dir to `%s`..." % dirname)
         os.chdir(dirname)
-    
+
     def symlink(self, sourcename, linkname):
         self.note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
         os.symlink(sourcename, linkname)
@@ -701,12 +701,12 @@ class Toolshelf(object):
                                 project_dirname = os.path.join(user_dirname, project)
                                 if not os.path.isdir(project_dirname):
                                     continue
-                                new_specs.append('%s/%s/%s' % (host, user, project))            
+                                new_specs.append('%s/%s/%s' % (host, user, project))
                     else:  # case 3
                         project_dirname = os.path.join(self.dir, host, user, project)
                         if not os.path.isdir(project_dirname):
                             continue
-                        new_specs.append('%s/%s/%s' % (host, user, project))            
+                        new_specs.append('%s/%s/%s' % (host, user, project))
             elif '/' not in name:  # cases 5 and 6
                 try:
                     for host in os.listdir(self.dir):
@@ -723,7 +723,7 @@ class Toolshelf(object):
                                 if (name.endswith('+') and
                                     project.startswith(name[:-1])):
                                     new_specs.append('%s/%s/%s' %
-                                                     (host, user, project))                            
+                                                     (host, user, project))
                                     raise StopIteration
                 except StopIteration:
                     pass
@@ -738,7 +738,7 @@ class Toolshelf(object):
                         new_specs.append('%s/%s/%s' % (host, user, project))
                 else:  # case 1
                     new_specs.append(name)
-        
+
         self.note('Resolved source specs to %r' % new_specs)
         return new_specs
 
@@ -796,7 +796,7 @@ class Toolshelf(object):
             project = match.group(3)
             return Source(self, url=name, host=host, user=user, project=project,
                           type='git')
- 
+
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
                          r'\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
         if match:
@@ -805,7 +805,7 @@ class Toolshelf(object):
             ext = match.group(3)
             return Source(self, url=name, host=host, user='distfile',
                           project=project, type=ext)
- 
+
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
         if match:
             host = match.group(1)
@@ -813,7 +813,7 @@ class Toolshelf(object):
             project = match.group(3)
             return Source(self, url=name, host=host, user=user, project=project,
                           type='hg-or-git')
- 
+
         # local distfile
         match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
         if match:
@@ -822,7 +822,7 @@ class Toolshelf(object):
             ext = match.group(3)
             return Source(self, url=name, host='localhost', user='distfile',
                           project=project, type=ext, local=True)
- 
+
         # already docked
         match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
         if match:
@@ -834,7 +834,7 @@ class Toolshelf(object):
                 return Source(self, url='', host=host, user=user,
                               project=project, type='unknown')
             raise SourceSpecError("Source '%s' not docked" % name)
- 
+
         raise SourceSpecError("Couldn't parse source spec '%s'" % name)
 
     def make_sources_from_specs(self, names):
@@ -965,7 +965,7 @@ class Toolshelf(object):
             self.expand_docked_specs(args), lambda(source): source.build(),
             rebuild_paths=True
         )
-    
+
     def update(self, args):
         def update(source):
             source.update()
@@ -990,13 +990,13 @@ class Toolshelf(object):
                 )
             )
         print sources[0].dir
-    
+
     def rectify(self, args):
         self.foreach_specced_source(
             self.expand_docked_specs(args),
             lambda source: source.rectify_executable_permissions()
         )
-    
+
     def relink(self, args):
         specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
@@ -1008,14 +1008,14 @@ class Toolshelf(object):
             self.lib_link_farm.clean(prefix=source.dir)
             for filename in source.linkable_files(is_shared_object):
                 self.lib_link_farm.create_link(filename)
-    
+
     def disable(self, args):
         specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             self.lib_link_farm.clean(prefix=source.dir)
-    
+
     def show(self, args):
         specs = self.expand_docked_specs(self.default_to_all(args))
         sources = self.make_sources_from_specs(specs)
