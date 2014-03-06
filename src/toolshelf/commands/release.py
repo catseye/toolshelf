@@ -6,7 +6,6 @@ def release(shelf, args):
     source tree.
     
     """
-    cwd = os.getcwd()
     sources = shelf.make_sources_from_specs(
         shelf.expand_docked_specs(args)
     )
@@ -19,7 +18,7 @@ def release(shelf, args):
         diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % tag)
         if diff and not shelf.options.force:
             raise SystemError("There are changes to mainline since latest tag")
-        shelf.chdir(cwd)
+        shelf.chdir(shelf.cwd)
 
         match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
         if match:
@@ -57,5 +56,5 @@ def release(shelf, args):
         command.append(full_filename)
         shelf.chdir(source.dir)
         shelf.run(*command)
-        shelf.chdir(cwd)
+        shelf.chdir(shelf.cwd)
         shelf.run('unzip', '-v', full_filename)

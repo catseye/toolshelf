@@ -134,16 +134,6 @@ HINT_NAMES = (
     'require_executables',
 )
 
-CWD = os.getcwd()
-
-
-### Globals
-
-class DefaultOptions(object):
-    break_on_error = True
-    verbose = False
-    build = True
-
 
 ### Exceptions
 
@@ -554,8 +544,7 @@ class Source(object):
         (hg only for now.)
         
         """
-        cwd = os.getcwd()
-        os.chdir(self.dir)
+        self.shelf.chdir(self.dir)
     
         latest_tag = None
         for line in self.shelf.get_it("hg tags").split('\n'):
@@ -566,7 +555,7 @@ class Source(object):
                 if tag != 'tip' and latest_tag is None:
                     latest_tag = tag
 
-        os.chdir(cwd)
+        self.shelf.chdir(self.shelf.cwd)
         return latest_tag
 
     def find_likely_documents(self):
@@ -594,16 +583,32 @@ class Source(object):
 
 
 class Toolshelf(object):
-    def __init__(self, directory=None, options=DefaultOptions(), cookies=None,
+    def __init__(self, directory=None, cwd=None, options=None, cookies=None,
                        bin_link_farm=None, lib_link_farm=None, errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
+
+        if cwd is None:
+            cwd = os.getcwd()
+        self.cwd = cwd
+
+        if options is None:
+            class DefaultOptions(object):
+                break_on_error = True
+                verbose = False
+                build = True
+            options = DefaultOptions()
         self.options = options
+
         if bin_link_farm is None:
             bin_link_farm = LinkFarm(self, os.path.join(self.dir, '.bin'))
+        self.bin_link_farm = bin_link_farm
+
         if lib_link_farm is None:
             lib_link_farm = LinkFarm(self, os.path.join(self.dir, '.lib'))
+        self.lib_link_farm = lib_link_farm
+
         if cookies is None:
             cookies = Cookies(self)
             cookies.add_file(os.path.join(
@@ -613,8 +618,6 @@ class Toolshelf(object):
                 self.dir, '.toolshelf', 'local-cookies.catalog'
             ))
         self.cookies = cookies
-        self.bin_link_farm = bin_link_farm
-        self.lib_link_farm = lib_link_farm
         if errors is None:
             errors = {}
         self.errors = errors
@@ -866,20 +869,21 @@ class Toolshelf(object):
             )
             return self.make_sources_from_catalog(filename)
         if name.startswith('@'):
-            return self.make_sources_from_catalog(os.path.join(CWD, name[1:]))
+            return self.make_sources_from_catalog(
+                os.path.join(self.cwd, name[1:])
+            )
 
         kwargs = self.parse_source_spec(name)
         kwargs['cookies'] = self.cookies
         return [Source(self, **kwargs)]
 
     def foreach_source(self, specs, fun, rebuild_paths=True):
-        cwd = os.getcwd()
         sources = self.make_sources_from_specs(specs)
         for source in sorted(sources, key=str):
             if os.path.isdir(source.dir):
-                os.chdir(source.dir)
+                self.chdir(source.dir)
             else:
-                os.chdir(self.dir)
+                self.chdir(self.dir)
             try:
                 fun(source)
             except Exception as e:
@@ -887,7 +891,7 @@ class Toolshelf(object):
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
             finally:
-                os.chdir(cwd)
+                os.chdir(self.cwd)
         if rebuild_paths:
             self.relink([s.name for s in sources])
 
