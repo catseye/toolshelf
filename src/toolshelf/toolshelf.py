@@ -184,26 +184,6 @@ def is_shared_object(filename):
     return os.path.isfile(filename) and match and os.access(filename, os.X_OK)
 
 
-def run(*args, **kwargs):
-    note("Running `%s`..." % ' '.join(args))
-    subprocess.check_call(args, **kwargs)
-
-
-def get_it(command):
-    note("Running `%s`..." % command)
-    output = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE
-    ).communicate()[0]
-    if OPTIONS.verbose:  # FIX
-        print output
-    return output
-
-
-def chdir(dirname):
-    note("Changing dir to `%s`..." % dirname)
-    os.chdir(dirname)
-
-
 def makedirs(dirname):
     try:
         os.makedirs(dirname)
@@ -212,16 +192,6 @@ def makedirs(dirname):
             pass
         else:
             raise
-
-
-def symlink(sourcename, linkname):
-    note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
-    os.symlink(sourcename, linkname)
-
-
-def note(msg):
-    if OPTIONS.verbose:  # FIX
-        print "*", msg
 
 
 def expand_docked_specs(specs, default_all=False):
@@ -309,7 +279,7 @@ def expand_docked_specs(specs, default_all=False):
             else:  # case 1
                 new_specs.append(name)
 
-    note('Resolved source specs to %r' % new_specs)
+    #note('Resolved source specs to %r' % new_specs)
     return new_specs
 
 
@@ -412,7 +382,8 @@ def parse_source_spec(name):
 ### Classes
 
 class Cookies(object):
-    def __init__(self):
+    def __init__(self, shelf):
+        self.shelf = shelf
         self._hint_map = None
         self.filenames = []
 
@@ -442,7 +413,7 @@ class Cookies(object):
                                 'Found hint %s before any spec' % hint_name
                             )
                         hint_value = match.group(1)
-                        note("Adding hint '%s %s' to %s" %
+                        self.shelf.note("Adding hint '%s %s' to %s" %
                             (hint_name, hint_value, spec_key)
                         )
                         self._hint_map[spec_key][hint_name] = hint_value
@@ -509,7 +480,8 @@ class LinkFarm(object):
     the filesystem.
 
     """
-    def __init__(self, dirname):
+    def __init__(self, shelf, dirname):
+        self.shelf = shelf
         self.dirname = dirname
         makedirs(dirname)
 
@@ -534,11 +506,11 @@ class LinkFarm(object):
         linkname = os.path.join(self.dirname, os.path.basename(filename))
         # We do trample existing links
         if os.path.islink(linkname):
-            note("Trampling existing link %s" % linkname)
-            note("  was: %s" % os.readlink(linkname))
-            note("  now: %s" % filename)
+            self.shelf.note("Trampling existing link %s" % linkname)
+            self.shelf.note("  was: %s" % os.readlink(linkname))
+            self.shelf.note("  now: %s" % filename)
             os.unlink(linkname)
-        symlink(filename, linkname)
+        self.shelf.symlink(filename, linkname)
 
     def clean(self, prefix=''):
         for (linkname, sourcename) in self.links():
@@ -547,8 +519,9 @@ class LinkFarm(object):
 
 
 class Source(object):
-    def __init__(self, url=None, host=None, user=None, project=None,
+    def __init__(self, shelf, url=None, host=None, user=None, project=None,
                  type=None, local=False, cookies=None):
+        self.shelf = shelf
         self.url = url
         if not host:
             raise ValueError('no host supplied')
@@ -594,108 +567,108 @@ class Source(object):
         return os.path.isdir(self.dir)
 
     def checkout(self):
-        note("Checking out %s..." % self.name)
+        self.shelf.note("Checking out %s..." % self.name)
 
         makedirs(self.user_dir)
-        chdir(self.user_dir)
+        self.shelf.chdir(self.user_dir)
 
         if self.type == 'git':
-            run('git', 'clone', self.url)
+            self.shelf.run('git', 'clone', self.url)
         elif self.type == 'hg':
-            run('hg', 'clone', self.url)
+            self.shelf.run('hg', 'clone', self.url)
         elif self.type == 'hg-or-git':
             try:
                 # better would be to check hg's error output for
                 # 'Http Error 406'
-                run('hg', 'clone', self.url)
+                self.shelf.run('hg', 'clone', self.url)
             except subprocess.CalledProcessError:
-                note("`hg clone` failed, so trying git")
-                run('git', 'clone', self.url)
+                self.shelf.note("`hg clone` failed, so trying git")
+                self.shelf.run('git', 'clone', self.url)
         elif self.distfile is not None:
-            run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
+            self.shelf.run('mkdir', '-p', os.path.join(TOOLSHELF, '.distfiles'))
             if not os.path.exists(self.distfile):
                 if self.local:
-                    run('cp', self.url, self.distfile)
+                    self.shelf.run('cp', self.url, self.distfile)
                 else:
-                    run('wget', '-nc', '-O', self.distfile, self.url)
+                    self.shelf.run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
                 TOOLSHELF, '.extract_' + self.project
             )
-            run('mkdir', '-p', extract_dir)
-            chdir(extract_dir)
+            self.shelf.run('mkdir', '-p', extract_dir)
+            self.shelf.chdir(extract_dir)
             if self.type == 'zip':
-                run('unzip', self.distfile)
+                self.shelf.run('unzip', self.distfile)
             elif self.type in ('tgz', 'tar.gz'):
                 # TODO: use modern command line arguments to tar
-                run('tar', 'zxvf', self.distfile)
+                self.shelf.run('tar', 'zxvf', self.distfile)
             elif self.type in ('tar.bz2'):
                 # TODO: use modern command line arguments to tar
-                run('tar', 'jxvf', self.distfile)
+                self.shelf.run('tar', 'jxvf', self.distfile)
 
             files = os.listdir(extract_dir)
             if len(files) == 1:
-                note("Archive is well-structured "
-                     "(all files in one directory)")
+                self.shelf.note("Archive is well-structured "
+                                "(all files in one directory)")
                 extracted_dir = os.path.join(extract_dir, files[0])
                 if not os.path.isdir(extracted_dir):
                     extracted_dir = extract_dir
             else:
-                note("Archive is a 'tarbomb' "
-                     "(all files in the root of the archive)")
+                self.shelf.note("Archive is a 'tarbomb' "
+                                "(all files in the root of the archive)")
                 extracted_dir = extract_dir
-            run('mv', extracted_dir, self.dir)
-            run('rm', '-rf', extract_dir)
+            self.shelf.run('mv', extracted_dir, self.dir)
+            self.shelf.run('rm', '-rf', extract_dir)
         else:
             raise NotImplementedError(self.type)
 
     def build(self):
-        if not OPTIONS.build:  # FIX
-            note("SKIPPING build of %s" % self.name)
+        if not self.shelf.options.build:
+            self.shelf.note("SKIPPING build of %s" % self.name)
             return
-        note("Building %s..." % self.dir)
+        self.shelf.note("Building %s..." % self.dir)
 
-        chdir(self.dir)
+        self.shelf.chdir(self.dir)
         build_command = self.hints.get('build_command', None)
         if build_command:
-            run(build_command, shell=True)
+            self.shelf.run(build_command, shell=True)
         elif os.path.isfile('build.sh'):
-            run('./build.sh')
+            self.shelf.run('./build.sh')
         elif os.path.isfile('make.sh'):
-            run('./make.sh')
+            self.shelf.run('./make.sh')
         elif os.path.isfile('build.xml'):
-            run('ant')
+            self.shelf.run('ant')
         else:
             if (os.path.isfile('autogen.sh') and
                 not os.path.isfile('configure')):
-                run('./autogen.sh')
+                self.shelf.run('./autogen.sh')
             if os.path.isfile('configure'):
-                run('./configure', "--prefix=%s" % self.dir)
-                run('make')
-                run('make', 'install')
+                self.shelf.run('./configure', "--prefix=%s" % self.dir)
+                self.shelf.run('make')
+                self.shelf.run('make', 'install')
             elif os.path.isfile('Makefile') or os.path.isfile('makefile'):
-                run('make')
+                self.shelf.run('make')
             elif os.path.isfile('src/Makefile'):
-                chdir('src')
-                run('make')
+                self.shelf.chdir('src')
+                self.shelf.run('make')
 
     def update(self):
-        chdir(self.dir)
+        self.shelf.chdir(self.dir)
         if os.path.isdir('.git'):
-            run('git', 'pull')
+            self.shelf.run('git', 'pull')
         elif os.path.isdir('.hg'):
-            run('hg', 'pull', '-u')
+            self.shelf.run('hg', 'pull', '-u')
         else:
             raise NotImplementedError
 
     def status(self):
-        chdir(self.dir)
+        self.shelf.chdir(self.dir)
         output = None
         if os.path.isdir('.git'):
-            output = get_it('git status')
+            output = self.shelf.get_it('git status')
             if 'working directory clean' in output:
                 output = ''
         elif os.path.isdir('.hg'):
-            output = get_it('hg status')
+            output = self.shelf.get_it('hg status')
         if output:
             print self.dir
             print output
@@ -724,13 +697,13 @@ class Source(object):
             if '.hg' in dirs:
                 dirs.remove('.hg')
             if not self.may_use_path(root):
-                note("%s excluded from search path" % root)
+                self.shelf.note("%s excluded from search path" % root)
                 dirs[:] = []
                 continue
             for name in files:
                 filename = os.path.join(self.dir, root, name)
                 if predicate(filename):
-                    note("    %s" % filename)
+                    self.shelf.note("    %s" % filename)
                     yield filename
 
     def rectify_executable_permissions(self):
@@ -748,10 +721,10 @@ class Source(object):
                 if 'executable' in output:
                     make_it_executable = True
                 if make_it_executable:
-                    note("Making %s executable" % filename)
+                    self.shelf.note("Making %s executable" % filename)
                     subprocess.check_call(["chmod", "u+x", filename])
                 else:
-                    note("Making %s NON-executable" % filename)
+                    self.shelf.note("Making %s NON-executable" % filename)
                     subprocess.check_call(["chmod", "u-x", filename])
 
     def rectify_permissions_if_needed(self):
@@ -777,7 +750,7 @@ class Source(object):
         os.chdir(self.dir)
     
         latest_tag = None
-        for line in get_it("hg tags").split('\n'):
+        for line in self.shelf.get_it("hg tags").split('\n'):
             match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
             if match:
                 tag = match.group(1)
@@ -814,12 +787,15 @@ class Source(object):
 
 class Toolshelf(object):
     def __init__(self, options=DefaultOptions(), cookies=None,
-                       bin_link_farm=LinkFarm(BIN_LINK_FARM_DIR),
-                       lib_link_farm=LinkFarm(LIB_LINK_FARM_DIR),
+                       bin_link_farm=None, lib_link_farm=None,
                        errors=None):
         self.options = options
+        if bin_link_farm is None:
+            bin_link_farm = LinkFarm(self, BIN_LINK_FARM_DIR)
+        if lib_link_farm is None:
+            lib_link_farm = LinkFarm(self, LIB_LINK_FARM_DIR)
         if cookies is None:
-            cookies = Cookies()
+            cookies = Cookies(self)
             cookies.add_file(os.path.join(
                 TOOLSHELF, '.toolshelf', 'cookies.catalog'
             ))
@@ -836,17 +812,33 @@ class Toolshelf(object):
     def expand_docked_specs(self, specs, default_all=False):
         return expand_docked_specs(specs, default_all=default_all)
 
-    def get_it(self, *args):
-        return get_it(*args)
+    def run(self, *args, **kwargs):
+        self.note("Running `%s`..." % ' '.join(args))
+        subprocess.check_call(args, **kwargs)
 
-    def run(self, *args):
-        return run(*args)
+    def get_it(self, command):
+        self.note("Running `%s`..." % command)
+        output = subprocess.Popen(
+            command, shell=True, stdout=subprocess.PIPE
+        ).communicate()[0]
+        if self.options.verbose:
+            print output
+        return output
 
-    def note(self, *args):
-        return note(*args)
+    def note(self, msg):
+        if self.options.verbose:
+            print "*", msg
+
+    def chdir(self, dirname):
+        self.note("Changing dir to `%s`..." % dirname)
+        os.chdir(dirname)
+    
+    def symlink(self, sourcename, linkname):
+        self.note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
+        os.symlink(sourcename, linkname)
 
     def make_sources_from_catalog(self, filename):
-        note('Reading catalog %s' % filename)
+        self.note('Reading catalog %s' % filename)
         sources = []
         with open(filename, 'r') as file:
             for line in file:
@@ -888,7 +880,7 @@ class Toolshelf(object):
 
         kwargs = parse_source_spec(name)
         kwargs['cookies'] = self.cookies
-        return [Source(**kwargs)]
+        return [Source(self, **kwargs)]
 
     def foreach_source(self, specs, fun, rebuild_paths=True):
         cwd = os.getcwd()
@@ -987,7 +979,7 @@ class Toolshelf(object):
     def relink(self, args):
         specs = expand_docked_specs(args, default_all=True)
         sources = self.make_sources_from_specs(specs)
-        note("Adding the following executables to your link farm...")
+        self.note("Adding the following executables to your link farm...")
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             for filename in source.linkable_files(is_executable):
