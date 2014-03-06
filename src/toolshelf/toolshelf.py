@@ -836,6 +836,12 @@ class Toolshelf(object):
     def expand_docked_specs(self, specs, default_all=False):
         return expand_docked_specs(specs, default_all=default_all)
 
+    def get_it(self, *args):
+        return get_it(*args)
+
+    def run(self, *args):
+        return run(*args)
+
     def note(self, *args):
         return note(*args)
 

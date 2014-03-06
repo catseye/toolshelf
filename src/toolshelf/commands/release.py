@@ -1,8 +1,6 @@
 import os
 import re
 
-from toolshelf.toolshelf import get_it, run
-
 def release(shelf, args):
     """Create a distfile from the latest tag in a local version-controlled
     source tree.
@@ -18,7 +16,7 @@ def release(shelf, args):
         if not tag:
             raise SystemError("Repository not tagged")
         os.chdir(source.dir)
-        diff = get_it('hg diff -r %s -r tip -X .hgtags' % tag)
+        diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % tag)
         if diff and not shelf.options.force:
             raise SystemError("There are changes to mainline since latest tag")
         os.chdir(cwd)
@@ -49,7 +47,7 @@ def release(shelf, args):
 """ % (v_maj, v_min, r_maj, r_min, filename)
         full_filename = os.path.join(shelf.options.distfiles_dir, filename)
         if os.path.exists(full_filename):
-            run('unzip', '-v', full_filename)
+            shelf.run('unzip', '-v', full_filename)
             raise SystemError("Distfile already exists: %s" % full_filename)
         command = ['hg', 'archive', '-t', 'zip', '-r', tag]
         for x in ('.hgignore', '.gitignore',
@@ -58,6 +56,6 @@ def release(shelf, args):
             command.append(x)
         command.append(full_filename)
         os.chdir(source.dir)
-        run(*command)
+        shelf.run(*command)
         os.chdir(cwd)
-        run('unzip', '-v', full_filename)
+        shelf.run('unzip', '-v', full_filename)

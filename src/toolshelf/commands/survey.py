@@ -1,5 +1,3 @@
-from toolshelf.toolshelf import get_it
-
 def survey(shelf, args):
     """Generates a report summarizing various properties of the docked
     source trees.  Sort of a "deep status".
@@ -9,10 +7,10 @@ def survey(shelf, args):
 
     def survey_it(source):
         print source.name
-        dirty = get_it("hg st")
+        dirty = shelf.get_it("hg st")
         outgoing = ''
         #if hg_outgoing:
-        #    outgoing = get_it("hg out")
+        #    outgoing = shelf.get_it("hg out")
         #if 'no changes found' in outgoing:
         #    outgoing = ''
         tags = {}
@@ -22,7 +20,7 @@ def survey(shelf, args):
         if latest_tag is None:
             due = 'NEVER RELEASED'
         else:
-            diff = get_it('hg diff -r %s -r tip -X .hgtags' % latest_tag)
+            diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % latest_tag)
             if not diff:
                 due = ''
             else:
