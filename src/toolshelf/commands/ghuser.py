@@ -2,9 +2,7 @@ import re
 
 import requests
 
-from toolshelf.toolshelf import note
-
-def ghuser(self, args):
+def ghuser(shelf, args):
     login = args[0]
     user = args[1]
     if login == 'none':
@@ -25,12 +23,12 @@ def ghuser(self, args):
         else:
             match = re.match(r'\<(.*?)\>\s*\;\s*rel\s*=\s*\"next\"', link)
             if not match:
-                note(link)
+                shelf.note(link)
                 done = True
             else:
                 url = match.group(1)
 
-def bbuser(self, args):
+def bbuser(shelf, args):
     # this only works for the logged-in user.  It would be great if...
     # yeah.
     from bitbucket.bitbucket import Bitbucket

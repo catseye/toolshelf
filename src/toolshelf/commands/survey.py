@@ -1,6 +1,6 @@
-from toolshelf.toolshelf import expand_docked_specs, get_it
+from toolshelf.toolshelf import get_it
 
-def survey(self, args):
+def survey(shelf, args):
     """Generates a report summarizing various properties of the docked
     source trees.  Sort of a "deep status".
 
@@ -38,8 +38,8 @@ def survey(self, args):
             'diff': diff,
         }
 
-    self.foreach_source(
-        expand_docked_specs(args), survey_it,
+    shelf.foreach_source(
+        shelf.expand_docked_specs(args), survey_it,
         rebuild_paths=False
     )
 

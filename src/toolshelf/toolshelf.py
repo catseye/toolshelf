@@ -86,7 +86,6 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         syntax will likely change.
 """
 
-import codecs
 import errno
 import os
 import optparse
@@ -810,7 +809,7 @@ class Source(object):
                         break
 
 
-### Toolshelf object (Subcommands)
+### Toolshelf object (Environment and intrinsic subcommands)
 
 
 class Toolshelf(object):
@@ -833,6 +832,12 @@ class Toolshelf(object):
         if errors is None:
             errors = {}
         self.errors = errors
+
+    def expand_docked_specs(self, specs, default_all=False):
+        return expand_docked_specs(specs, default_all=default_all)
+
+    def note(self, *args):
+        return note(*args)
 
     def make_sources_from_catalog(self, filename):
         note('Reading catalog %s' % filename)

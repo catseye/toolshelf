@@ -2,9 +2,7 @@ import codecs
 
 import yaml
 
-from toolshelf.toolshelf import expand_docked_specs, get_it, run
-
-def collectdocs(self, args):
+def collectdocs(shelf, args):
     """Looks for documentation in local repository clones and writes out
     a files that can be used to update the Documentation nodes in the
     Chrysoberyl data.
@@ -16,8 +14,8 @@ def collectdocs(self, args):
         for path in source.find_likely_documents():
             docdict.setdefault(source.name, []).append(path)
 
-    self.foreach_source(
-        expand_docked_specs(args), collectdocs_it
+    shelf.foreach_source(
+        shelf.expand_docked_specs(args), collectdocs_it
     )
 
     output_filename = 'docs.yaml'

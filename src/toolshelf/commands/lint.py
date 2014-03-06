@@ -1,8 +1,6 @@
 import os
 
-from toolshelf.toolshelf import expand_docked_specs
-
-def lint(self, args):
+def lint(shelf, args):
     """Check that the layouts of distributions conform to some
     distribution organization guidelines.  If these are not guidelines that
     you use, you can take this with a grain of salt.
@@ -57,8 +55,8 @@ def lint(self, args):
                     )
         problems[source.dir] = prob
 
-    self.foreach_source(
-        expand_docked_specs(args), lint_it,
+    shelf.foreach_source(
+        shelf.expand_docked_specs(args), lint_it,
         rebuild_paths=False
     )
 
