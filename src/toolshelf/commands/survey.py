@@ -36,7 +36,7 @@ def survey(shelf, args):
             'diff': diff,
         }
 
-    shelf.foreach_source(
+    shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), survey_it
     )
 

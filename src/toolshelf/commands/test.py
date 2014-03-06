@@ -27,7 +27,7 @@ def test(shelf, args):
         else:
             stats['no_tests'] += 1
 
-    shelf.foreach_source(
+    shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), test_it
     )
     

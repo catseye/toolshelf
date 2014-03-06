@@ -550,7 +550,6 @@ class Source(object):
                 if tag != 'tip' and latest_tag is None:
                     latest_tag = tag
 
-        self.shelf.chdir(self.shelf.cwd)
         return latest_tag
 
     def find_likely_documents(self):
@@ -874,7 +873,18 @@ class Toolshelf(object):
 
     ### processing sources ###
 
-    def foreach_source(self, specs, fun, rebuild_paths=False):
+    def foreach_specced_source(self, specs, fun, rebuild_paths=False):
+        """Call `fun` for each Source specified by the given specs.
+
+        The working directory is changed to that Source's directory
+        before `fun` is called.  (It is not changed back afterwards.)
+        In addition, if `fun` raises an error, it will be caught and
+        collected (unless the --break-on-error option was given.)
+
+        Note that a single spec among the specs can result in
+        multiple Sources.
+
+        """
         sources = self.make_sources_from_specs(specs)
         for source in sorted(sources, key=str):
             if os.path.isdir(source.dir):
@@ -887,8 +897,6 @@ class Toolshelf(object):
                 if self.options.break_on_error:
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
-            finally:
-                os.chdir(self.cwd)
         if rebuild_paths:
             self.relink([s.name for s in sources])
 
@@ -939,10 +947,10 @@ class Toolshelf(object):
                 source.checkout()
                 source.rectify_permissions_if_needed()
                 source.build()
-        self.foreach_source(args, dock_it, rebuild_paths=True)
-    
+        self.foreach_specced_source(args, dock_it, rebuild_paths=True)
+
     def build(self, args):
-        self.foreach_source(
+        self.foreach_specced_source(
             self.expand_docked_specs(args), lambda(source): source.build(),
             rebuild_paths=True
         )
@@ -951,13 +959,13 @@ class Toolshelf(object):
         def update(source):
             source.update()
             source.build()
-        self.foreach_source(
+        self.foreach_specced_source(
             self.expand_docked_specs(args), update,
             rebuild_paths=True
         )
 
     def status(self, args):
-        self.foreach_source(
+        self.foreach_specced_source(
             self.expand_docked_specs(args), lambda(source): source.status()
         )
 
@@ -975,7 +983,7 @@ class Toolshelf(object):
     def rectify(self, args):
         specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
-        # XXX why is this not foreach_source?
+        # XXX why is this not foreach_specced_source?
         for source in sources:
             source.rectify_permissions_if_needed()
     

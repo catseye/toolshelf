@@ -55,7 +55,7 @@ def lint(shelf, args):
                     )
         problems[source.dir] = prob
 
-    shelf.foreach_source(
+    shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), lint_it
     )
 

@@ -14,7 +14,7 @@ def collectdocs(shelf, args):
         for path in source.find_likely_documents():
             docdict.setdefault(source.name, []).append(path)
 
-    shelf.foreach_source(
+    shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), collectdocs_it
     )
 
