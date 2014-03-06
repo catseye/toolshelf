@@ -6,12 +6,7 @@ def release(shelf, args):
     source tree.
     
     """
-    sources = shelf.make_sources_from_specs(
-        shelf.expand_docked_specs(args)
-    )
-    for source in sources:
-        # wouldn't need this if we used foreach_specced_sources
-        shelf.chdir(source.dir)
+    def release_it(source):
         distro = source.project
         tag = source.get_latest_release_tag()
         if not tag:
@@ -56,3 +51,7 @@ def release(shelf, args):
         command.append(full_filename)
         shelf.run(*command)
         shelf.run('unzip', '-v', full_filename)
+
+    shelf.foreach_specced_source(
+        shelf.expand_docked_specs(args), release_it
+    )

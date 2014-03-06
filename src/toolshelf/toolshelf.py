@@ -981,11 +981,10 @@ class Toolshelf(object):
         print sources[0].dir
     
     def rectify(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        # XXX why is this not foreach_specced_source?
-        for source in sources:
-            source.rectify_permissions_if_needed()
+        self.foreach_specced_source(
+            self.expand_docked_specs(args),
+            lambda source: source.rectify_executable_permissions()
+        )
     
     def relink(self, args):
         specs = self.expand_docked_specs(self.default_to_all(args))
