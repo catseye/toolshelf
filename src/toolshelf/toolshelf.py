@@ -84,6 +84,12 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         target username).  A password will be prompted for the login username.
         If --login is not given, the Github API will be used anonymously, with
         all the caveats that implies.  Note that this command is experimental.
+
+    bbuser --login <login> <username>
+        Like ghuser, but for the Bitbucket API.  The --login option is required
+        and the login username must be the same as the target username.  (This
+        appears to be a limitation of the Bitbucket API.)  Note that this
+        command is experimental.
 """
 
 import errno
@@ -1109,7 +1115,7 @@ def main(args):
     parser.add_option("--login", dest="login",
                       default=None, metavar='USERNAME',
                       help="username to login with when using the "
-                           "Github API")
+                           "Github or Bitbucket APIs")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
