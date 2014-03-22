@@ -1,19 +1,22 @@
 import re
 
+import getpass
+import optparse
 import requests
 
 def ghuser(shelf, args):
-    login = args[0]
-    user = args[1]
-    if login == 'none':
-        login = ''
-    else:
-        login = login + '@'
-    url = 'https://%sapi.github.com/users/%s/repos' % (login, user)
+    user = args[0]
+    auth = None
+    if shelf.options.login is not None:
+        password = getpass.getpass('Password: ')
+        auth = (shelf.options.login, password)
+    url = 'https://api.github.com/users/%s/repos' % user
     
     done = False
     while not done:
-        response = requests.get(url)
+        response = requests.get(url, auth=auth)
+        #for header in ('X-RateLimit-Limit', 'X-RateLimit-Remaining'):
+        #    print header, response.headers[header]
         data = response.json()
         for x in data:
             print 'gh:%s' % x['full_name']

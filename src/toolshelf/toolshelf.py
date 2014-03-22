@@ -77,13 +77,13 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         permissions of files, removing or adding the executable bit based on
         whether toolshelf thinks the file should really be executable or not.
 
-    ghuser <login> <username>
+    ghuser [--login <login>] <username>
         Create (on standard output) a catalog for all of the given Github user's
-        repositories.  The login is either 'username:password', which is your
-        Github login, not necessarily the target user's, and which is used to
-        log in to the Github API, or 'none', in which the Github API will be
-        used anonymously.  Note that this command is experimental and its
-        syntax will likely change.
+        repositories.  If the --login option is given, the Github API will be
+        logged into using the login username (not necessarily the same as the
+        target username).  A password will be prompted for the login username.
+        If --login is not given, the Github API will be used anonymously, with
+        all the caveats that implies.  Note that this command is experimental.
 """
 
 import errno
@@ -1106,6 +1106,10 @@ def main(args):
                       default=False, action="store_true",
                       help="abort if error occurs with a single "
                            "source when processing multiple sources")
+    parser.add_option("--login", dest="login",
+                      default=None, metavar='USERNAME',
+                      help="username to login with when using the "
+                           "Github API")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
