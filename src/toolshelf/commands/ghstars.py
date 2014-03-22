@@ -3,14 +3,14 @@ import re
 import getpass
 import requests
 
-def ghuser(shelf, args):
+def ghstars(shelf, args):
     user = args[0]
     auth = None
     if shelf.options.login is not None:
         password = getpass.getpass('Password: ')
         auth = (shelf.options.login, password)
-    url = 'https://api.github.com/users/%s/repos' % user
-    
+    url = 'https://api.github.com/users/%s/starred' % user
+
     done = False
     while not done:
         response = requests.get(url, auth=auth)
