@@ -58,9 +58,13 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
 
     disable {<docked-source-spec>}
         Temporarily remove the links to executables in the given docked projects
-        from your link farm.  A subsequent `relink` will restore them.
-        If no source specs are given, all docked sources will apply.
-        (Note: currently insufficient; everything else needs to be relinked)
+        from your link farm.  A subsequent `enable` will restore them.  Note
+        that this implies a `relink all` to make sure any previously-shadowed
+        links now show up with these sources disabled.
+
+    enable {<docked-source-spec>}
+        Restore links to executables for the given docked projects, previously
+        disabled.
 
     show {<docked-source-spec>}
         Display the links that have been put on your linked farm for the
@@ -248,6 +252,45 @@ class Cookies(object):
 
     def apply_hints(self, source):
         source.hints.update(self.hint_map.get(source.name, {}))
+
+
+class Blacklist(object):
+    """A list of sources whose files will not be made available
+    in the link farms.
+    
+    Used by `toolshelf disable/enable`, and persisted.
+
+    """
+    def __init__(self, shelf, filename):
+        self.shelf = shelf
+        self.filename = filename
+        self._blacklist_map = set()
+
+    def load(self):
+        if not os.path.exists(self.filename):
+            return
+        with open(self.filename, 'r') as blacklist_file:
+            for line in blacklist_file:
+                line = line.strip()
+                match = re.match(r'^(.*?\/.*?\/.*?)$', line)
+                if match:
+                    self._blacklist_map.add(match.group(1))
+        self.shelf.note("Loaded blacklist %r" % self._blacklist_map)
+
+    def save(self):
+        with open(self.filename, 'w') as blacklist_file:
+            for key in self._blacklist_map:
+                self.shelf.note("Saving blacklisted %r" % key)
+                blacklist_file.write('%s\n' % key)
+
+    def add(self, source):
+        self._blacklist_map.add(source.name)
+
+    def remove(self, source):
+        self._blacklist_map.remove(source.name)
+
+    def __contains__(self, source):
+        return source.name in self._blacklist_map
 
 
 class Path(object):
@@ -615,7 +658,8 @@ class Source(object):
 
 class Toolshelf(object):
     def __init__(self, directory=None, cwd=None, options=None, cookies=None,
-                       bin_link_farm=None, lib_link_farm=None, errors=None):
+                       blacklist=None, bin_link_farm=None, lib_link_farm=None,
+                       errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -649,6 +693,14 @@ class Toolshelf(object):
                 self.dir, '.toolshelf', 'local-cookies.catalog'
             ))
         self.cookies = cookies
+
+        if blacklist is None:
+            blacklist = Blacklist(self, os.path.join(
+                self.dir, '.toolshelf', 'blacklist.txt'
+            ))
+            blacklist.load()
+        self.blacklist = blacklist
+
         if errors is None:
             errors = {}
         self.errors = errors
@@ -679,6 +731,11 @@ class Toolshelf(object):
     def symlink(self, sourcename, linkname):
         self.note("Symlinking `%s` to `%s`..." % (linkname, sourcename))
         os.symlink(sourcename, linkname)
+
+    ### persist state ###
+
+    def save(self):
+        self.blacklist.save()
 
     ### making Sources from specs ###
 
@@ -1067,18 +1124,27 @@ class Toolshelf(object):
         self.note("Adding the following executables to your link farm...")
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
-            for filename in source.linkable_files(is_interesting_executable):
-                self.bin_link_farm.create_link(filename)
+            if source not in self.blacklist:
+                for filename in source.linkable_files(is_interesting_executable):
+                    self.bin_link_farm.create_link(filename)
             self.lib_link_farm.clean(prefix=source.dir)
-            for filename in source.linkable_files(is_shared_object):
-                self.lib_link_farm.create_link(filename)
+            if source not in self.blacklist:
+                for filename in source.linkable_files(is_shared_object):
+                    self.lib_link_farm.create_link(filename)
 
     def disable(self, args):
-        specs = self.expand_docked_specs(self.default_to_all(args))
+        specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
-            self.bin_link_farm.clean(prefix=source.dir)
-            self.lib_link_farm.clean(prefix=source.dir)
+            self.blacklist.add(source)
+        self.relink(['all'])
+
+    def enable(self, args):
+        specs = self.expand_docked_specs(args)
+        sources = self.make_sources_from_specs(specs)
+        for source in sources:
+            self.blacklist.remove(source)
+        self.relink(args)
 
     def show(self, args):
         specs = self.expand_docked_specs(self.default_to_all(args))
@@ -1137,6 +1203,8 @@ def main(args):
             sys.stderr.write('\n')
         sys.stderr.write('For usage, run `toolshelf --help`.\n')
         sys.exit(1)
+    else:
+        t.save()
 
 
 if __name__ == '__main__':
