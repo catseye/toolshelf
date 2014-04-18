@@ -1,5 +1,8 @@
 bb:durin42/hg-git
 
+# note that the tip currently does not work (for me).  there's a cookie
+# that runs `hg up 0.4.0` as part of the build.
+
 # then, once that's docked, edit your $HOME/.hgrc to include:
     
 # [extensions]

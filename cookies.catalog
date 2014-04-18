@@ -11,6 +11,7 @@ gh:darius/ichbins
 
 bb:durin42/hg-git
   exclude_paths tests
+  build_command hg up 0.4.0
 
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
