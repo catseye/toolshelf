@@ -114,6 +114,12 @@ gh:joh/when-changed
 gh:kristi/pathify
 gh:kristi/spackle
 gh:trentm/sources
+
+# and these are very, very other
+
 bb:chrisatlee/poster
 gh:mono/winforms
 https://pyglet.googlecode.com/hg/
+gh:jackmoore/colorbox
+gh:antirez/redis
+gh:bjorn/tiled
