@@ -1,0 +1,15 @@
+bb:durin42/hg-git
+
+# then, once that's docked, edit your $HOME/.hgrc to include:
+    
+# [extensions]
+# hgext.bookmarks =
+# hggit = `toolshelf pwd hg-git`/hggit
+
+# unfortunately(?) you'll have to run `toolshelf pwd hg-git` yourself in
+# the shell and copy its output into the .hgrc file.
+
+# then, to push changes to a github clone of a bitbucket repo:
+
+# hg bookmark -f -r default master
+# hg push git+ssh://git@github.com/user/repo.git
