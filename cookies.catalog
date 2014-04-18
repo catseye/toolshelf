@@ -16,6 +16,11 @@ bb:durin42/hg-git
 http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz
   exclude_paths tests etc example build-aux
 
+# yeesh
+http://ftp.gnu.org/gnu/bison/bison-2.7.1.tar.gz
+  exclude_paths tests etc example build-aux
+  build_command mkdir -p install && ./configure --prefix=`pwd`/install && make && make install
+
 http://nmap.org/dist/nmap-6.40.tar.bz2
   build_command ./configure --with-liblua=`toolshelf pwd lua-5.2.2` --prefix=`pwd` && make && make install
 
