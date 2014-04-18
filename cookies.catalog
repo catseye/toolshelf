@@ -51,6 +51,9 @@ http://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
   build_command ./configure --enable-gnomeui --prefix=`pwd` && make && make install && ln -s lib64 lib
 
+http://sourceforge.net/projects/seed7/files/seed7/seed7_05_20140406/seed7_05_20140406.tgz
+  build_command cd src && make depend && make
+
 bb:catseye/yucca
   require_executables python
 

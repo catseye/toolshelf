@@ -1,4 +1,4 @@
-# Experimental programming languages:
+# Experimental and other "less than mainstream" programming languages:
 
 gh:crcx/retro-language
 gh:darius/squerm
@@ -37,6 +37,7 @@ gh:FMNSSun/mopl
 gh:lvzixun/A2
 git://factorcode.org/git/factor.git
 https://code.google.com/p/chibi-scheme/
+http://sourceforge.net/projects/seed7/files/seed7/seed7_05_20140406/seed7_05_20140406.tgz
 
 # Lisps and Schemes:
 
@@ -86,23 +87,6 @@ gh:silentmatt/javascript-biginteger
 gh:jtobey/javascript-bignum
 gh:CurryBoy/Peirce-Logic
 gh:pikhq/clambda-demo
-
-# Emulators:
-
-gh:rascal999/chip8-emulator
-gh:pikhq/cmako
-gh:JohnEarnest/Mako
-gh:ppeccin/javatari
-gh:schnej7/Atari-2600-emulator
-gh:samplx/z80pack
-gh:LawrenceWoodman/xAce
-gh:ctm/syn68k
-gh:TomHarte/Clock-Signal
-gh:begoon/jasper
-gh:XelaRellum/ZPlet
-gh:Two9A/jsGB
-gh:enukane/z80-js
-gh:maximecb/toyCPU
 
 # Games:
 

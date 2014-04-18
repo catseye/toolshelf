@@ -835,7 +835,10 @@ class Toolshelf(object):
             except StopIteration:
                 pass
         else:  # case 1 or 2
-            (host, user, project) = name.split('/')
+            components = name.split('/')
+            host = components[0]
+            user = ','.join(components[1:-2])
+            project = components[-1]
             if project == 'all':  # case 2
                 user_dirname = os.path.join(self.dir, host, user)
                 for project in os.listdir(user_dirname):
@@ -1098,6 +1101,12 @@ class Toolshelf(object):
             self.expand_docked_specs(args), update_it,
             rebuild_paths=True
         )
+
+    def resolve(self, args):
+        def dump(source):
+            print repr(source)
+
+        self.foreach_specced_source(self.expand_docked_specs(args), dump)
 
     def status(self, args):
         self.foreach_specced_source(
