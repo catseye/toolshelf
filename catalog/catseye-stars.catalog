@@ -51,6 +51,10 @@ gh:stanistan/tiddlylisp-js
 gh:JeffBezanson/femtolisp
 gh:santoshrajan/lispyscript
 gh:benekastah/oppo
+http://sourceforge.net/projects/tinyscheme/files/tinyscheme/tinyscheme-1.41/tinyscheme-1.41.tar.gz
+http://people.bath.ac.uk/masrjb/Sources/euscheme361.tgz
+gh:larcenists/larceny
+gh:feeley/gambit
 
 # Other implementations of existing languages:
 
