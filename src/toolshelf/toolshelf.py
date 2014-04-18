@@ -355,9 +355,9 @@ class LinkFarm(object):
         linkname = os.path.join(self.dirname, os.path.basename(filename))
         # We do trample existing links
         if os.path.islink(linkname):
-            self.shelf.note("Trampling existing link %s" % linkname)
-            self.shelf.note("  was: %s" % os.readlink(linkname))
-            self.shelf.note("  now: %s" % filename)
+            self.shelf.warn("Trampling existing link %s" % linkname)
+            self.shelf.warn("  was: %s" % os.readlink(linkname))
+            self.shelf.warn("  now: %s" % filename)
             os.unlink(linkname)
         self.shelf.symlink(filename, linkname)
 
@@ -721,8 +721,14 @@ class Toolshelf(object):
         return output
 
     def note(self, msg):
+        """Display an informative message, but only if verbose was selected."""
         if self.options.verbose:
             print "*", msg
+
+    def warn(self, msg):
+        """Display a warning, but only if quiet was not selected."""
+        if not self.options.quiet:
+            print msg
 
     def chdir(self, dirname):
         self.note("Changing dir to `%s`..." % dirname)
@@ -850,6 +856,8 @@ class Toolshelf(object):
         any expanded source specifiers, an error is raised.
 
         """
+        if not specs:
+            self.warn('No source specifiers given')
         new_specs = []
         for name in specs:
             additional_specs = self.expand_docked_spec(name)
@@ -1028,7 +1036,7 @@ class Toolshelf(object):
                 if self.options.break_on_error:
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
-        if rebuild_paths:
+        if rebuild_paths and sources:
             self.relink([s.name for s in sources])
 
     def run_command(self, subcommand, args):
@@ -1177,6 +1185,9 @@ def main(args):
                       default=None, metavar='USERNAME',
                       help="username to login with when using the "
                            "Github or Bitbucket APIs")
+    parser.add_option("-q", "--quiet", dest="quiet",
+                      default=False, action="store_true",
+                      help="suppress output of warning messages")
     parser.add_option("-v", "--verbose", dest="verbose",
                       default=False, action="store_true",
                       help="report steps taken to standard output")
