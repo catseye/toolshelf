@@ -33,6 +33,12 @@ http://www.rcdrummond.net/uae/e-uae-0.8.29-WIP4/e-uae-0.8.29-WIP4.tar.bz2
 ### Stella
 http://prdownloads.sourceforge.net/stella/stella-3.9.2-src.tar.gz
 
+### Apple Emulator
+# needs fltk.
+# but doesn't honour fltk-config --includedir.  frustrating...
+http://fltk.org/pub/fltk/1.3.2/fltk-1.3.2-source.tar.gz
+http://sourceforge.net/projects/apple-emulator/files/apple-emulator/0.8/apple_emulator-0.8-src.tar.gz
+
 ### miscellany
 
 gh:rascal999/chip8-emulator
@@ -49,3 +55,4 @@ gh:XelaRellum/ZPlet
 gh:Two9A/jsGB
 gh:enukane/z80-js
 gh:maximecb/toyCPU
+http://downloads.sourceforge.net/project/z80sim/z80sim/0.1.0/z80sim-0.1.0.tar.gz
