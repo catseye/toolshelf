@@ -53,8 +53,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         naive format, for the given docked sources.
 
     relink {<docked-source-spec>}
-        Update your link farm to contain links to the executables for the given
-        docked sources.  If none are given, all docked sources will apply.
+        Update your link farms to contain links to the executables for the given
+        docked sources.  Use `relink all` to rebuild the farms from scratch.
 
     disable {<docked-source-spec>}
         Temporarily remove the links to executables in the given docked projects
@@ -1031,11 +1031,6 @@ class Toolshelf(object):
         if rebuild_paths:
             self.relink([s.name for s in sources])
 
-    def default_to_all(self, specs):
-        if specs == []:
-            specs = ['all']
-        return specs
-
     def run_command(self, subcommand, args):
         try:
             module = __import__("toolshelf.commands.%s" % subcommand,
@@ -1119,7 +1114,7 @@ class Toolshelf(object):
         )
 
     def relink(self, args):
-        specs = self.expand_docked_specs(self.default_to_all(args))
+        specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         self.note("Adding the following executables to your link farm...")
         for source in sources:
@@ -1147,7 +1142,7 @@ class Toolshelf(object):
         self.relink(args)
 
     def show(self, args):
-        specs = self.expand_docked_specs(self.default_to_all(args))
+        specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             for (linkname, filename) in self.bin_link_farm.links():
