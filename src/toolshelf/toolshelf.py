@@ -142,6 +142,7 @@ HINT_NAMES = (
     #'prerequisites',
     'rectify_permissions',
     'require_executables',
+    'interesting_executables',
 )
 
 
@@ -163,20 +164,8 @@ class DependencyError(ValueError):
 ### Helper Functions
 
 
-def is_interesting(filename):
-    basename = os.path.basename(filename)
-    for pattern in UNINTERESTING_EXECUTABLES:
-        if re.match('^' + pattern + '$', basename):
-            return False
-    return True
-
-
 def is_executable(filename):
     return os.path.isfile(filename) and os.access(filename, os.X_OK)
-
-
-def is_interesting_executable(filename):
-    return is_interesting(filename) and is_executable(filename)
 
 
 def is_shared_object(filename):
@@ -528,6 +517,19 @@ class Source(object):
 
     ### utility methods ###
 
+    def is_interesting(self, filename):
+        basename = os.path.basename(filename)
+        interesting_executables = self.hints.get('interesting_executables', '').split(' ')
+        if basename in interesting_executables:
+            return True
+        for pattern in UNINTERESTING_EXECUTABLES:
+            if re.match('^' + pattern + '$', basename):
+                return False
+        return True
+
+    def is_interesting_executable(self, filename):
+        return self.is_interesting(filename) and is_executable(filename)
+
     def head_ref(self):
         self.shelf.chdir(self.dir)
         output = None
@@ -539,7 +541,7 @@ class Source(object):
             raise NotImplementedError(
                 "Can't get head ref of a non-version-controlled Source"
             )
-        
+
     def may_use_path(self, dirname):
         only_paths = self.hints.get('only_paths', None)
         if only_paths:
@@ -584,7 +586,7 @@ class Source(object):
                 # if it's not 'interesting', just skip it, so we don't
                 # have to call 'file' so many times.  it won't be put on
                 # the path anyway, whether it's executable or not.
-                if not is_interesting(filename):
+                if not self.is_interesting(filename):
                     continue
                 make_it_executable = False
                 pipe = subprocess.Popen(["file", filename],
@@ -1137,7 +1139,9 @@ class Toolshelf(object):
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             if source not in self.blacklist:
-                for filename in source.linkable_files(is_interesting_executable):
+                for filename in source.linkable_files(
+                                  source.is_interesting_executable
+                                ):
                     self.bin_link_farm.create_link(filename)
             self.lib_link_farm.clean(prefix=source.dir)
             if source not in self.blacklist:
