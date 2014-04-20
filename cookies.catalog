@@ -105,3 +105,11 @@ http://ftp.gnu.org/gnu/make/make-3.81.tar.gz
 
 localhost/distfile/make-3.81.tar.gz
   interesting_executables make
+
+http://mercurial.selenic.com/release/mercurial-1.9.3.tar.gz
+  build_command make local
+  interesting_executables hg
+
+localhost/distfile/mercurial-1.9.3.tar.gz
+  build_command make local
+  interesting_executables hg
