@@ -97,6 +97,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
 """
 
 import errno
+import fnmatch
 import os
 import optparse
 import re
@@ -184,6 +185,9 @@ def makedirs(dirname):
 
 ### Classes
 
+# hints are stored under a 'spec key' which is a glob which
+# matches a *docked* source spec.
+
 class Cookies(object):
     def __init__(self, shelf):
         self.shelf = shelf
@@ -229,8 +233,7 @@ class Cookies(object):
                         break
                 if found_hint or line == '' or line.startswith('#'):
                     continue
-                source = self.shelf.make_source_from_spec(line)
-                spec_key = source.name
+                spec_key = line
                 self._hint_map.setdefault(spec_key, {})
 
     @property
@@ -240,7 +243,11 @@ class Cookies(object):
         return self._hint_map
 
     def apply_hints(self, source):
-        source.hints.update(self.hint_map.get(source.name, {}))
+        for key in self.hint_map:
+            pattern = fnmatch.translate(key)
+            match = re.match(pattern, source.name)
+            if match:
+                source.hints.update(self.hint_map[key])
 
 
 class Blacklist(object):
