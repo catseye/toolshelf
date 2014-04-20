@@ -98,5 +98,10 @@ gh:joyent/node
 gh:poeschko/Mathics
   exclude_paths mathics/web/media
 
+# it should NOT be necessary to have both of these.
+
 http://ftp.gnu.org/gnu/make/make-3.81.tar.gz
+  interesting_executables make
+
+localhost/distfile/make-3.81.tar.gz
   interesting_executables make
