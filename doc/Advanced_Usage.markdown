@@ -38,7 +38,7 @@ Then:
 
 Then edit your `.profile`:
 
-    export TOOLSHELF=/home/user/toolshelf && . $TOOLSHELF/init.sh
+    export TOOLSHELF=/home/user/toolshelf && . $TOOLSHELF/.toolshelf/init.sh
 
 Then start a new shell.  Then test that you can run python
 and toolshelf:

@@ -171,7 +171,8 @@ def is_executable(filename):
 
 def is_shared_object(filename):
     match = re.match('^.*?\.so$', filename)
-    return os.path.isfile(filename) and match and os.access(filename, os.X_OK)
+    return ((os.path.isfile(filename) or os.path.islink(filename)) and
+            match and os.access(filename, os.X_OK))
 
 
 def makedirs(dirname):
