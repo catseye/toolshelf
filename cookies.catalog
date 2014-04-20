@@ -13,6 +13,10 @@
   exclude_paths tests
   build_command hg up 0.4.0 && find . -name '*.pyc' -exec rm {} \;
 
+# eesh
+*/*/tree-1.6.0
+  build_command make "OBJS=tree.o unix.o html.o xml.o hash.o color.o strverscmp.o" "CFLAGS=-O2 -Wall"
+
 */*/bison-2.5
   exclude_paths tests etc example build-aux
 
