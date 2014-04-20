@@ -113,3 +113,6 @@ http://mercurial.selenic.com/release/mercurial-1.9.3.tar.gz
 localhost/distfile/mercurial-1.9.3.tar.gz
   build_command make local
   interesting_executables hg
+
+localhost/distfile/lua-5.2.2.tar.gz
+  build_command make ansi && make INSTALL_TOP=`pwd` install
