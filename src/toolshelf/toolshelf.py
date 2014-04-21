@@ -484,7 +484,8 @@ class Source(object):
                 not os.path.isfile('configure')):
                 self.shelf.run('./autogen.sh')
             if os.path.isfile('configure'):
-                self.shelf.run('./configure', "--prefix=%s" % self.dir)
+                self.shelf.run('./configure', "--prefix=%s" %
+                               os.path.join(self.dir, 'install'))
                 self.shelf.run('make')
                 self.shelf.run('make', 'install')
             elif os.path.isfile('Makefile') or os.path.isfile('makefile'):
