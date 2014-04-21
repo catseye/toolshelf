@@ -76,6 +76,9 @@ factorcode.org/git/factor.git
 */poeschko/Mathics
   exclude_paths mathics/web/media
 
+*/erlang/otp
+  build_command ./otp_build all
+
 */*/make-3.81
   interesting_executables make
 
@@ -84,6 +87,7 @@ factorcode.org/git/factor.git
   interesting_executables hg
 
 # chewing gum *AND* baling wire -- together at last!!
+# (now with 300% more chewing gum, and titanium baling wire!)
 
 */*/v1.8.5.5
-  build_command CPATH=`toolshelf pwd curl-7.35.0`/install/include make
+  build_command NO_PERL=1 LIBRARY_PATH=$TOOLSHELF/.lib CPATH=`toolshelf pwd curl-7.35.0`/install/include make
