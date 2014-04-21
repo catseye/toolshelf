@@ -5,7 +5,7 @@ import sys
 def test(shelf, args):
     stats = {
         'sources': 0,
-        'no_tests': 0,
+        'no_tests': [],
         'passes': [],
         'fails': []
     }
@@ -25,14 +25,16 @@ def test(shelf, args):
             else:
                 stats['fails'].append(source)
         else:
-            stats['no_tests'] += 1
+            stats['no_tests'].append(source)
 
     shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), test_it
     )
     
     print "Total docked sources tested:   %s" % stats['sources']
-    print "Total without obvious tests:   %s" % stats['no_tests']
+    print "Total without obvious tests:   %s" % len(stats['no_tests'])
+    if shelf.options.verbose:
+        print [s.name for s in stats['no_tests']]
     print "Total passing:                 %s" % len(stats['passes'])
     if shelf.options.verbose:
         print [s.name for s in stats['passes']]
