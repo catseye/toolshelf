@@ -122,6 +122,8 @@ UNINTERESTING_EXECUTABLES = (
     'config\.status', 'config\.sub', 'config\.guess',
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
+    # perl seems to like these
+    'regen',
     # "project files" that sometimes have the executable bit set
     '(README|INSTALL|COPYING|LICENSE|AUTHORS|authors|CHANGELOG)',
     'Makefile(\.am)?', '\.gitignore', '\.hgignore', 'Rakefile',
@@ -173,6 +175,15 @@ def is_shared_object(filename):
     match = re.match('^.*?\.so$', filename)
     return ((os.path.isfile(filename) or os.path.islink(filename)) and
             match and os.access(filename, os.X_OK))
+
+
+def is_static_lib(filename):
+    match = re.match('^.*?\.a$', filename)
+    return ((os.path.isfile(filename) or os.path.islink(filename)) and match)
+
+
+def is_library(filename):
+    return is_shared_object(filename) or is_static_lib(filename)
 
 
 def makedirs(dirname):
@@ -1154,7 +1165,7 @@ class Toolshelf(object):
                     self.bin_link_farm.create_link(filename)
             self.lib_link_farm.clean(prefix=source.dir)
             if source not in self.blacklist:
-                for filename in source.linkable_files(is_shared_object):
+                for filename in source.linkable_files(is_library):
                     self.lib_link_farm.create_link(filename)
 
     def disable(self, args):

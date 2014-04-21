@@ -82,3 +82,8 @@ factorcode.org/git/factor.git
 */*/mercurial-1.9.3
   build_command make local
   interesting_executables hg
+
+# chewing gum *AND* baling wire -- together at last!!
+
+*/*/v1.8.5.5
+  build_command CPATH=`toolshelf pwd curl-7.35.0`/install/include make
