@@ -975,10 +975,19 @@ class Toolshelf(object):
         # local distfile
         match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
         if match:
-            host = match.group(1)
+            localfilepath = match.group(1)
+            host = 'localhost'
+            user = 'distfile'
             project = match.group(2)
             ext = match.group(3)
-            return Source(self, url=name, host='localhost', user='distfile',
+            # has "magic" filename?
+            match = re.match(r'^([^,]*?),([^,]*?),([^,]*?)(\-.*?)?$', project)
+            if match:
+                host = match.group(1)
+                user = match.group(2)
+                project = match.group(3)
+                version = match.group(4)
+            return Source(self, url=name, host=host, user=user,
                           project=project, type=ext, local=True)
 
         # already docked
