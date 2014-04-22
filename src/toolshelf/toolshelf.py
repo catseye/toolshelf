@@ -133,9 +133,10 @@ UNINTERESTING_EXECUTABLES = (
     # to dock a source which builds an executable by one of these names and
     # toolshelf puts it on the path, you may just have a *wee* problem when
     # trying to build anything else after that point :)
+    # you can always declare them to be interesting in a cookie if you want
     'make', 'ant', 'mkdir', 'mv', 'rm',
     'git', 'hg', 'wget', 'unzip', 'tar',
-    'cat', 'which', 'install',
+    'cat', 'which', 'install', 'dirname', 'basename',
 )
 
 HINT_NAMES = (
@@ -397,6 +398,8 @@ class Source(object):
 
     @property
     def distfile(self):
+        if self.local:
+            return self.url
         if self.type in ('zip', 'tgz', 'tar.gz', 'tar.bz2'):
             return os.path.join(self.shelf.dir, '.distfiles',
                                 '%s.%s' % (self.project, self.type))
@@ -442,7 +445,7 @@ class Source(object):
                            os.path.join(self.shelf.dir, '.distfiles'))
             if not os.path.exists(self.distfile):
                 if self.local:
-                    self.shelf.run('cp', self.url, self.distfile)
+                    raise IOError("local distfile '%s' doesn't exist?!" % self.distfile)
                 else:
                     self.shelf.run('wget', '-nc', '-O', self.distfile, self.url)
             extract_dir = os.path.join(
