@@ -36,6 +36,9 @@
 */*/colordiff-1.0.13
   build_command ln -s cdiff.sh cdiff && ln -s colordiff.pl colordiff
 
+*/ymattw/cdiff
+  build_command echo "No need to build."
+
 # 1. it would be nice to be able to vary this by OS, so it could be
 #    'make linux' under linux, etc.
 
@@ -67,7 +70,7 @@
 */paulhodge/circa
   exclude_paths platform tests
 
-*/*/*Ophis*
+*/michaelcmartin/Ophis
   exclude_paths src/scripts
 
 factorcode.org/git/factor.git
@@ -90,7 +93,8 @@ factorcode.org/git/factor.git
   interesting_executables hg
 
 # chewing gum *AND* baling wire -- together at last!!
-# (now with 300% more chewing gum, and titanium baling wire!)
+# (now with titanium baling wire!)
 
-*/*/v1.8.5.5
+github.com/git/git
   build_command NO_PERL=1 LIBRARY_PATH=$TOOLSHELF/.lib CPATH=`toolshelf pwd curl-7.35.0`/install/include make
+
