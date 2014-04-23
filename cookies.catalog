@@ -74,7 +74,7 @@
   exclude_paths src/scripts
 
 factorcode.org/git/factor.git
-  exclude_paths basis extra unmaintained
+  exclude_paths basis extra unmaintained basis/xml/tests
 
 */joyent/node
   exclude_paths deps
@@ -84,6 +84,7 @@ factorcode.org/git/factor.git
 
 */erlang/otp
   build_command ./otp_build all
+  exclude_paths bootstrap erts make plt release system xcomp
 
 */*/make-3.81
   interesting_executables make

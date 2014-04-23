@@ -136,7 +136,9 @@ UNINTERESTING_EXECUTABLES = (
     # you can always declare them to be interesting in a cookie if you want
     'make', 'ant', 'mkdir', 'mv', 'rm',
     'git', 'hg', 'wget', 'unzip', 'tar',
-    'cat', 'which', 'install', 'dirname', 'basename',
+    'cat', 'which', 'install', 'time',
+    # whoa, erlang, whoa whoa
+    'dirname', 'basename', 'mt',
 )
 
 HINT_NAMES = (
@@ -981,7 +983,7 @@ class Toolshelf(object):
             project = match.group(2)
             ext = match.group(3)
             # has "magic" filename?
-            match = re.match(r'^([^,]*?),([^,]*?),([^,]*?)(\-.*?)?$', project)
+            match = re.match(r'^([^,]*?),([^,]*?),([^,]*?)(\-[^\-]*?)?$', project)
             if match:
                 host = match.group(1)
                 user = match.group(2)
