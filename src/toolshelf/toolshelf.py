@@ -1221,10 +1221,11 @@ def main(args):
                       default=False, action="store_true",
                       help="subvert any safety mechanisms and just do "
                            "the thing regardless of the consequences")
-    parser.add_option("--distfiles-dir",
-                      dest="distfiles_dir", metavar='DIR',
-                      default='../catseye_tc/catseye.tc/distfiles',
-                      help="write distfiles into this directory "
+    parser.add_option("--output-dir",
+                      dest="output_dir", metavar='DIR',
+                      default=os.path.realpath(os.path.abspath('.')),
+                      help="for certain commands (release and export), "
+                           "write the results into this directory "
                            "(default: %default)")
     parser.add_option("-K", "--break-on-error", dest="break_on_error",
                       default=False, action="store_true",

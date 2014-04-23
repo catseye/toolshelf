@@ -39,7 +39,7 @@ def release(shelf, args):
     revision: "%s.%s"
     url: http://catseye.tc/distfiles/%s
 """ % (v_maj, v_min, r_maj, r_min, filename)
-        full_filename = os.path.join(shelf.options.distfiles_dir, filename)
+        full_filename = os.path.join(shelf.options.output_dir, filename)
         if os.path.exists(full_filename):
             shelf.run('unzip', '-v', full_filename)
             raise SystemError("Distfile already exists: %s" % full_filename)
