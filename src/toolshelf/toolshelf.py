@@ -402,7 +402,7 @@ class Source(object):
     def distfile(self):
         if self.local:
             return self.url
-        if self.type in ('zip', 'tgz', 'tar.gz', 'tar.bz2'):
+        if self.type in ('zip', 'tgz', 'tar.gz', 'tar.xz', 'tar.bz2'):
             return os.path.join(self.shelf.dir, '.distfiles',
                                 '%s.%s' % (self.project, self.type))
         else:
@@ -459,6 +459,8 @@ class Source(object):
                 self.shelf.run('unzip', self.distfile)
             elif self.type in ('tgz', 'tar.gz'):
                 self.shelf.run('tar', '-z', '-x', '-v', '-f', self.distfile)
+            elif self.type == 'tar.xz':
+                self.shelf.run('tar', '-J', '-x', '-v', '-f', self.distfile)
             elif self.type == 'tar.bz2':
                 self.shelf.run('tar', '-j', '-x', '-v', '-f', self.distfile)
 
@@ -914,10 +916,12 @@ class Toolshelf(object):
           http[s]://host.dom/.../user/repo       Mercurial
           http[s]://host.dom/.../distfile.tgz    \
           http[s]://host.dom/.../distfile.tar.gz | remotely hosted archive
-          http[s]://host.dom/.../distfile.tar.bz2| ("distfile" or "tarball")
+          http[s]://host.dom/.../distfile.tar.xz | ("distfile" or "tarball")
+          http[s]://host.dom/.../distfile.tar.bz2|
           http[s]://host.dom/.../distfile.zip    /
           path/to/.../distfile.tgz               \
-          path/to/.../distfile.tar.gz            | local distfile
+          path/to/.../distfile.tar.gz            |
+          path/to/.../distfile.tar.xz            | local distfile
           path/to/.../distfile.tar.bz2           |
           path/to/.../distfile.zip               /
           gh:user/project            short for https://github.com/...
@@ -958,7 +962,7 @@ class Toolshelf(object):
                           type='git')
 
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
-                         r'\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
+                         r'\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
         if match:
             host = match.group(1)
             project = match.group(2)
@@ -975,7 +979,7 @@ class Toolshelf(object):
                           type='hg-or-git')
 
         # local distfile
-        match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.bz2)$', name)
+        match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
         if match:
             localfilepath = match.group(1)
             host = 'localhost'

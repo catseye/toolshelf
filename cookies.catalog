@@ -84,7 +84,7 @@ factorcode.org/git/factor.git
 
 */erlang/otp
   build_command ./otp_build all
-  exclude_paths bootstrap erts make plt release system xcomp
+  exclude_paths bootstrap erts make plt release system xcomp cygwin
 
 */*/make-3.81
   interesting_executables make
@@ -92,10 +92,3 @@ factorcode.org/git/factor.git
 */*/mercurial-1.9.3
   build_command make local
   interesting_executables hg
-
-# chewing gum *AND* baling wire -- together at last!!
-# (now with titanium baling wire!)
-
-github.com/git/git
-  build_command NO_PERL=1 LIBRARY_PATH=$TOOLSHELF/.lib CPATH=`toolshelf pwd curl-7.35.0`/install/include make
-
