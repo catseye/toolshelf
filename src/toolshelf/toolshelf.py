@@ -119,7 +119,7 @@ UNINTERESTING_EXECUTABLES = (
     '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.pl|\.py)?',
     '(test|testme|runtests)(-cygwin)?(\.sh|\.pl|\.py)?',
     # autoconf and automake and libtool stuff
-    'config\.status', 'config\.sub', 'config\.guess',
+    'config\.status', 'config\.sub', 'config\.guess', 'config\.rpath',
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
@@ -839,19 +839,19 @@ class Toolshelf(object):
         elif match:  # case 3 or 4
             user = match.group(1)
             project = match.group(2)
-            for host in os.listdir(self.dir):
+            for host in sorted(os.listdir(self.dir)):
                 if host.startswith('.'):
                     continue
                 user_dirname = os.path.join(self.dir, host, user)
                 if project == 'all':  # case 4
                     if os.path.isdir(user_dirname):
-                        for project in os.listdir(user_dirname):
+                        for found_project in os.listdir(user_dirname):
                             project_dirname = os.path.join(user_dirname,
-                                                           project)
+                                                           found_project)
                             if not os.path.isdir(project_dirname):
                                 continue
                             new_specs.append('%s/%s/%s' %
-                                (host, user, project)
+                                (host, user, found_project)
                             )
                 else:  # case 3
                     project_dirname = os.path.join(
@@ -883,15 +883,15 @@ class Toolshelf(object):
         else:  # case 1 or 2
             components = name.split('/')
             host = components[0]
-            user = ','.join(components[1:-2])
+            user = ','.join(components[1:-1])
             project = components[-1]
             if project == 'all':  # case 2
                 user_dirname = os.path.join(self.dir, host, user)
-                for project in os.listdir(user_dirname):
-                    project_dirname = os.path.join(user_dirname, project)
+                for found_project in os.listdir(user_dirname):
+                    project_dirname = os.path.join(user_dirname, found_project)
                     if not os.path.isdir(project_dirname):
                         continue
-                    new_specs.append('%s/%s/%s' % (host, user, project))
+                    new_specs.append('%s/%s/%s' % (host, user, found_project))
             else:  # case 1
                 new_specs.append(name)
 
