@@ -234,7 +234,7 @@ class Cookies(object):
                                 'Found hint %s before any spec' % hint_name
                             )
                         hint_value = match.group(1)
-                        self.shelf.note("Adding hint '%s %s' to %s" %
+                        self.shelf.debug("Adding hint '%s %s' to %s" %
                             (hint_name, hint_value, spec_key)
                         )
                         self._hint_map[spec_key][hint_name] = hint_value
@@ -285,12 +285,12 @@ class Blacklist(object):
                 match = re.match(r'^(.*?\/.*?\/.*?)$', line)
                 if match:
                     self._blacklist_map.add(match.group(1))
-        self.shelf.note("Loaded blacklist %r" % self._blacklist_map)
+        self.shelf.debug("Loaded blacklist %r" % self._blacklist_map)
 
     def save(self):
         with open(self.filename, 'w') as blacklist_file:
             for key in self._blacklist_map:
-                self.shelf.note("Saving blacklisted %r" % key)
+                self.shelf.debug("Saving blacklisted %r" % key)
                 blacklist_file.write('%s\n' % key)
 
     def add(self, source):
@@ -603,13 +603,13 @@ class Source(object):
             if '.hg' in dirs:
                 dirs.remove('.hg')
             if not self.may_use_path(root):
-                self.shelf.note("%s excluded from search path" % root)
+                self.shelf.debug("%s excluded from search path" % root)
                 dirs[:] = []
                 continue
             for name in files:
                 filename = os.path.join(self.dir, root, name)
                 if predicate(filename):
-                    self.shelf.note("    %s" % filename)
+                    self.shelf.debug("found linkable file: %s" % filename)
                     found_files.add(filename)
         return found_files
 
@@ -630,14 +630,14 @@ class Source(object):
                 pipe = subprocess.Popen(["file", filename],
                                         stdout=subprocess.PIPE)
                 output = pipe.communicate()[0]
-                self.shelf.note(output)
+                self.shelf.debug(output)
                 if 'executable' in output:
                     make_it_executable = True
                 if make_it_executable:
-                    self.shelf.note("Making %s executable" % filename)
+                    self.shelf.debug("Making %s executable" % filename)
                     subprocess.check_call(["chmod", "u+x", filename])
                 else:
-                    self.shelf.note("Making %s NON-executable" % filename)
+                    self.shelf.debug("Making %s NON-executable" % filename)
                     subprocess.check_call(["chmod", "u-x", filename])
 
     def rectify_permissions_if_needed(self):
@@ -759,6 +759,11 @@ class Toolshelf(object):
         if self.options.verbose:
             print output
         return output
+
+    def debug(self, msg):
+        """Display a debugging message."""
+        if self.options.debug:
+            print "DEBUG: ", msg
 
     def note(self, msg):
         """Display an informative message, but only if verbose was selected."""
@@ -910,7 +915,7 @@ class Toolshelf(object):
                 )
             new_specs.extend(additional_specs)
 
-        self.note('Resolved source specs to %r' % new_specs)
+        self.debug('Resolved source specs to %r' % new_specs)
         return new_specs
 
     def make_source_from_spec(self, name):
@@ -1054,7 +1059,7 @@ class Toolshelf(object):
         return [self.make_source_from_spec(name)]
 
     def make_sources_from_catalog(self, filename):
-        self.note('Reading catalog %s' % filename)
+        self.debug('Reading catalog %s' % filename)
         sources = []
         with open(filename, 'r') as file:
             for line in file:
@@ -1184,7 +1189,7 @@ class Toolshelf(object):
     def relink(self, args):
         specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
-        self.note("Adding the following executables to your link farm...")
+        self.debug("Adding files to your link farms")
         for source in sources:
             self.bin_link_farm.clean(prefix=source.dir)
             if source not in self.blacklist:
@@ -1230,6 +1235,10 @@ def main(args):
                       default=True, action="store_false",
                       help="don't try to build sources during docking "
                            "and updating")
+    parser.add_option("--debug", dest="debug",
+                      default=False, action="store_true",
+                      help="display messages to assist in troublshooting. "
+                           "does not imply --verbose")
     parser.add_option("-f", "--force",
                       default=False, action="store_true",
                       help="subvert any safety mechanisms and just do "

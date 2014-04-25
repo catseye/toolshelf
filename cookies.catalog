@@ -73,8 +73,8 @@
 */michaelcmartin/Ophis
   exclude_paths src/scripts
 
-factorcode.org/git/factor.git
-  exclude_paths basis extra unmaintained basis/xml/tests
+factorcode.org/git/factor
+  exclude_paths basis extra unmaintained
 
 */joyent/node
   exclude_paths deps
