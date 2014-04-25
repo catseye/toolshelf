@@ -365,6 +365,8 @@ class LinkFarm(object):
         linkname = os.path.join(self.dirname, os.path.basename(filename))
         # We do trample existing links
         if os.path.islink(linkname):
+            # TODO only produce this message if the source link and
+            # dest link are in different sources?
             self.shelf.warn("Trampling existing link %s" % linkname)
             self.shelf.warn("  was: %s" % os.readlink(linkname))
             self.shelf.warn("  now: %s" % filename)
@@ -572,10 +574,13 @@ class Source(object):
             )
 
     def may_use_path(self, dirname):
+        # TODO the problem with this is that if '.' isn't listed in only_paths,
+        # we never look beyond the root, and if it is, we look in every dir!
         only_paths = self.hints.get('only_paths', None)
         if only_paths:
             only_paths = only_paths.split(' ')
             for path in only_paths:
+                self.shelf.note("dir %s is %s?" % (dirname, os.path.join(self.dir, path)))
                 if dirname == os.path.join(self.dir, path):
                     return True
             return False
@@ -589,6 +594,7 @@ class Source(object):
         return True
 
     def linkable_files(self, predicate):
+        found_files = set()
         for root, dirs, files in os.walk(self.dir):
             if '.git' in dirs:
                 dirs.remove('.git')
@@ -602,7 +608,8 @@ class Source(object):
                 filename = os.path.join(self.dir, root, name)
                 if predicate(filename):
                     self.shelf.note("    %s" % filename)
-                    yield filename
+                    found_files.add(filename)
+        return found_files
 
     def rectify_executable_permissions(self):
         for root, dirs, files in os.walk(self.dir):
