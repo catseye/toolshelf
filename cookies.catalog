@@ -95,3 +95,6 @@ factorcode.org/git/factor.git
 
 */*/chicken-4.*
   build_command make PLATFORM=linux
+
+# */*/curl-7.*
+#   only_paths install

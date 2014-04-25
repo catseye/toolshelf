@@ -574,16 +574,6 @@ class Source(object):
             )
 
     def may_use_path(self, dirname):
-        # TODO the problem with this is that if '.' isn't listed in only_paths,
-        # we never look beyond the root, and if it is, we look in every dir!
-        only_paths = self.hints.get('only_paths', None)
-        if only_paths:
-            only_paths = only_paths.split(' ')
-            for path in only_paths:
-                self.shelf.note("dir %s is %s?" % (dirname, os.path.join(self.dir, path)))
-                if dirname == os.path.join(self.dir, path):
-                    return True
-            return False
         exclude_paths = self.hints.get('exclude_paths', None)
         if exclude_paths:
             exclude_paths = exclude_paths.split(' ')
@@ -594,8 +584,20 @@ class Source(object):
         return True
 
     def linkable_files(self, predicate):
+        only_paths = self.hints.get('only_paths', None)
+        paths_to_try = [self.dir]
+        if only_paths:
+            paths_to_try = [
+                os.path.join(os.path.join(self.dir, path))
+                for path in only_paths.split(' ')
+            ]
+        for path in paths_to_try:
+            for filename in self.find_linkable_file_set(predicate, subdir=path):
+                yield filename
+
+    def find_linkable_file_set(self, predicate, subdir='.'):
         found_files = set()
-        for root, dirs, files in os.walk(self.dir):
+        for root, dirs, files in os.walk(os.path.join(self.dir, subdir)):
             if '.git' in dirs:
                 dirs.remove('.git')
             if '.hg' in dirs:
