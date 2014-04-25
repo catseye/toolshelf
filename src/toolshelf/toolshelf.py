@@ -596,7 +596,7 @@ class Source(object):
                 yield filename
 
     def find_linkable_file_set(self, predicate, subdir='.'):
-        found_files = set()
+        found_files = {}
         for root, dirs, files in os.walk(os.path.join(self.dir, subdir)):
             if '.git' in dirs:
                 dirs.remove('.git')
@@ -610,8 +610,8 @@ class Source(object):
                 filename = os.path.join(self.dir, root, name)
                 if predicate(filename):
                     self.shelf.debug("found linkable file: %s" % filename)
-                    found_files.add(filename)
-        return found_files
+                    found_files[os.path.basename(filename)] = filename
+        return found_files.values()
 
     def rectify_executable_permissions(self):
         for root, dirs, files in os.walk(self.dir):
