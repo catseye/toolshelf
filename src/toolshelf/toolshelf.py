@@ -122,6 +122,7 @@ UNINTERESTING_EXECUTABLES = (
     'config\.status', 'config\.sub', 'config\.guess',
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
+    'configure\.in', 'configure\.gnu', 'configure\.lineno',
     # perl seems to like these
     'regen',
     # "project files" that sometimes have the executable bit set
