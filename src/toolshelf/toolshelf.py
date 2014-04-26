@@ -810,13 +810,13 @@ class Toolshelf(object):
         new_specs = []
         match = re.match(r'^([^/]*)/([^/]*)$', name)
         if name == 'all':  # case 7
-            for host in os.listdir(self.dir):
+            for host in sorted(os.listdir(self.dir)):
                 if host.startswith('.'):
                     continue
                 host_dirname = os.path.join(self.dir, host)
-                for user in os.listdir(host_dirname):
+                for user in sorted(os.listdir(host_dirname)):
                     user_dirname = os.path.join(host_dirname, user)
-                    for project in os.listdir(user_dirname):
+                    for project in sorted(os.listdir(user_dirname)):
                         project_dirname = os.path.join(user_dirname,
                                                        project)
                         if not os.path.isdir(project_dirname):
@@ -845,7 +845,7 @@ class Toolshelf(object):
                 user_dirname = os.path.join(self.dir, host, user)
                 if project == 'all':  # case 4
                     if os.path.isdir(user_dirname):
-                        for found_project in os.listdir(user_dirname):
+                        for found_project in sorted(os.listdir(user_dirname)):
                             project_dirname = os.path.join(user_dirname,
                                                            found_project)
                             if not os.path.isdir(project_dirname):
@@ -887,7 +887,7 @@ class Toolshelf(object):
             project = components[-1]
             if project == 'all':  # case 2
                 user_dirname = os.path.join(self.dir, host, user)
-                for found_project in os.listdir(user_dirname):
+                for found_project in sorted(os.listdir(user_dirname)):
                     project_dirname = os.path.join(user_dirname, found_project)
                     if not os.path.isdir(project_dirname):
                         continue
@@ -1085,7 +1085,7 @@ class Toolshelf(object):
 
         """
         sources = self.make_sources_from_specs(specs)
-        for source in sorted(sources, key=str):
+        for source in sources:
             if os.path.isdir(source.dir):
                 self.chdir(source.dir)
             else:
