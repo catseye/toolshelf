@@ -534,6 +534,22 @@ class Source(object):
         new_head_ref = self.head_ref()
         return old_head_ref != new_head_ref
 
+    def relink(self):
+        """Search this source for linkable files, and place them in
+        the link farms.
+
+        """
+        self.shelf.bin_link_farm.clean(prefix=self.dir)
+        if self not in self.shelf.blacklist:
+            for filename in self.linkable_files(
+                              self.is_interesting_executable
+                            ):
+                self.shelf.bin_link_farm.create_link(filename)
+        self.shelf.lib_link_farm.clean(prefix=self.dir)
+        if self not in self.shelf.blacklist:
+            for filename in self.linkable_files(is_library):
+                self.shelf.lib_link_farm.create_link(filename)
+
     def status(self):
         self.shelf.chdir(self.dir)
         output = None
@@ -1072,7 +1088,7 @@ class Toolshelf(object):
 
     ### processing sources ###
 
-    def foreach_specced_source(self, specs, fun, rebuild_paths=False):
+    def foreach_specced_source(self, specs, fun):
         """Call `fun` for each Source specified by the given specs.
 
         The working directory is changed to that Source's directory
@@ -1096,8 +1112,6 @@ class Toolshelf(object):
                 if self.options.break_on_error:
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
-        if rebuild_paths and sources:
-            self.relink([s.name for s in sources])
 
     def run_command(self, subcommand, args):
         try:
@@ -1141,34 +1155,32 @@ class Toolshelf(object):
                 source.checkout()
                 source.rectify_permissions_if_needed()
                 source.build()
-        self.foreach_specced_source(args, dock_it, rebuild_paths=True)
+                source.relink()
+        self.foreach_specced_source(args, dock_it)
 
     def build(self, args):
-        self.foreach_specced_source(
-            self.expand_docked_specs(args), lambda(source): source.build(),
-            rebuild_paths=True
-        )
+        def build_it(source):
+            source.build()
+            source.relink()
+        self.foreach_specced_source(self.expand_docked_specs(args), build_it)
 
     def update(self, args):
         def update_it(source):
             was_changed = source.update()
             if was_changed:
                 source.build()
-        self.foreach_specced_source(
-            self.expand_docked_specs(args), update_it,
-            rebuild_paths=True
-        )
+                source.relink()
+        self.foreach_specced_source(self.expand_docked_specs(args), update_it)
 
     def resolve(self, args):
-        def dump(source):
+        def dump_it(source):
             print repr(source)
-
-        self.foreach_specced_source(self.expand_docked_specs(args), dump)
+        self.foreach_specced_source(self.expand_docked_specs(args), dump_it)
 
     def status(self, args):
-        self.foreach_specced_source(
-            self.expand_docked_specs(args), lambda(source): source.status()
-        )
+        def status_it(source):
+            source.status()
+        self.foreach_specced_source(self.expand_docked_specs(args), status_it)
 
     def pwd(self, args):
         specs = self.expand_docked_specs(args)
@@ -1182,26 +1194,14 @@ class Toolshelf(object):
         print sources[0].dir
 
     def rectify(self, args):
-        self.foreach_specced_source(
-            self.expand_docked_specs(args),
-            lambda source: source.rectify_executable_permissions()
-        )
+        def rectify_it(source):
+            source.rectify_executable_permissions()
+        self.foreach_specced_source(self.expand_docked_specs(args), rectify_it)
 
     def relink(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        self.debug("Adding files to your link farms")
-        for source in sources:
-            self.bin_link_farm.clean(prefix=source.dir)
-            if source not in self.blacklist:
-                for filename in source.linkable_files(
-                                  source.is_interesting_executable
-                                ):
-                    self.bin_link_farm.create_link(filename)
-            self.lib_link_farm.clean(prefix=source.dir)
-            if source not in self.blacklist:
-                for filename in source.linkable_files(is_library):
-                    self.lib_link_farm.create_link(filename)
+        def relink_it(source):
+            source.relink()
+        self.foreach_specced_source(self.expand_docked_specs(args), relink_it)
 
     def disable(self, args):
         specs = self.expand_docked_specs(args)
