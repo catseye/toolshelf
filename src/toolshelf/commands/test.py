@@ -11,9 +11,13 @@ def test(shelf, args):
     }
     def test_it(source):
         stats['sources'] += 1
-        if os.path.exists(os.path.join(source.dir, 'test.sh')):
+        test_command = source.hints.get('test_command', None)
+        if not test_command:
+            if os.path.exists(os.path.join(source.dir, 'test.sh')):
+                test_command = './test.sh'
+        if test_command:
             process = subprocess.Popen(
-                './test.sh', shell=True,
+                test_command, shell=True,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             (std_output, std_error) = process.communicate()

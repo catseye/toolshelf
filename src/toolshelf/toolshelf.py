@@ -144,6 +144,7 @@ UNINTERESTING_EXECUTABLES = (
 
 HINT_NAMES = (
     'build_command',
+    'test_command',
     'exclude_paths',
     'only_paths',
     #'prerequisites',
