@@ -8,6 +8,7 @@ def pushgh(shelf, args):
 
     """
     def pushgh_it(source):
+        shelf.run('hg', 'bookmark', '-f', '-r', 'tip', 'master')
         url = "git+ssh://git@github.com/%s/%s.git" % (source.user, source.project)
         shelf.run('hg', 'push', url)
 
