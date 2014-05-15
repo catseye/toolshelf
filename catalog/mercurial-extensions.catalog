@@ -1,18 +1,21 @@
 bb:durin42/hg-git
 
-# note that the tip currently does not work (for me).  there's a cookie
-# that runs `hg up 0.4.0` as part of the build.
+# note that there's a cookie that runs `hg up 0.6.0` as part of the build,
+# and deletes any stray *.pyc files.
 
 # then, once that's docked, edit your $HOME/.hgrc to include:
     
 # [extensions]
 # hgext.bookmarks =
-# hggit = `toolshelf pwd hg-git`/hggit
+# hggit = $TOOLSHELF/bitbucket.org/durin42/hg-git/hggit
 
-# unfortunately(?) you'll have to run `toolshelf pwd hg-git` yourself in
-# the shell and copy its output into the .hgrc file.
+# note that .hgrc understands env vars, so the line can be just like that.
 
 # then, to push changes to a github clone of a bitbucket repo:
 
 # hg bookmark -f -r default master
 # hg push git+ssh://git@github.com/user/repo.git
+
+# or... to use toolshelf's shortcut...
+
+# toolshelf pushgh .
