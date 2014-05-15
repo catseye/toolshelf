@@ -15,6 +15,8 @@ elif [ ! -d $TOOLSHELF ]; then
 else
   export PATH="$TOOLSHELF/.toolshelf/bin:$TOOLSHELF/.bin:$PATH"
   export LD_LIBRARY_PATH="$TOOLSHELF/.lib:$LD_LIBRARY_PATH"
+  # XXX this is a bodge for now
+  export PYTHONPATH="$TOOLSHELF/pypi.python.org/distfile/dulwich-0.9.5:$PYTHONPATH"
 
   # `toolshelf` itself can't change the shell's idea of the current working
   # directory, but a shell function can utilize `toolshelf` to do so.  Since
