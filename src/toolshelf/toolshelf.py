@@ -553,7 +553,7 @@ class Source(object):
                 self.shelf.lib_link_farm.create_link(filename)
         self.shelf.py_link_farm.clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
-            for dirname in self.hints.get('python_modules'):
+            for filename in self.hints.get('python_modules').split(' '):
                 self.shelf.py_link_farm.create_link(filename)
 
     def status(self):
