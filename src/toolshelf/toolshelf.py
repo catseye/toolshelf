@@ -384,7 +384,7 @@ class LinkFarm(object):
 
 class Source(object):
     def __init__(self, shelf, url=None, host=None, user=None, project=None,
-                 type=None, local=False):
+                 type=None, local=False, tag=None):
         self.shelf = shelf
         self.url = url
         if not host:
@@ -394,14 +394,15 @@ class Source(object):
         self.project = project
         self.type = type
         self.local = local
+        self.tag = tag
         self.hints = {}
         self.shelf.cookies.apply_hints(self)
 
     def __repr__(self):
         return ("Source(url=%r, host=%r, user=%r, "
-                "project=%r, type=%r, local=%r, hints=%r)" %
+                "project=%r, type=%r, local=%r, tag=%r, hints=%r)" %
                 (self.url, self.host, self.user,
-                 self.project, self.type, self.local, self.hints))
+                 self.project, self.type, self.local, self.tag, self.hints))
 
     @property
     def distfile(self):
@@ -437,8 +438,10 @@ class Source(object):
 
         if self.type == 'git':
             self.shelf.run('git', 'clone', self.url)
+            self.update_to_tag(self.tag)
         elif self.type == 'hg':
             self.shelf.run('hg', 'clone', self.url)
+            self.update_to_tag(self.tag)
         elif self.type == 'hg-or-git':
             try:
                 # better would be to check hg's error output for
@@ -447,6 +450,7 @@ class Source(object):
             except subprocess.CalledProcessError:
                 self.shelf.note("`hg clone` failed, so trying git")
                 self.shelf.run('git', 'clone', self.url)
+            self.update_to_tag(self.tag)
         elif self.distfile is not None:
             self.shelf.run('mkdir', '-p',
                            os.path.join(self.shelf.dir, '.distfiles'))
@@ -484,6 +488,17 @@ class Source(object):
             self.shelf.run('rm', '-rf', extract_dir)
         else:
             raise NotImplementedError(self.type)
+
+    def update_to_tag(self, tag):
+        """'tag' may also be the name of a branch."""
+        if tag is None:
+            return
+        self.shelf.note("Updating %s to %s..." % (self.dir, tag))
+        self.shelf.chdir(self.dir)
+        if os.path.isdir('.hg'):
+            self.shelf.run('hg', 'up', tag)
+        else:
+            self.shelf.run('git', 'checkout', tag)
 
     def build(self):
         if not self.shelf.options.build:
@@ -974,6 +989,11 @@ class Toolshelf(object):
         an exception will be raised.
 
         """
+        tag = None
+        match = re.match(r'^(.*?)\@(.*?)$', name)
+        if match:
+            name = match.group(1)
+            tag = match.group(2)
 
         # resolve name shorthands
         # TODO: make these configurable
@@ -994,7 +1014,7 @@ class Toolshelf(object):
             user = match.group(2)
             project = match.group(3)
             return Source(self, url=name, host=host, user=user, project=project,
-                          type='git')
+                          type='git', tag=tag)
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -1002,7 +1022,7 @@ class Toolshelf(object):
             user = match.group(2)
             project = match.group(3)
             return Source(self, url=name, host=host, user=user, project=project,
-                          type='git')
+                          type='git', tag=tag)
 
         match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
                          r'\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
@@ -1011,7 +1031,7 @@ class Toolshelf(object):
             project = match.group(2)
             ext = match.group(3)
             return Source(self, url=name, host=host, user='distfile',
-                          project=project, type=ext)
+                          project=project, type=ext, tag=tag)
 
         match = re.match(r'^https?:\/\/(.*?)/(.*?)/(.*?)\/?$', name)
         if match:
@@ -1019,7 +1039,7 @@ class Toolshelf(object):
             user = match.group(2)
             project = match.group(3)
             return Source(self, url=name, host=host, user=user, project=project,
-                          type='hg-or-git')
+                          type='hg-or-git', tag=tag)
 
         # local distfile
         match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
@@ -1037,7 +1057,7 @@ class Toolshelf(object):
                 project = match.group(3)
                 version = match.group(4)
             return Source(self, url=name, host=host, user=user,
-                          project=project, type=ext, local=True)
+                          project=project, type=ext, local=True, tag=tag)
 
         # already docked
         match = re.match(r'^(.*?)\/(.*?)\/(.*?)$', name)
@@ -1048,7 +1068,7 @@ class Toolshelf(object):
             if os.path.isdir(os.path.join(self.dir, host, user, project)):
                 # TODO divine type
                 return Source(self, url='', host=host, user=user,
-                              project=project, type='unknown')
+                              project=project, type='unknown', tag=tag)
             raise SourceSpecError("Source '%s' not docked" % name)
 
         raise SourceSpecError("Couldn't parse source spec '%s'" % name)
