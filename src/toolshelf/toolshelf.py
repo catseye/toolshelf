@@ -438,10 +438,8 @@ class Source(object):
 
         if self.type == 'git':
             self.shelf.run('git', 'clone', self.url)
-            self.update_to_tag(self.tag)
         elif self.type == 'hg':
             self.shelf.run('hg', 'clone', self.url)
-            self.update_to_tag(self.tag)
         elif self.type == 'hg-or-git':
             try:
                 # better would be to check hg's error output for
@@ -450,7 +448,6 @@ class Source(object):
             except subprocess.CalledProcessError:
                 self.shelf.note("`hg clone` failed, so trying git")
                 self.shelf.run('git', 'clone', self.url)
-            self.update_to_tag(self.tag)
         elif self.distfile is not None:
             self.shelf.run('mkdir', '-p',
                            os.path.join(self.shelf.dir, '.distfiles'))
@@ -488,6 +485,7 @@ class Source(object):
             self.shelf.run('rm', '-rf', extract_dir)
         else:
             raise NotImplementedError(self.type)
+        self.update_to_tag(self.tag)
 
     def update_to_tag(self, tag):
         """'tag' may also be the name of a branch."""
@@ -497,8 +495,10 @@ class Source(object):
         self.shelf.chdir(self.dir)
         if os.path.isdir('.hg'):
             self.shelf.run('hg', 'up', tag)
-        else:
+        elif os.path.isdir('.git'):
             self.shelf.run('git', 'checkout', tag)
+        else:
+            self.shelf.warn("Can't update to %s -- not version-controlled" % tag)
 
     def build(self):
         if not self.shelf.options.build:
