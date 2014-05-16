@@ -1,3 +1,7 @@
+# hg-git needs dulwich
+
+https://pypi.python.org/packages/source/d/dulwich/dulwich-0.9.5.tar.gz
+
 bb:durin42/hg-git
 
 # note that there's a cookie that runs `hg up 0.6.0` as part of the build,

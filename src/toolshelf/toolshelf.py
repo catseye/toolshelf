@@ -151,6 +151,7 @@ HINT_NAMES = (
     'rectify_permissions',
     'require_executables',
     'interesting_executables',
+    'python_modules',
 )
 
 
@@ -337,8 +338,8 @@ class Path(object):
 
 class LinkFarm(object):
     """A link farm is a directory which contains symbolic links
-    to files (typically executables) in various other parts of
-    the filesystem.
+    to files (typically executables, libraries, modules, etc.)
+    in various other parts of the filesystem.
 
     """
     def __init__(self, shelf, dirname):
@@ -550,6 +551,10 @@ class Source(object):
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_library):
                 self.shelf.lib_link_farm.create_link(filename)
+        self.shelf.py_link_farm.clean(prefix=self.dir)
+        if self not in self.shelf.blacklist:
+            for dirname in self.hints.get('python_modules'):
+                self.shelf.py_link_farm.create_link(filename)
 
     def status(self):
         self.shelf.chdir(self.dir)
@@ -717,7 +722,7 @@ class Source(object):
 class Toolshelf(object):
     def __init__(self, directory=None, cwd=None, options=None, cookies=None,
                        blacklist=None, bin_link_farm=None, lib_link_farm=None,
-                       errors=None):
+                       py_link_farm=None, errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -741,6 +746,10 @@ class Toolshelf(object):
         if lib_link_farm is None:
             lib_link_farm = LinkFarm(self, os.path.join(self.dir, '.lib'))
         self.lib_link_farm = lib_link_farm
+
+        if py_link_farm is None:
+            py_link_farm = LinkFarm(self, os.path.join(self.dir, '.python'))
+        self.py_link_farm = py_link_farm
 
         if cookies is None:
             cookies = Cookies(self)
