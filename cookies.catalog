@@ -90,6 +90,9 @@ factorcode.org/git/factor
   build_command ./otp_build all
   exclude_paths bootstrap erts make plt release system xcomp cygwin
 
+*/*/otp_src_R16B03-*
+  build_command ./configure --prefix=`pwd` --without-termcap && make
+
 */*/make-3.81
   interesting_executables make
 
