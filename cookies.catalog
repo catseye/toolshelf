@@ -16,6 +16,9 @@
   exclude_paths tests
   find . -name '*.pyc' -exec rm {} \;
 
+*/*/qemu-1.*
+  build_command ./configure --with-system-pixman --prefix=`pwd` && make
+
 # eesh
 */*/tree-1.6.0
   build_command make "OBJS=tree.o unix.o html.o xml.o hash.o color.o strverscmp.o" "CFLAGS=-O2 -Wall"
