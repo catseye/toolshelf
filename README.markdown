@@ -16,7 +16,9 @@ Instead, you simply store them somewhere (say, on a shelf) until they're needed.
 *install* a can opener.
 
 If this metaphor piques your curiosity, you can read more about
-[why `toolshelf` exists](https://github.com/catseye/toolshelf/blob/master/doc/Philosophy.markdown).
+[why `toolshelf` exists, where it shines, and where it doesn't](https://github.com/catseye/toolshelf/blob/master/doc/Philosophy.markdown)
+(tl;dr great for evaluating random projects off Github, maybe not so great
+for getting X.org onto a machine.)
 
 Description
 -----------
@@ -37,9 +39,9 @@ structures extracted from downloaded archives (so-called "tarballs" or
 
 `toolshelf` is a **work in progress**, currently **version 0.1-PRE**, and
 subject to change.  It is written in Python 2.7, with some supporting scripts
-in vanilla `sh`.  It also requires the presence of those tools it needs to use
-to get and build what it asks for.  Obviously, the less you ask for, the less it
-needs, but at least some of the following will be helpful:
+in Bourne shell.  It also requires the presence of those tools it needs to use
+to get and build what it asks for.  Obviously, the less you ask for, the less
+it needs, but at least some of the following will be helpful:
 
 *   `git` or `hg` (Mercurial)
 *   `wget`
@@ -47,9 +49,9 @@ needs, but at least some of the following will be helpful:
 *   `unzip`
 *   `make`
 
-(It is also probably better if you use a POSIX `sh`-based shell, such as `bash`
-or `ash`, as your interactive shell; otherwise you may lack some functions
-such as `toolshelf_cd`.  I have not tested it with `csh`, `zsh`, etc.)
+(It is also probably better if you use a Bourne-shell-based shell, such as
+`bash` or `ash`, as your interactive shell; otherwise you may lack some
+functions such as `toolshelf_cd`.  I have not tested it with `csh`, `zsh`, etc.)
 
 `toolshelf` is distributed under an MIT-style license.
 
@@ -108,8 +110,9 @@ the packages you've docked using it, simply
 that `bootstrap-toolshelf.sh` added to your `.bashrc`.  But if your `$TOOLSHELF`
 directory doesn't exist, they won't run anyway.)
 
-If you want to know more, you can read more about
-[how `toolshelf` works](https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown).
+For a summary of the `toolshelf` commands, run `toolshelf --help`.  If you
+want to know more about how it works, you can read about
+[`toolshelf`'s theory of operation](https://github.com/catseye/toolshelf/blob/master/doc/Theory_of_Operation.markdown).
 
 Manual Setup
 ------------
@@ -130,7 +133,7 @@ Manual Setup
     
         git clone https://github.com/catseye/toolshelf /home/user/toolshelf/.toolshelf
     
-    If you prefer, you could use Mercurial and clone it from Bitbucket.
+    If you prefer, you could use Mercurial and clone it [from Bitbucket](https://bitbucket.org/catseye/toolshelf).
     Or get a zip of the `toolshelf` distribution, and unzip it to there.  Any
     of these options should be fine.
 

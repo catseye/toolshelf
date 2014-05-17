@@ -1,3 +1,6 @@
+`toolshelf` — Theory of Operation
+=================================
+
 Heuristics
 ----------
 

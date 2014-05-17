@@ -1,3 +1,6 @@
+`toolshelf` — Philosophical Points
+==================================
+
 Why `toolshelf`?
 ----------------
 
@@ -28,7 +31,9 @@ it *is* my home directory, after all.)
 
 So I decided I should write `toolshelf`.
 
-### Advantages ###
+
+Advantages of `toolshelf`
+-------------------------
 
 * When it works, it's pretty slick.  Issue one command, and when it finishes,
   you can immediately issue new commands from the software you "installed".
@@ -42,7 +47,9 @@ So I decided I should write `toolshelf`.
   a previous version and whatever.  If you have push privleges for an upstream
   repo, you can send your changes off there.
 
-### Limitations ###
+
+Limitations of `toolshelf`
+--------------------------
 
 * It doesn't always work, and can't always work for every piece of software
   out there.
