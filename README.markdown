@@ -145,10 +145,10 @@ Manual Setup
 Related Work
 ------------
 
-*   [checkoutmanager][https://bitbucket.org/reinout/checkoutmanager]
-*   [Gobolinux][http://gobolinux.org/]
-*   [pathify][https://github.com/kristi/pathify]
-*   [sources][https://github.com/trentm/sources]
-*   [spackle][https://github.com/kristi/spackle]
+*   [checkoutmanager](https://bitbucket.org/reinout/checkoutmanager)
+*   [Gobolinux](http://gobolinux.org/)
+*   [pathify](https://github.com/kristi/pathify)
+*   [sources](https://github.com/trentm/sources)
+*   [spackle](https://github.com/kristi/spackle)
 *   `zero-install`/`0launch`
 *   `pkgviews`
