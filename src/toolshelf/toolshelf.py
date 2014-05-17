@@ -191,6 +191,10 @@ def is_library(filename):
     return is_shared_object(filename) or is_static_lib(filename)
 
 
+def is_pkgconfig_data(filename):
+    return re.match('^.*?\.pc$', filename) is not None
+
+
 def makedirs(dirname):
     try:
         os.makedirs(dirname)
@@ -555,6 +559,8 @@ class Source(object):
         """Search this source for linkable files, and place them in
         the link farms.
 
+        TODO: refactor this to make it more efficient.
+
         """
         self.shelf.bin_link_farm.clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
@@ -572,6 +578,10 @@ class Source(object):
             if python_modules is not None:
                 for filename in python_modules.split(' '):
                     self.shelf.py_link_farm.create_link(filename)
+        self.shelf.pkgconfig_link_farm.clean(prefix=self.dir)
+        if self not in self.shelf.blacklist:
+            for filename in self.linkable_files(is_pkgconfig_data):
+                self.shelf.pkgconfig_link_farm.create_link(filename)
 
     def status(self):
         self.shelf.chdir(self.dir)
@@ -739,7 +749,7 @@ class Source(object):
 class Toolshelf(object):
     def __init__(self, directory=None, cwd=None, options=None, cookies=None,
                        blacklist=None, bin_link_farm=None, lib_link_farm=None,
-                       py_link_farm=None, errors=None):
+                       py_link_farm=None, pkgconfig_link_farm=None, errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -767,6 +777,12 @@ class Toolshelf(object):
         if py_link_farm is None:
             py_link_farm = LinkFarm(self, os.path.join(self.dir, '.python'))
         self.py_link_farm = py_link_farm
+
+        if pkgconfig_link_farm is None:
+            pkgconfig_link_farm = LinkFarm(self,
+                os.path.join(self.dir, '.pkgconfig')
+            )
+        self.pkgconfig_link_farm = pkgconfig_link_farm
 
         if cookies is None:
             cookies = Cookies(self)
