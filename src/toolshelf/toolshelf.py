@@ -193,7 +193,11 @@ def is_library(filename):
 
 
 def is_pkgconfig_data(filename):
-    return re.match('^.*?\.pc$', filename) is not None
+    if re.match('^.*?\.pc$', filename) is None:
+        return False
+    if re.match('^.*?\uninstalled\.pc$', filename) is not None:
+        return False
+    return True
 
 
 def makedirs(dirname):
