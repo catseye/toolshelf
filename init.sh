@@ -17,6 +17,7 @@ else
   export LD_LIBRARY_PATH="$TOOLSHELF/.lib:$LD_LIBRARY_PATH"
   export PYTHONPATH="$TOOLSHELF/.python:$PYTHONPATH"
   export PKG_CONFIG_PATH="$TOOLSHELF/.pkgconfig:$PKG_CONFIG_PATH"
+  export C_INCLUDE_PATH="$TOOLSHELF/.include:$C_INCLUDE_PATH"
 
   # `toolshelf` itself can't change the shell's idea of the current working
   # directory, but a shell function can utilize `toolshelf` to do so.  Since
