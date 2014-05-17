@@ -50,7 +50,7 @@ Of course, this is (or would be) partly my fault for believing the project
 docs when they parrot the cargo-cult instructions "next, run `make install`."
 Often, the software will work just fine, even if I just build it and don't
 install it.  (Not always, of course, but often.)  The main problem remaining
-is being able to use it without having to remember where it's located;
+is my being able to use it without having to remember where it's located;
 but to solve this, all I have to do is to learn to adjust my `$PATH`.
 
 ### Package managers ###
@@ -64,11 +64,12 @@ something.
 And yeah, package managers reduce a lot of the pain of installing software.
 They do.  I'm not faulting them.  But they create new pains.
 
-Package managers create a whole new class of labour -- package maintainers.
+Package managers create a whole new class of labour — package maintainers.
 Release engineering is one thing, but this really shouldn't be a specialized
 skill, you know?  And the package maintainer probably has a slightly different
 idea of how the package should be installed — different from how the
-developers thought it should be installed
+developers thought it should be installed and different from how you think it
+should be installed.  You know what they say about too many cooks.
 
 Package managers are generally tied to a platform.  So, if you use Ubuntu,
 and your system has bits written in Python and Ruby and Haskell and Node.js,
@@ -83,14 +84,15 @@ heard from the maintainer in months, so...
 
 Basically, a package manager is an attempt to solve the problem by creating
 a *closed system* of a sort.  The problem is that closed systems are an
-uphill battle against chaos.
+uphill battle against chaos.  They're a lot of effort, and in the end, all
+abstractions leak anyway (or so I've heard.)
 
 And the whole concept is still built on top of the "installation" concept
 anyway.
 
 ### So. ###
 
-There is lots more I could rant about, but I'll leave it at here for now.
+There is lots more I could rant about but I'll leave it at here for now.
 
 So, faced with all this — exploring random projects on Github and wanting
 to try them out without installing them; battling package managers almost
@@ -130,12 +132,13 @@ Advantages of `toolshelf`
     of date.  There is no package database to get corrupted.  There is no
     package maintainer to go missing.
 
-*   It encourages hackability.  The sources are there — if you have a problem,
-    go edit them.  After you rebuild, the new executable will immediately be
-    on your `$PATH` — no install step.  If the docked sources are in a repo,
-    you can commit and branch and restore a previous version and whatever.
-    If you have push privleges for an upstream repo, you can send your changes
-    off there.
+*   It encourages hackability.  Docked source distributions are meant to be
+    *developed* in.   If you have a problem, `toolshelf_cd` to the docked
+    sources, edit them, and rebuild.  After you rebuild, the new executable
+    will immediately be on your `$PATH` — no install step.  If the docked
+    sources are in a repo, you can commit and branch and restore a previous
+    version and whatever.  If you have push privleges for an upstream repo,
+    you can send your changes off there.  And so forth.
 
 
 Limitations of `toolshelf`
@@ -203,7 +206,24 @@ Limitations of `toolshelf`
     run `make linux` on a Linux system but `make bsd` on a FreeBSD system,
     is actually not entirely reasonable.  (I'm thinking of Lua and CHICKEN
     Scheme here.)
+    
+*   Making software available to multiple users on the system *is* a valid
+    use case for installing it to a common directory like `/usr/bin`.  So if
+    you do want to expose the same software to multiple users, that may be
+    the better approach.
+    
+    But consider that there are many fewer *genuine* multi-user Unix systems
+    in existence nowadays; developers often have their own machine, and may
+    `ssh` to a (virtualized!) server that only has a handful of artificial
+    users.  (And "users" on a web site are hardly "users" in this sense.)
+    
+    And consider the flipside: if you are working with experimental software,
+    you probably *don't* want other users to be able to see it and run it
+    unless they explicitly configure that.
 
+*   `toolshelf` doesn't notify you about security updates, or any other kind
+    of updates, available for docked sources.  That is another area where
+    using a well-staffed package system is beneficial.
 
 Case Studies
 ------------
@@ -231,8 +251,8 @@ description of how well they work with the `toolshelf` model, and why.
 *   `toolshelf dock `[`gh:kulp/tenyr`][]
 
     `tenyr` is an aspiring 32-bit toy computational environment.  `toolshelf`
-    has no problem building it, finding the built executables, and putting them
-    on your path.
+    has no problem building it (assuming you've got bison 2.5 and libsdl,)
+    finding the built executables, and putting them on your path.
     
     In `toolshelf`'s cookies database, this source has the hint
     `exclude_paths bench ui hw scripts` associated with it; it says to decline
@@ -256,3 +276,22 @@ description of how well they work with the `toolshelf` model, and why.
 [`bb:catseye/yucca`]: https://bitbucket.org/catseye/yucca
 [`gh:kulp/tenyr`]: https://github.com/kulp/tenyr
 [`http://ftp.gnu.org/gnu/bison/bison-2.5.tar.gz`]: http://www.gnu.org/software/bison/bison.html
+
+Testimonial
+-----------
+
+Finally, I'd just like to say I've been using toolshelf for a little over a
+year now (after I decided to put in the effort to eat my own dogfood, a few
+months after writing the initial version) and it's served me very well.  There
+have been rough patches when I've been developing it while using but, but that
+is the nature of the bootstrap.  It's fairly well burned-in at this point.
+
+It is also the basis of [The Cat's Eye Technologies Platform](https://github.com/catseye/NetBSD-Gondola),
+where everything except the NetBSD base system and development tools is
+installed via `toolshelf`.  This includes Python, Perl, and Erlang, which are
+all rather heavyweight; `toolshelf` was never conceived to be able to install
+its own infrastructure, but it can.
+
+I am also, somewhat unusually perhaps, using it on
+[catseye.tc](http://catseye.tc/); the web content is just one of the several
+docked sources, and is served from the directory it's docked under.

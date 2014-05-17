@@ -9,7 +9,7 @@ grab a source from, how it should build it, and what it should put on your
 search paths; and how you can influence it when it's not clever enough to
 figure these things out by itself.
 
-When you refer to a source, `toolshelf` tries to do a lot of clever guessing
+When you refer to a source, `toolshelf` tries to do some clever guessing
 about what source you mean, how to build it, and how to put its executables
 on your search path.  It also allows you to supply explicit hints to help it
 along in this process.
@@ -20,10 +20,10 @@ Sections marked ♦ are not yet implemented.
 
 #### When docking sources ####
 
-When docking a source, the source must by explicitly specified, although
+When docking a source, the source must be explicitly specified, although
 there are shortcuts you can use.  Unsurprisingly,
 
-    toolshelf dock git://github.com/alincoln/Gettysburg-Address.git
+    toolshelf dock https://github.com/alincoln/Gettysburg-Address.git
 
 will clone a `git` repo from github to use as the source.  Similarly,
 
@@ -47,6 +47,9 @@ source tree in `$TOOLSHELF/example.com/distfile/foo-1.0`.  This will work
 regardless of whether the tarball contains a single directory called
 `foo-1.0`, as is standard, or if it is a "tarbomb" where all the files are
 contained in the root of the tar archive.  Which is frowned upon.)
+(Note also that if this is a `.tar.gz` or `.zip` of an entire Git or
+Mercurial repository, `toolshelf` will recognize this once it has been
+extracted, and will treat it as such.)
 
 `toolshelf` understands a few shortcuts for Github and Bitbucket:
 
@@ -59,18 +62,17 @@ specifications you can use.  For example,
     toolshelf dock @/home/me/my-sources.catalog
 
 will read a list of source specifications, one per line, from the given text
-file (called a _catalog file_.)
+file (called a _catalog file_.)  These specification may themselves use
+shortcuts, or refer to other catalogs.
 
-Several catalog files are supplied with `toolshelf` itself; you can use
-the following specification as a shortcut for
-`@$TOOLSHELF/.toolshelf/catalog/collection.catalog`:
+As a sort of bonus, `@` after a source spec can be used to indicate a revision
+to rewind the repository to (which happens immediately after docking and
+immediately before building):
 
-    toolshelf dock @@collection
+    toolshelf dock https://bitbucket.org/user/project@v1.7
 
-♦ To better accommodate tab-completion, `toolshelf` should also allow you
-to pass the `@` or `@@` as a seperate argument on the command line, like:
-
-    toolshelf dock @ ~/gezbo.catalog
+...will attempt to build version 1.7 of the project, assuming the tag
+(or branch) `v1.7` exists in the repo.
 
 #### When referring to an already-docked source ####
 
@@ -80,7 +82,9 @@ specification `all` refers to all sources which are currently docked:
 
     toolshelf build all
 
-Several commands take `all` to be the default if no source spec is given.
+(No commands (anymore) take `all` to be the default if no source spec is given.
+If you want to do something to all, say `all`.  A common case is
+`toolshelf relink all`.)
 
 To refer to all locally-docked source trees by a particular user, the
 following syntax may be used:
@@ -106,19 +110,19 @@ host name and the username to resolve the ambiguity:
 
     toolshelf build github.com/alincoln/Gettysburg-Address
 
-### How does it know which directories to place on your path? ###
+You can also refer to the source tree in the current working directory
+(if the current working directory is in a docked source...) with `.`:
+
+    toolshelf build .
+
+### How does it know which executables to place on your path? ###
 
 After a source tree has been docked and built (see below for building,)
-`toolshelf` traverses the source tree, looking for executable files.  Every
-time it finds one, it places the directory in which it found it into a working
-set of directories.  It then adds that set of directories to your path.
-
-(It adds them at the start of your `$PATH` variable, so that the executables
-shadow (override) any executables with the same names that you might already
-have installed.  It is easy to temporarily disable `toolshelf`'s modifications
-to `$PATH` by running `toolshelf path disable` if you need to use the shadowed
-executables.  You can reinstate the `toolshelf`-docked executables by running
-`toolshelf path rebuild`.)
+`toolshelf` traverses the source tree, looking for interesting files.  When
+it finds such things, it collects their names into a set.  It then creates
+symlinks in an appropriate "link farm".  For example, for executable files,
+the link farm is `$TOOLSHELF/.bin`, and `init.sh` ensures that this directory
+is on your `$PATH`.
 
 This approach occasionally results in useless executables on your
 path, in the case where are files in the source tree which aren't really
@@ -134,6 +138,11 @@ this case, `toolshelf` traverses all of the files in the source tree just after
 extracting them from the archive, running `file` on each one, and setting its
 executable permission based on whether `file` called it `executable` or not.
 
+This applies to files that aren't executables, too.  Links to found shared
+objects (`.so`'s) are placed in the `$TOOLSHELF/.lib` link farm.  Links to
+(specified only, for now) Python modules are placed in the `$TOOLSHELF/.python`
+link farm.  And there will be more in the future.
+
 ### How does it know how to build the executables from the sources? ###
 
 If the source has a cookie that specifies a `build_command` hint, that
@@ -142,17 +151,19 @@ command will be used.  Otherwise...
 If there is a script called `build.sh` or `make.sh`, it will run that.
 Otherwise...
 
+If there's a `build.xml`, it runs `ant`.  Otherwise...
+
 If there's an `autogen.sh` but no `configure`, it runs that first, to
 create `configure`.
 
-♦ If there's no `autogen.sh`, but there is a `configure.in`, it runs
+If there's no `autogen.sh`, but there is a `configure.in`, it tries to run
 `autconf` to create `configure`.
 
-If there's a `configure`, it runs that, to create a `Makefile`.
+If there's a `configure`, it runs `./configure --prefix=$PWD` to create a
+`Makefile`.  Note that it uses the source distribution directory *itself*
+as the install target.
 
 If there's a `Makefile`, it runs `make`.
-
-If there's a `build.xml`, it runs `ant` instead.
 
 ### "Cookies" ###
 
@@ -160,7 +171,8 @@ If there's a `build.xml`, it runs `ant` instead.
 information (hints) about the idiosyncracies of particular, known projects.
 As you discover idiosyncracies of new software you try to dock, you can add
 new hints to this database (and open a pull request to push them upstream for
-everyone to benefit from.)
+everyone to benefit from.  But it's even better if you can somehow fix the
+source (or the heuristics!) so that cookies aren't required.)
 
 The use of the term "cookie" here is not like "HTTP cookie" or "magic cookie",
 but more like how it was used in Windows 3.1 (and may, for all I know, still
@@ -171,8 +183,9 @@ idiosyncratic and non-standard.
 
 In some ways, `toolshelf`'s cookies file is like the `Makefile`s used in
 FreeBSD's package system — the information contained in it is similar.
-However, it is just a single file, and is parsed directly instead of being a
-`Makefile`.
+However, it is much more lightweight — the idea is that ideally, no cookies
+are needed — so it is just a single file, and is parsed directly instead of
+being a `Makefile`.
 
 The cookies file for `toolshelf` consists of a list of source specifications
 with hints.  When `toolshelf` is given a source specification which matches
@@ -199,40 +212,20 @@ the hint value (the syntax of which is determined by the hint name.)
 Hint names are verbose because they're more readable that way and you'll
 probably just be copy-pasting them from other cookies in the cookies file.
 
-It *may* be possible to give ad-hoc hints on the command line at some point,
-but this is not a recommended practice, as you'll probably want to record
-those hints for future use or for sharing.
+It is not possible to give ad-hoc hints on the command line, but only because
+it is not a recommended practice; you'll probably want to record those hints
+for future use (or for sharing) anyway.
 
 The names of hints are as follows.
 
-*   `require_executables`
+*   `build_command`
     
-    Example: `require_executables perl`
+    Example: `build_command ./configure --no-cheese --prefix=\`pwd\` && make`
     
-    A space-separated list of executables required to dock and run the source.
-    When this is given, `toolshelf` first checks if you have the named
-    executable on your executable search path; if you do not, it will display
-    an error message, and will not try to dock the source.
-    
-*   `rectify_permissions`
-    
-    Example: `rectify_permissions yes`
-
-    Either `yes` or `no`.  If `yes`, rectify the execute permissions of the
-    source, which means: after checking out the source but before building
-    it, traverse all of the files in the source tree, run `file` on each one,
-    and set its executable permission based on whether `file` called it
-    `executable` or not.  This defaults to `no` for all sources except for
-    `.zip` archives, for which it defaults to `yes`; this hint will override
-    the default.
-    
-*   ♦ `prerequisites`
-    
-    Example: `prerequisites gh:Scriptor/Pharen`
-    
-    A space-separated list of  source specifications.  When this is given,
-    `toolshelf` first checks if you have each of the sources given in the
-    hint value, docked; if you do not, it will try to dock the source first.
+    A shell command that will be used to build the source.  `toolshelf`
+    passes the entire hint value to the shell for execution.  The command
+    will be run with the root of the source tree as the working directory.
+    `toolshelf`'s built-in heuristics for building sources will not be used.
     
 *   `exclude_paths`
     
@@ -256,20 +249,21 @@ The names of hints are as follows.
     `only_paths bin` is given, `bin/subdir` will not be added to the search
     path.
     
-*   `build_command`
+*   `rectify_permissions`
     
-    Example: `build_command ./configure --no-cheese && make`
+    Example: `rectify_permissions yes`
     
-    A shell command that will be used to build the source.  `toolshelf`
-    passes the entire hint value to the shell for execution.  The command
-    will be run with the root of the source tree as the working directory.
-    `toolshelf`'s built-in heuristics for building sources will not be used.
+    Either `yes` or `no`.  If `yes`, rectify the execute permissions of the
+    source, which means: after checking out the source but before building
+    it, traverse all of the files in the source tree, run `file` on each one,
+    and set its executable permission based on whether `file` called it
+    `executable` or not.  This defaults to `no` for all sources except for
+    `.zip` archives, for which it defaults to `yes`; this hint will override
+    the default.
 
-Theory of Operation
--------------------
 
-This section describes how it all works — specifically, how typing
-`toolshelf` can seemingly magically alter your search paths.
+Internal Mechanics
+------------------
 
 ### `bootstrap-toolshelf.sh` ###
 
@@ -303,14 +297,9 @@ script.)  This is what it does:
         `toolshelf_cd` function, in backticks.
     -   It attempts to `cd` to the output of `toolshelf pwd`.
     -   The `cd` is done in this shell function, because the `toolshelf`
-        executable itself can't affect the user's shell.
-
-The `toolshelf_cd` function and the `toolshelf.py` script, taken together,
-perform something which we could call the "shell-then-source trick".  In
-effect, it makes it possible for a "command" (really a shell function) to
-affect the environment of the user's current interactive shell — something
-an ordinarily invoked command cannot do.  This is what lets `toolshelf_cd`
-change your current working directory.
+        executable itself can't affect the user's shell.  This is why
+        `toolshelf_cd` is a seperate command, and not a sub-command of
+        `toolshelf`.
 
 ### `toolshelf` ###
 
@@ -321,17 +310,16 @@ imports it, and runs the thing in it that does all the real work.
 
 The Python module `toolshelf.py` is the workhorse:
 
-- It checks its arguments for an appropriate subcommand.
-- For the subcommand `dock`, it expects to find a source specifier.  It parses
-  that specifier to determine where it should find that source.  It attempts
-  to obtain that source (using `git clone` or whatever) and places the source
-  tree under a subdirectory (organized by domain name and user name) under
-  `$TOOLSHELF`.  It then decides if the obtained source needs building, and if
-  so, builds it.  It then calls `toolshelf relink` (internally) to rebuild the
-  link farm.
-- It checks for other arguments as needed.  Since it's trivial to remove a
-  package that has been docked, there might not be a `undock` subcommand.
-  (Actually there should be one that rebuilds the link farm afterwards.)
+-   It checks its arguments for an appropriate subcommand.
+-   For the subcommand `dock`, it expects to find a source specifier.  It parses
+    that specifier to determine where it should find that source.  It attempts
+    to obtain that source (using `git clone` or whatever) and places the source
+    tree under a subdirectory (organized by domain name and user name) under
+    `$TOOLSHELF`.  It then decides if the obtained source needs building, and if
+    so, builds it.  It then calls `toolshelf relink` (internally) to rebuild the
+    link farm.
+-   It checks for other arguments as needed.  Since it's trivial to remove a
+    package that has been docked, there is no `undock` subcommand.
 
 Loose `toolshelf` Integration
 -----------------------------
