@@ -12,6 +12,23 @@
 */*/dulwich-0.9.5
   python_modules dulwich
 
+pypi.python.org/*/atomize-0.*
+  python_modules src2/atomize.py
+
+pypi.python.org/*/PyYAML-3.*
+  python_modules lib/yaml
+
+pypi.python.org/*/MarkupSafe-0.*
+  python_modules markupsafe
+
+pypi.python.org/*/Jinja2-2.7.*
+  python_modules jinja2
+
+# just running "make" will try to install stuff to /usr/local.  sigh
+pypi.python.org/*/Markdown-2.*
+  python_modules markdown
+  build_command python setup.py build
+
 */durin42/hg-git
   exclude_paths tests
   find . -name '*.pyc' -exec rm {} \;
