@@ -626,7 +626,6 @@ class Source(object):
 
     def head_ref(self):
         self.shelf.chdir(self.dir)
-        output = None
         if os.path.isdir('.git'):
             return self.shelf.get_it('git rev-parse HEAD')
         elif os.path.isdir('.hg'):
@@ -1080,7 +1079,6 @@ class Toolshelf(object):
         # local distfile
         match = re.match(r'^(.*?\/)([^/]*?)\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
         if match:
-            localfilepath = match.group(1)
             host = 'localhost'
             user = 'distfile'
             project = match.group(2)
@@ -1091,7 +1089,6 @@ class Toolshelf(object):
                 host = match.group(1)
                 user = match.group(2)
                 project = match.group(3)
-                version = match.group(4)
             return Source(self, url=name, host=host, user=user,
                           project=project, type=ext, local=True, tag=tag)
 

@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 
 def export(shelf, args):
     def export_it(source):
