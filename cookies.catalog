@@ -29,6 +29,14 @@ pypi.python.org/*/Markdown-2.*
   python_modules markdown
   build_command python setup.py build
 
+# https://pypi.python.org/packages/source/r/requests/requests-2.3.0.tar.gz
+pypi.python.org/*/requests-2.*
+  python_modules requests
+
+# https://pypi.python.org/packages/source/p/pyflakes/pyflakes-0.8.1.tar.gz
+pypi.python.org/*/pyflakes-0.*
+  python_modules pyflakes
+
 */durin42/hg-git
   exclude_paths tests
   find . -name '*.pyc' -exec rm {} \;
