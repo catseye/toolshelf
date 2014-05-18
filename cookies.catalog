@@ -16,12 +16,8 @@
   exclude_paths tests
   find . -name '*.pyc' -exec rm {} \;
 
-# todo: might be able to get this from the pkgconfig file?
-*/*/pixman-0.*
-  include_dirs install/include/pixman-1
-
 */*/qemu-1.*
-  build_command ./configure --with-system-pixman --prefix=`pwd` && make
+  build_command ./configure --with-system-pixman --enable-sdl --prefix=`pwd` && make
 
 # eesh
 */*/tree-1.6.0
