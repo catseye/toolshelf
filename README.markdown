@@ -155,3 +155,8 @@ Related Work
 *   [spackle](https://github.com/kristi/spackle)
 *   `zero-install`/`0launch`
 *   `pkgviews`
+
+Curation
+--------
+
+*   [toolshelf node on catseye.tc](http://catseye.tc/node/toolshelf)
