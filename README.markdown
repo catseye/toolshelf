@@ -37,8 +37,12 @@ The source distributions are typically version-controlled working directories
 structures extracted from downloaded archives (so-called "tarballs" or
 "distfiles".)
 
-`toolshelf` is a **work in progress**, currently **version 0.1-PRE**, and
-subject to change.  It is written in Python 2.7, with some supporting scripts
+The current released version of `toolshelf` is **version 0.1**.  The current
+development version is **version 0.2-PRE**.  As indicated by the major version
+number **0**, it is a **work in progress** and subject to backwards-incompatible
+changes.
+
+`toolshelf` is written in Python 2.7, with some supporting scripts
 in Bourne shell.  It also requires the presence of those tools it needs to use
 to get and build what it asks for.  Obviously, the less you ask for, the less
 it needs, but at least some of the following will be helpful:
