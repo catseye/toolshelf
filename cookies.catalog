@@ -3,14 +3,20 @@
 # When you try to dock a source tree, toolshelf looks in this file to
 # see if it is listed here.  If it is, it uses the hints listed in this file.
 
-*/kulp/tenyr
-  exclude_paths bench ui hw scripts
+### Mercurial
 
-*/darius/ichbins
-  exclude_paths tests
+*/*/mercurial-1.9.3
+  build_command make local
+  interesting_executables hg
 
 */*/dulwich-0.9.5
   python_modules dulwich
+
+*/durin42/hg-git
+  exclude_paths tests
+  find . -name '*.pyc' -exec rm {} \;
+
+### PyPi
 
 pypi.python.org/*/atomize-0.*
   python_modules src2/atomize.py
@@ -29,24 +35,16 @@ pypi.python.org/*/Markdown-2.*
   python_modules markdown
   build_command python setup.py build
 
-# https://pypi.python.org/packages/source/r/requests/requests-2.3.0.tar.gz
 pypi.python.org/*/requests-2.*
   python_modules requests
 
-# https://pypi.python.org/packages/source/p/pyflakes/pyflakes-0.8.1.tar.gz
 pypi.python.org/*/pyflakes-0.*
   python_modules pyflakes
 
-*/durin42/hg-git
-  exclude_paths tests
-  find . -name '*.pyc' -exec rm {} \;
+pypi.python.org/*/grin-1.*
+  python_modules grin.py
 
-*/*/qemu-1.*
-  build_command ./configure --with-system-pixman --enable-sdl --prefix=`pwd` && make
-
-# eesh
-*/*/tree-1.6.0
-  build_command make "OBJS=tree.o unix.o html.o xml.o hash.o color.o strverscmp.o" "CFLAGS=-O2 -Wall"
+### Infra
 
 */*/bison-2.5
   exclude_paths tests etc example build-aux
@@ -56,6 +54,15 @@ pypi.python.org/*/pyflakes-0.*
   exclude_paths tests etc example build-aux
 
 # */*/fltk-1.3.2-source
+
+### Tools
+
+*/*/make-3.81
+  interesting_executables make
+
+# eesh
+*/*/tree-1.6.0
+  build_command make "OBJS=tree.o unix.o html.o xml.o hash.o color.o strverscmp.o" "CFLAGS=-O2 -Wall"
 
 */*/nmap-6.40
   build_command ./configure --with-liblua=`toolshelf pwd lua-5.2.2` --prefix=`pwd` && make && make install
@@ -70,6 +77,11 @@ pypi.python.org/*/pyflakes-0.*
 */ymattw/cdiff
   build_command echo "No need to build."
 
+# */*/curl-7.*
+#   only_paths install
+
+### Languages
+
 # 1. it would be nice to be able to vary this by OS, so it could be
 #    'make linux' under linux, etc.
 
@@ -79,6 +91,34 @@ pypi.python.org/*/pyflakes-0.*
 */*/perl-5.18*
   build_command ./Configure -des -Dprefix=`pwd` && make && make install
 
+*/*/seed7*
+  build_command cd src && make depend && make
+
+github.com/*/Ophis
+  exclude_paths src/scripts vendor
+  test_command ./tests/test_ophis.py
+
+factorcode.org/git/factor
+  exclude_paths basis extra unmaintained
+
+*/joyent/node
+  exclude_paths deps
+
+*/erlang/otp
+  build_command ./otp_build all
+  exclude_paths bootstrap erts make plt release system xcomp cygwin
+
+*/*/otp_src_R16B03-*
+  build_command ./configure --prefix=`pwd` --without-termcap && make
+
+*/*/chicken-4.*
+  build_command make PLATFORM=linux
+
+### Emulators
+
+*/*/qemu-1.*
+  build_command ./configure --with-system-pixman --enable-sdl --prefix=`pwd` && make
+
 */*/bochs-2.6.2
   rectify_permissions yes
   exclude_paths doc build bx_debug bios
@@ -86,8 +126,13 @@ pypi.python.org/*/pyflakes-0.*
 */*/vice-2.4
   build_command ./configure --enable-gnomeui --prefix=`pwd` && make && make install && ln -s lib64 lib
 
-*/*/seed7*
-  build_command cd src && make depend && make
+### Experimental/Github stuff
+
+*/kulp/tenyr
+  exclude_paths bench ui hw scripts
+
+*/darius/ichbins
+  exclude_paths tests
 
 */catseye/amiga-gondola
   exclude_paths dh0 workbench-cache
@@ -101,35 +146,5 @@ pypi.python.org/*/pyflakes-0.*
 */paulhodge/circa
   exclude_paths platform tests
 
-github.com/*/Ophis
-  exclude_paths src/scripts vendor
-  test_command ./tests/test_ophis.py
-
-factorcode.org/git/factor
-  exclude_paths basis extra unmaintained
-
-*/joyent/node
-  exclude_paths deps
-
 */poeschko/Mathics
   exclude_paths mathics/web/media
-
-*/erlang/otp
-  build_command ./otp_build all
-  exclude_paths bootstrap erts make plt release system xcomp cygwin
-
-*/*/otp_src_R16B03-*
-  build_command ./configure --prefix=`pwd` --without-termcap && make
-
-*/*/make-3.81
-  interesting_executables make
-
-*/*/mercurial-1.9.3
-  build_command make local
-  interesting_executables hg
-
-*/*/chicken-4.*
-  build_command make PLATFORM=linux
-
-# */*/curl-7.*
-#   only_paths install
