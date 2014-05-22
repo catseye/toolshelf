@@ -200,6 +200,15 @@ def is_pkgconfig_data(filename):
     return True
 
 
+def is_python_package(filename):
+    print filename
+    if not os.path.isdir(filename):
+        return False
+    if os.path.isfile(os.path.join(filename, '__init__.py')):
+        return True
+    return False
+
+
 def makedirs(dirname):
     try:
         os.makedirs(dirname)
@@ -583,6 +592,9 @@ class Source(object):
             if python_modules is not None:
                 for filename in python_modules.split(' '):
                     self.shelf.py_link_farm.create_link(filename)
+            else:
+                for filename in self.linkable_python_packages():
+                    self.shelf.py_link_farm.create_link(filename)                
         self.shelf.pkgconfig_link_farm.clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_pkgconfig_data):
@@ -654,10 +666,10 @@ class Source(object):
                 for path in only_paths.split(' ')
             ]
         for path in paths_to_try:
-            for filename in self.find_linkable_file_set(predicate, subdir=path):
+            for filename in self.find_linkable_file_set(predicate, path):
                 yield filename
 
-    def find_linkable_file_set(self, predicate, subdir='.'):
+    def find_linkable_file_set(self, predicate, subdir):
         found_files = {}
         for root, dirs, files in os.walk(os.path.join(self.dir, subdir)):
             if '.git' in dirs:
@@ -674,6 +686,30 @@ class Source(object):
                     self.shelf.debug("found linkable file: %s" % filename)
                     found_files[os.path.basename(filename)] = filename
         return found_files.values()
+
+    def linkable_python_packages(self):
+        for filename in self.find_linkable_dir_set(is_python_package,
+                                                   self.dir):
+            yield filename
+
+    def find_linkable_dir_set(self, predicate, subdir):
+        found_dirs = {}
+        for root, dirs, files in os.walk(os.path.join(self.dir, subdir)):
+            if '.git' in dirs:
+                dirs.remove('.git')
+            if '.hg' in dirs:
+                dirs.remove('.hg')
+            remove_these = []
+            for name in dirs:
+                dirname = os.path.join(self.dir, root, name)
+                if predicate(dirname):
+                    self.shelf.debug("found linkable dir: %s" % dirname)
+                    found_dirs[os.path.basename(dirname)] = dirname
+                    remove_these.append(name)
+            # now, don't recurse
+            for name in remove_these:
+                dirs.remove(name)
+        return found_dirs.values()
 
     def rectify_executable_permissions(self):
         for root, dirs, files in os.walk(self.dir):

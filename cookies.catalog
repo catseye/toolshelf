@@ -24,22 +24,10 @@ pypi.python.org/*/atomize-0.*
 pypi.python.org/*/PyYAML-3.*
   python_modules lib/yaml
 
-pypi.python.org/*/MarkupSafe-0.*
-  python_modules markupsafe
-
-pypi.python.org/*/Jinja2-2.7.*
-  python_modules jinja2
-
 # just running "make" will try to install stuff to /usr/local.  sigh
 pypi.python.org/*/Markdown-2.*
   python_modules markdown
   build_command python setup.py build
-
-pypi.python.org/*/requests-2.*
-  python_modules requests
-
-pypi.python.org/*/pyflakes-0.*
-  python_modules pyflakes
 
 pypi.python.org/*/grin-1.*
   python_modules grin.py
