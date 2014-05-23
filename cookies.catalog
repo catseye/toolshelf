@@ -10,11 +10,11 @@
   interesting_executables hg
 
 */*/dulwich-0.9.5
-  python_modules dulwich
+  exclude_paths dulwich/tests
 
 */durin42/hg-git
   exclude_paths tests
-  find . -name '*.pyc' -exec rm {} \;
+  build_command find . -name '*.pyc' -exec rm {} \;
 
 ### PyPi
 

@@ -201,7 +201,6 @@ def is_pkgconfig_data(filename):
 
 
 def is_python_package(filename):
-    print filename
     if not os.path.isdir(filename):
         return False
     if os.path.isfile(os.path.join(filename, '__init__.py')):
@@ -1324,7 +1323,8 @@ class Toolshelf(object):
         for source in sources:
             for (linkname, filename) in self.bin_link_farm.links():
                 if filename.startswith(source.dir):
-                    print "%s -> %s" % (os.path.basename(linkname), filename)
+                    showname = filename.replace(self.dir, '$TOOLSHELF')
+                    print "%s -> %s" % (os.path.basename(linkname), showname)
                     if (not os.path.isfile(filename) or
                         not os.access(filename, os.X_OK)):
                         print "BROKEN: %s is not an executable file" % filename
