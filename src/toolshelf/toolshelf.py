@@ -125,6 +125,8 @@ UNINTERESTING_EXECUTABLES = (
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
     # perl seems to like these
     'regen',
+    # seems to be a debian package thing
+    'rules',
     # "project files" that sometimes have the executable bit set
     '(README|INSTALL|COPYING|LICENSE|AUTHORS|authors|CHANGELOG)',
     'Makefile(\.am)?', '\.gitignore', '\.hgignore', 'Rakefile',
