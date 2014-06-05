@@ -1047,7 +1047,7 @@ class Toolshelf(object):
           http[s]://host.dom/.../distfile.tgz    \
           http[s]://host.dom/.../distfile.tar.gz | remotely hosted archive
           http[s]://host.dom/.../distfile.tar.xz | ("distfile" or "tarball")
-          http[s]://host.dom/.../distfile.tar.bz2|
+          http[s]://host.dom/.../distfile.tar.bz2| (ftp:// also supported)
           http[s]://host.dom/.../distfile.zip    /
           path/to/.../distfile.tgz               \
           path/to/.../distfile.tar.gz            |
@@ -1096,12 +1096,12 @@ class Toolshelf(object):
             return Source(self, url=name, host=host, user=user, project=project,
                           type='git', tag=tag)
 
-        match = re.match(r'^https?:\/\/(.*?)/.*?\/?([^/]*?)'
+        match = re.match(r'^(https?|ftp):\/\/(.*?)/.*?\/?([^/]*?)'
                          r'\.(zip|tgz|tar\.gz|tar\.xz|tar\.bz2)$', name)
         if match:
-            host = match.group(1)
-            project = match.group(2)
-            ext = match.group(3)
+            host = match.group(2)
+            project = match.group(3)
+            ext = match.group(4)
             return Source(self, url=name, host=host, user='distfile',
                           project=project, type=ext, tag=tag)
 
