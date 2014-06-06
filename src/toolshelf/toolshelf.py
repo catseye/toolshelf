@@ -117,7 +117,7 @@ UNINTERESTING_EXECUTABLES = (
     '(make|build|compile|clean|install|mkdep)(-cygwin)?(\.sh|\.pl|\.py)?',
     '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.pl|\.py)?',
     '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.pl|\.py)?',
-    '(test|testme|runtests)(-cygwin)?(\.sh|\.pl|\.py)?',
+    '(test(-driver)?|testme|runtests)(-cygwin)?(\.sh|\.pl|\.py)?',
     # autoconf and automake and libtool stuff
     'config\.status', 'config\.sub', 'config\.guess', 'config\.rpath',
     'missing', 'mkinstalldirs', 'install-sh',
@@ -144,17 +144,21 @@ UNINTERESTING_EXECUTABLES = (
     'dirname', 'basename', 'mt',
 )
 
+UNINTERESTING_PATHS = (
+    'tests', 'dep', 'deps'
+)
+
 HINT_NAMES = (
     'build_command',
     'test_command',
-    'exclude_paths',
+    'exclude_paths',  # TODO: need an include_paths, or interesting_paths, now, too
     'only_paths',
     #'prerequisites',
     'rectify_permissions',
     'require_executables',
     'interesting_executables',
     'python_modules',
-    'include_dirs',
+    'include_dirs',  # TODO: if exists '/install', default '/install/include'
 )
 
 
@@ -649,13 +653,14 @@ class Source(object):
             )
 
     def may_use_path(self, dirname):
-        exclude_paths = self.hints.get('exclude_paths', None)
-        if exclude_paths:
-            exclude_paths = exclude_paths.split(' ')
-            for path in exclude_paths:
-                verboten = os.path.join(self.dir, path)
-                if dirname.startswith(verboten):
-                    return False
+        exclude_paths = UNINTERESTING_PATHS
+        exclude_paths_hint = self.hints.get('exclude_paths', None)
+        if exclude_paths_hint:
+            exclude_paths.extend(exclude_paths_hint.split(' '))
+        for path in exclude_paths:
+            verboten = os.path.join(self.dir, path)
+            if dirname.startswith(verboten):
+                return False
         return True
 
     def linkable_files(self, predicate):
@@ -1323,13 +1328,18 @@ class Toolshelf(object):
         specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
-            for (linkname, filename) in self.bin_link_farm.links():
-                if filename.startswith(source.dir):
-                    showname = filename.replace(self.dir, '$TOOLSHELF')
-                    print "%s -> %s" % (os.path.basename(linkname), showname)
-                    if (not os.path.isfile(filename) or
-                        not os.access(filename, os.X_OK)):
-                        print "BROKEN: %s is not an executable file" % filename
+            # TODO: methinks it might be time for a link_farm[] dict
+            # TODO: colourize the output for which are exes, which are dirs
+            for link_farm in (self.bin_link_farm, self.lib_link_farm, self.py_link_farm,
+                              self.pkgconfig_link_farm, self.include_link_farm):
+                for (linkname, filename) in link_farm.links():
+                    if filename.startswith(source.dir):
+                        showname = filename.replace(self.dir, '$TOOLSHELF')
+                        print "%s -> %s" % (os.path.basename(linkname), showname)
+                        if link_farm is self.bin_link_farm:
+                            if (not os.path.isfile(filename) or
+                                not os.access(filename, os.X_OK)):
+                                print "BROKEN: %s is not an executable file" % filename
 
 
 def main(args):

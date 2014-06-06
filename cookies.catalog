@@ -13,7 +13,6 @@
   exclude_paths dulwich/tests
 
 */durin42/hg-git
-  exclude_paths tests
   build_command find . -name '*.pyc' -exec rm {} \;
 
 ### PyPi
@@ -35,12 +34,17 @@ pypi.python.org/*/grin-1.*
 ### Infra
 
 */*/bison-2.*
-  exclude_paths tests etc example build-aux
+  exclude_paths etc example build-aux
 
 # Unintelligently, ncurses' build system assumes you want the C++ bindings,
 # and therefore, that you have a C++ compiler.  Shouldn't it at least check?
+# (If I don't have a C++ compiler, I probably don't want the C++ bindings, eh?)
 */*/ncurses-5.*
-  build_command ./configure --without-cxx --without-cxx-binding --prefix=`pwd`/install && make && make install
+  build_command ./configure --with-shared --without-cxx --without-cxx-binding --prefix=`pwd`/install && make && make install
+  include_dirs install/include install/include/ncurses
+
+*/*/zlib-1.2.*
+  include_dirs install/include
 
 ### Tools
 
@@ -88,9 +92,6 @@ github.com/*/Ophis
 factorcode.org/git/factor
   exclude_paths basis extra unmaintained
 
-*/joyent/node
-  exclude_paths deps
-
 */erlang/otp
   build_command ./otp_build all
   exclude_paths bootstrap erts make plt release system xcomp cygwin
@@ -103,8 +104,11 @@ factorcode.org/git/factor
 
 ### Emulators
 
+# Using the bundled pixman also requires you have autconf installed, sheesh
+# ...so install pixman first with toolshelf instead.
+# This also requires curses, but will use SDL if it can find it.
 */*/qemu-1.*
-  build_command ./configure --with-system-pixman --disable-sdl --disable-gtk --prefix=`pwd` && make
+  build_command ./configure --target-list=i386-linux-user,i386-softmmu --with-system-pixman --enable-curses --prefix=`pwd`/install && make
 
 */*/bochs-2.6.2
   rectify_permissions yes
@@ -118,20 +122,14 @@ factorcode.org/git/factor
 */kulp/tenyr
   exclude_paths bench ui hw scripts
 
-*/darius/ichbins
-  exclude_paths tests
-
 */catseye/amiga-gondola
   exclude_paths dh0 workbench-cache
-
-*/munificent/magpie
-  exclude_paths dep
 
 */digego/extempore
   build_command ./all.bash
 
 */paulhodge/circa
-  exclude_paths platform tests
+  exclude_paths platform
 
 */poeschko/Mathics
   exclude_paths mathics/web/media
