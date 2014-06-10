@@ -1312,7 +1312,7 @@ class Toolshelf(object):
         sources = self.make_sources_from_specs(specs)
         for source in sources:
             # TODO: colourize the output for which are exes, which are dirs
-            for link_farm in self.link_farms.items():
+            for (link_farm_name, link_farm) in self.link_farms.iteritems():
                 for (linkname, filename) in link_farm.links():
                     if filename.startswith(source.dir):
                         showname = filename.replace(self.dir, '$TOOLSHELF')
