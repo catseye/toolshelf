@@ -76,21 +76,14 @@ pypi.python.org/*/grin-1.*
 # 1. it would be nice to be able to vary this by OS, so it could be
 #    'make linux' under linux, etc.
 
-*/*/lua-5*
+*/*/lua-5.*
   build_command make ansi && make INSTALL_TOP=`pwd` install
 
-*/*/perl-5.18*
+*/*/perl-5.18.*
   build_command ./Configure -des -Dprefix=`pwd` && make && make install
 
-*/*/seed7*
-  build_command cd src && make depend && make
-
-github.com/*/Ophis
-  exclude_paths src/scripts vendor
-  test_command ./tests/test_ophis.py
-
-factorcode.org/git/factor
-  exclude_paths basis extra unmaintained
+*/*/perl-5.20.*
+  build_command ./Configure -des -Dprefix=`pwd` && make && make install
 
 */erlang/otp
   build_command ./otp_build all
@@ -101,6 +94,16 @@ factorcode.org/git/factor
 
 */*/chicken-4.*
   build_command make PLATFORM=linux
+
+factorcode.org/git/factor
+  exclude_paths basis extra unmaintained
+
+*/*/seed7*
+  build_command cd src && make depend && make
+
+github.com/*/Ophis
+  exclude_paths src/scripts vendor
+  test_command ./tests/test_ophis.py
 
 ### Emulators
 

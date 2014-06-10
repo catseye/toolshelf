@@ -161,6 +161,7 @@ HINT_NAMES = (
     'include_dirs',  # TODO: if exists '/install', default '/install/include'
 )
 
+LINK_FARM_NAMES = ('bin', 'lib', 'include', 'python', 'pkgconfig')
 
 ### Exceptions
 
@@ -581,37 +582,37 @@ class Source(object):
         TODO: refactor this to make it more efficient.
 
         """
-        self.shelf.bin_link_farm.clean(prefix=self.dir)
+        self.shelf.link_farms['bin'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(
                               self.is_interesting_executable
                             ):
-                self.shelf.bin_link_farm.create_link(filename)
-        self.shelf.lib_link_farm.clean(prefix=self.dir)
+                self.shelf.link_farms['bin'].create_link(filename)
+        self.shelf.link_farms['lib'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_library):
-                self.shelf.lib_link_farm.create_link(filename)
-        self.shelf.py_link_farm.clean(prefix=self.dir)
+                self.shelf.link_farms['lib'].create_link(filename)
+        self.shelf.link_farms['python'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             python_modules = self.hints.get('python_modules')
             if python_modules is not None:
                 for filename in python_modules.split(' '):
-                    self.shelf.py_link_farm.create_link(filename)
+                    self.shelf.link_farms['python'].create_link(filename)
             else:
                 for filename in self.linkable_python_packages():
-                    self.shelf.py_link_farm.create_link(filename)                
-        self.shelf.pkgconfig_link_farm.clean(prefix=self.dir)
+                    self.shelf.link_farms['python'].create_link(filename)                
+        self.shelf.link_farms['pkgconfig'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_pkgconfig_data):
-                self.shelf.pkgconfig_link_farm.create_link(filename)
-        self.shelf.include_link_farm.clean(prefix=self.dir)
+                self.shelf.link_farms['pkgconfig'].create_link(filename)
+        self.shelf.link_farms['include'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             include_dirs = self.hints.get('include_dirs')
             if include_dirs is not None:
                 for dirname in include_dirs.split(' '):
                     for filename in os.listdir(dirname):
                         i_filename = os.path.join(dirname, filename)
-                        self.shelf.include_link_farm.create_link(i_filename)
+                        self.shelf.link_farms['include'].create_link(i_filename)
 
     def status(self):
         self.shelf.chdir(self.dir)
@@ -802,9 +803,7 @@ class Source(object):
 
 class Toolshelf(object):
     def __init__(self, directory=None, cwd=None, options=None, cookies=None,
-                       blacklist=None, bin_link_farm=None, lib_link_farm=None,
-                       py_link_farm=None, pkgconfig_link_farm=None,
-                       include_link_farm=None, errors=None):
+                       blacklist=None, link_farms=None, errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -821,29 +820,13 @@ class Toolshelf(object):
             options = DefaultOptions()
         self.options = options
 
-        if bin_link_farm is None:
-            bin_link_farm = LinkFarm(self, os.path.join(self.dir, '.bin'))
-        self.bin_link_farm = bin_link_farm
-
-        if lib_link_farm is None:
-            lib_link_farm = LinkFarm(self, os.path.join(self.dir, '.lib'))
-        self.lib_link_farm = lib_link_farm
-
-        if include_link_farm is None:
-            include_link_farm = LinkFarm(self,
-                os.path.join(self.dir, '.include')
+        if link_farms is None:
+            link_farms = {}
+        for farm in LINK_FARM_NAMES:
+            link_farms.setdefault(farm,
+                LinkFarm(self, os.path.join(self.dir, '.' + farm))
             )
-        self.include_link_farm = include_link_farm
-
-        if py_link_farm is None:
-            py_link_farm = LinkFarm(self, os.path.join(self.dir, '.python'))
-        self.py_link_farm = py_link_farm
-
-        if pkgconfig_link_farm is None:
-            pkgconfig_link_farm = LinkFarm(self,
-                os.path.join(self.dir, '.pkgconfig')
-            )
-        self.pkgconfig_link_farm = pkgconfig_link_farm
+        self.link_farms = link_farms
 
         if cookies is None:
             cookies = Cookies(self)
@@ -1328,15 +1311,13 @@ class Toolshelf(object):
         specs = self.expand_docked_specs(args)
         sources = self.make_sources_from_specs(specs)
         for source in sources:
-            # TODO: methinks it might be time for a link_farm[] dict
             # TODO: colourize the output for which are exes, which are dirs
-            for link_farm in (self.bin_link_farm, self.lib_link_farm, self.py_link_farm,
-                              self.pkgconfig_link_farm, self.include_link_farm):
+            for link_farm in self.link_farms.items():
                 for (linkname, filename) in link_farm.links():
                     if filename.startswith(source.dir):
                         showname = filename.replace(self.dir, '$TOOLSHELF')
                         print "%s -> %s" % (os.path.basename(linkname), showname)
-                        if link_farm is self.bin_link_farm:
+                        if link_farm is self.link_farms['bin']:
                             if (not os.path.isfile(filename) or
                                 not os.access(filename, os.X_OK)):
                                 print "BROKEN: %s is not an executable file" % filename
