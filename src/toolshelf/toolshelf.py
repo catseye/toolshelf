@@ -654,7 +654,7 @@ class Source(object):
             )
 
     def may_use_path(self, dirname):
-        exclude_paths = UNINTERESTING_PATHS
+        exclude_paths = [p for p in UNINTERESTING_PATHS]        
         exclude_paths_hint = self.hints.get('exclude_paths', None)
         if exclude_paths_hint:
             exclude_paths.extend(exclude_paths_hint.split(' '))

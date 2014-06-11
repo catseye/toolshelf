@@ -49,6 +49,9 @@ pypi.python.org/*/mock-1.*
 */*/zlib-1.2.*
   include_dirs install/include
 
+*/*/readline-6.*
+  include_dirs install/include
+
 ### Tools
 
 */*/make-3.81

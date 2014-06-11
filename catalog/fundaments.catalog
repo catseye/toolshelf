@@ -19,6 +19,7 @@ http://ftp.gnu.org/gnu/patch/patch-2.7.1.tar.gz              #U
 http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz
 http://rsync.samba.org/ftp/rsync/rsync-3.1.0.tar.gz          #U
 http://links.twibright.com/download/links-2.8.tar.gz
+ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz
 http://utopia.knoware.nl/~hlub/uck/rlwrap/rlwrap-0.37.tar.gz
 gh:ymattw/cdiff
 https://github.com/git/git/archive/v1.8.4.3.zip
