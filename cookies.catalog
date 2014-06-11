@@ -31,6 +31,9 @@ pypi.python.org/*/Markdown-2.*
 pypi.python.org/*/grin-1.*
   python_modules grin.py
 
+pypi.python.org/*/mock-1.*
+  python_modules mock.py
+
 ### Infra
 
 */*/bison-2.*

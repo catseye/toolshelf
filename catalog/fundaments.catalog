@@ -29,3 +29,6 @@ http://www.irssi.org/files/irssi-0.8.16-rc1.tar.gz
 http://nmap.org/dist/nmap-6.40.tar.bz2
 
 http://ftp.gnu.org/gnu/bison/bison-2.7.1.tar.gz
+
+# requires g++
+http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz
