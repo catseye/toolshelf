@@ -112,7 +112,7 @@ __all__ = ['Toolshelf']
 
 UNINTERESTING_EXECUTABLES = (
     '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
-    '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf)',
+    '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf|\.ttf)',
     '.*?(\.so|\.pbxproj|\.c|\.cpp|\.h|\.java)',
     '(make|build|compile|clean|install|mkdep)(-cygwin)?(\.sh|\.pl|\.py)?',
     '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.pl|\.py)?',

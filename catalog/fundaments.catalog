@@ -7,7 +7,9 @@
 
 http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tgz      #U
 http://www.cpan.org/src/5.0/perl-5.18.2.tar.gz               #U
-http://www.lua.org/ftp/lua-5.2.2.tar.gz
+
+http://www.lua.org/ftp/lua-5.2.3.tar.gz
+http://www.lua.org/ftp/lua-5.1.5.tar.gz
 
 http://www.nano-editor.org/dist/v2.2/nano-2.2.6.tar.gz       #U
 
