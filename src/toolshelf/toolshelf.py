@@ -161,7 +161,7 @@ HINT_NAMES = (
     'include_dirs',  # TODO: if exists '/install', default '/install/include'
 )
 
-LINK_FARM_NAMES = ('bin', 'lib', 'include', 'python', 'pkgconfig')
+LINK_FARM_NAMES = ('bin', 'lib', 'include', 'pkgconfig', 'python', 'lua')
 
 ### Exceptions
 
@@ -213,6 +213,10 @@ def is_python_package(filename):
     if os.path.isfile(os.path.join(filename, '__init__.py')):
         return True
     return False
+
+
+def is_lua_module(filename):
+    return filename.endswith('.lua') and os.path.isfile(filename)
 
 
 def makedirs(dirname):
@@ -588,10 +592,12 @@ class Source(object):
                               self.is_interesting_executable
                             ):
                 self.shelf.link_farms['bin'].create_link(filename)
+
         self.shelf.link_farms['lib'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_library):
                 self.shelf.link_farms['lib'].create_link(filename)
+
         self.shelf.link_farms['python'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             python_modules = self.hints.get('python_modules')
@@ -601,10 +607,17 @@ class Source(object):
             else:
                 for filename in self.linkable_python_packages():
                     self.shelf.link_farms['python'].create_link(filename)                
+
+        self.shelf.link_farms['lua'].clean(prefix=self.dir)
+        if self not in self.shelf.blacklist:
+            for filename in self.linkable_files(is_lua_module):
+                self.shelf.link_farms['lua'].create_link(filename)
+
         self.shelf.link_farms['pkgconfig'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(is_pkgconfig_data):
                 self.shelf.link_farms['pkgconfig'].create_link(filename)
+
         self.shelf.link_farms['include'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             include_dirs = self.hints.get('include_dirs')

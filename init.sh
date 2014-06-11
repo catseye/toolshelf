@@ -19,6 +19,7 @@ else
   export C_INCLUDE_PATH="$TOOLSHELF/.include:$C_INCLUDE_PATH"
   export PYTHONPATH="$TOOLSHELF/.python:$PYTHONPATH"
   export PKG_CONFIG_PATH="$TOOLSHELF/.pkgconfig:$PKG_CONFIG_PATH"
+  export LUA_PATH="$TOOLSHELF/.lua/?.lua;$TOOLSHELF/.lib/?.so;$LUA_PATH"
 
   # `toolshelf` itself can't change the shell's idea of the current working
   # directory, but a shell function can utilize `toolshelf` to do so.  Since
