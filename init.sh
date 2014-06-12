@@ -10,28 +10,30 @@
 
 if [ -z $TOOLSHELF ]; then
   echo "error: TOOLSHELF env var must be set before sourcing init.sh"
-elif [ ! -d $TOOLSHELF ]; then
-  echo "error: TOOLSHELF does not refer to a valid directory"
-else
-  export PATH="$TOOLSHELF/.toolshelf/bin:$TOOLSHELF/.bin:$PATH"
-  export LD_LIBRARY_PATH="$TOOLSHELF/.lib:$LD_LIBRARY_PATH"
-  export LIBRARY_PATH="$TOOLSHELF/.lib:$LIBRARY_PATH"
-  export C_INCLUDE_PATH="$TOOLSHELF/.include:$C_INCLUDE_PATH"
-  export PYTHONPATH="$TOOLSHELF/.python:$PYTHONPATH"
-  export PKG_CONFIG_PATH="$TOOLSHELF/.pkgconfig:$PKG_CONFIG_PATH"
-  export LUA_PATH="$TOOLSHELF/.lua/?.lua;$TOOLSHELF/.lib/?.so;$LUA_PATH"
-
-  # `toolshelf` itself can't change the shell's idea of the current working
-  # directory, but a shell function can utilize `toolshelf` to do so.  Since
-  # this is a *very* handy function of toolshelf, you may wish to make a short
-  # alias for this, i.e. add a line like this to your shell profile or aliases
-  # file:
-  #    alias thcd=toolshelf_cd
-
-  toolshelf_cd() {
-      DIR=`$TOOLSHELF/.toolshelf/bin/toolshelf pwd $*`
-      if [ ! -z $DIR ]; then
-          cd $DIR
-      fi
-  }
+  exit 1
 fi
+
+if [ ! -d $TOOLSHELF ]; then
+  echo "error: TOOLSHELF does not refer to a valid directory"
+  exit 1
+fi
+
+export PATH="$TOOLSHELF/.bin:$PATH"
+export LD_LIBRARY_PATH="$TOOLSHELF/.lib:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="$TOOLSHELF/.lib:$LIBRARY_PATH"
+export C_INCLUDE_PATH="$TOOLSHELF/.include:$C_INCLUDE_PATH"
+export PYTHONPATH="$TOOLSHELF/.python:$PYTHONPATH"
+export PKG_CONFIG_PATH="$TOOLSHELF/.pkgconfig:$PKG_CONFIG_PATH"
+export LUA_PATH="$TOOLSHELF/.lua/?.lua;$TOOLSHELF/.lib/?.so;$LUA_PATH"
+
+toolshelf() {
+  if [ x$1 = xcd ]; then
+    shift
+    DIR=`$TOOLSHELF/.toolshelf/bin/toolshelf pwd $*`
+    if [ ! -z $DIR ]; then
+      cd $DIR
+    fi
+  else
+    $TOOLSHELF/.toolshelf/bin/toolshelf $*
+  fi
+}

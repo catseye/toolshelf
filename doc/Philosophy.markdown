@@ -133,7 +133,7 @@ Advantages of `toolshelf`
     package maintainer to go missing.
 
 *   It encourages hackability.  Docked source distributions are meant to be
-    *developed* in.   If you have a problem, `toolshelf_cd` to the docked
+    *developed* in.   If you have a problem, `toolshelf cd` to the docked
     sources, edit them, and rebuild.  After you rebuild, the new executable
     will immediately be on your `$PATH` — no install step.  If the docked
     sources are in a repo, you can commit and branch and restore a previous

@@ -42,10 +42,10 @@ development version is **version 0.2-PRE**.  As indicated by the major version
 number **0**, it is a **work in progress** and subject to backwards-incompatible
 changes.
 
-`toolshelf` is written in Python 2.7, with some supporting scripts
-in Bourne shell.  It also requires the presence of those tools it needs to use
-to get and build what it asks for.  Obviously, the less you ask for, the less
-it needs, but at least some of the following will be helpful:
+`toolshelf` is written in Bourne shell and Python 2.7.  It also requires the
+presence of those tools it needs to use to get and build what it asks for.
+Obviously, the less you ask for, the less it needs, but at least some of the
+following will be helpful:
 
 *   `git` or `hg` (Mercurial)
 *   `wget`
@@ -53,9 +53,10 @@ it needs, but at least some of the following will be helpful:
 *   `unzip`
 *   `make`
 
-(It is also probably better if you use a Bourne-shell-based shell, such as
-`bash` or `ash`, as your interactive shell; otherwise you may lack some
-functions such as `toolshelf_cd`.  I have not tested it with `csh`, `zsh`, etc.)
+The main `toolshelf` command is written as a Bourne shell function (to support
+`toolshelf cd`), so it should work with `bash`, `ash`, and other Bourne-shell-
+compatible shells.  It has not been tested with `zsh` or others.  It will not
+work with `csh`.
 
 `toolshelf` is distributed under an MIT-style license.
 

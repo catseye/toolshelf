@@ -289,17 +289,19 @@ script.)  This is what it does:
 
 -   Takes a single command-line argument, which is the `toolshelf` directory,
     and exports it as the `TOOLSHELF` environment variable
--   Puts `$TOOLSHELF/.toolshelf/bin` (where the `toolshelf` executable lives)
-    and `$TOOLSHELF/.bin` (the link farm `toolshelf` will create) onto the
+-   Puts `$TOOLSHELF/.bin` (the link farm `toolshelf` will create) onto the
     shell's executable search path (`$PATH`.)
--   Defines a shell function called `toolshelf_cd`, which does the following:
-    -   It runs `toolshelf pwd`, with the arguments that were passed to the
-        `toolshelf_cd` function, in backticks.
-    -   It attempts to `cd` to the output of `toolshelf pwd`.
-    -   The `cd` is done in this shell function, because the `toolshelf`
-        executable itself can't affect the user's shell.  This is why
-        `toolshelf_cd` is a seperate command, and not a sub-command of
-        `toolshelf`.
+-   Puts a bunch of other link farms (`.lib`, `.include`, `.pkconfig`,
+    `.python`, `.lua`) on their respective search paths.
+-   Defines a shell function called `toolshelf`, which does the following:
+    -   If the first argument is `cd`, it:
+        -   runs `$TOOLSHELF/.toolshelf/bin/toolshelf pwd` with the arguments
+            that were passed after the `cd`
+        -   It attempts to change directory to the output of `toolshelf pwd`.
+        -   This is done in this shell function because the `toolshelf`
+            executable itself can't affect the user's shell.
+    -   If not, it simply runs `$TOOLSHELF/.toolshelf/bin/toolshelf` with
+        the arguments it was passed.
 
 ### `toolshelf` ###
 
