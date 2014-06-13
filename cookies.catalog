@@ -86,7 +86,7 @@ pypi.python.org/*/mock-1.*
   build_command make ansi && make INSTALL_TOP=`pwd`/install install
 
 */*/perl-5.*
-  build_command ./Configure -des -Dprefix=`pwd`/install && make && make install
+  C_INCLUDE_PATH="" build_command ./Configure -des -Dprefix=`pwd`/install && make && make install
 
 */erlang/otp
   build_command ./otp_build all
