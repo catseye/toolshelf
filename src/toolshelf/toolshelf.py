@@ -236,7 +236,7 @@ def makedirs(dirname):
 class Cookies(object):
     def __init__(self, shelf):
         self.shelf = shelf
-        self._hint_map = None
+        self._hint_maps = None
         self.filenames = []
 
     def add_file(self, filename):
@@ -246,15 +246,18 @@ class Cookies(object):
             self.filenames.append(filename)
 
     def _load_hints(self):
-        self._hint_map = {}
+        self._hint_maps = []
         for filename in self.filenames:
             self._load_hints_from_file(filename)
 
     def _load_hints_from_file(self, filename):
+        hint_map = {}
         with open(filename, 'r') as hints_file:
             spec_key = None
             for line in hints_file:
                 line = line.strip()
+                if line == '' or line.startswith('#'):
+                    continue
                 found_hint = False
                 for hint_name in HINT_NAMES:
                     pattern = r'^%s\s+(.*?)\s*$' % hint_name
@@ -268,7 +271,7 @@ class Cookies(object):
                         self.shelf.debug("Adding hint '%s %s' to %s" %
                             (hint_name, hint_value, spec_key)
                         )
-                        self._hint_map[spec_key][hint_name] = hint_value
+                        hint_map[spec_key][hint_name] = hint_value
                         if (hint_name == 'rectify_permissions' and
                             hint_value not in ('yes', 'no')):
                             raise ValueError(
@@ -276,23 +279,28 @@ class Cookies(object):
                             )
                         found_hint = True
                         break
-                if found_hint or line == '' or line.startswith('#'):
-                    continue
-                spec_key = line
-                self._hint_map.setdefault(spec_key, {})
+                if not found_hint:  # ... then we found a spec
+                    spec_key = line
+                    hint_map.setdefault(spec_key, {})
+        self._hint_maps.append(hint_map)
 
     @property
-    def hint_map(self):
-        if self._hint_map is None:
+    def hint_maps(self):
+        if self._hint_maps is None:
             self._load_hints()
-        return self._hint_map
+        return self._hint_maps
 
     def apply_hints(self, source):
-        for key in self.hint_map:
-            pattern = fnmatch.translate(key)
-            match = re.match(pattern, source.name)
-            if match:
-                source.hints.update(self.hint_map[key])
+        for hint_map in self.hint_maps:
+            found_in_map = False
+            for (key, hints) in hint_map.iteritems():
+                pattern = fnmatch.translate(key)
+                match = re.match(pattern, source.name)
+                if match:
+                    source.hints.update(hints)
+                    found_in_map = True
+            if found_in_map:
+                break
 
 
 class Blacklist(object):
@@ -844,10 +852,10 @@ class Toolshelf(object):
         if cookies is None:
             cookies = Cookies(self)
             cookies.add_file(os.path.join(
-                self.dir, '.toolshelf', 'cookies.catalog'
+                self.dir, '.toolshelf', 'local-cookies.catalog'
             ))
             cookies.add_file(os.path.join(
-                self.dir, '.toolshelf', 'local-cookies.catalog'
+                self.dir, '.toolshelf', 'cookies.catalog'
             ))
         self.cookies = cookies
 
