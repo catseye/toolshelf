@@ -3,11 +3,9 @@ gh:silentbicycle/tamale
 # vvv BZZT
 gh:kengonakajima/lua-msgpack
 gh:davidm/lua-find-bin
-# vvv BZZT
 gh:keplerproject/luafilesystem
 gh:stevedonovan/Penlight
 gh:davidm/lua-glob-pattern
-# vvv BZZT
 gh:agladysh/luabins
 gh:moteus/lua-path
 gh:Etiene/valua

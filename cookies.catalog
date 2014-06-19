@@ -84,6 +84,7 @@ pypi.python.org/*/mock-1.*
 
 */*/lua-5.*
   build_command make ansi && make INSTALL_TOP=`pwd`/install install
+  include_dirs install/include
 
 */*/perl-5.*
   build_command C_INCLUDE_PATH="" ./Configure -des -Dprefix=`pwd`/install && C_INCLUDE_PATH="" make && make install
