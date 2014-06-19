@@ -106,7 +106,7 @@ factorcode.org/git/factor
 
 github.com/*/Ophis
   exclude_paths src/scripts vendor
-  test_command ./tests/test_ophis.py
+  test_command python ./tests/test_ophis.py
 
 ### Emulators
 
