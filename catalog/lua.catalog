@@ -1,13 +1,19 @@
-gh:mascarenhas/alien
-gh:silentbicycle/tamale
-# vvv BZZT
-gh:kengonakajima/lua-msgpack
-gh:davidm/lua-find-bin
 gh:keplerproject/luafilesystem
-gh:stevedonovan/Penlight
-gh:davidm/lua-glob-pattern
-gh:agladysh/luabins
-gh:moteus/lua-path
-gh:Etiene/valua
+gh:diegonehab/luasocket
+# gh:keplerproject/copas
+gh:keplerproject/rings
+gh:keplerproject/md5
+# gh:keplerproject/coxpcall
+gh:keplerproject/xavante
+
+gh:mascarenhas/alien
 gh:easeway/lua-chan
+
+gh:davidm/lua-find-bin
+gh:davidm/lua-glob-pattern
+gh:moteus/lua-path
+gh:silentbicycle/tamale
+gh:stevedonovan/Penlight
+gh:agladysh/luabins
+gh:Etiene/valua
 gh:hoelzro/ansicolors
