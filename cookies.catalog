@@ -46,12 +46,6 @@ pypi.python.org/*/mock-1.*
   build_command ./configure --with-shared --without-cxx --without-cxx-binding --prefix=`pwd`/install && make && make install
   include_dirs install/include install/include/ncurses
 
-*/*/zlib-1.2.*
-  include_dirs install/include
-
-*/*/readline-6.*
-  include_dirs install/include
-
 ### Tools
 
 */*/make-3.81
@@ -84,7 +78,7 @@ pypi.python.org/*/mock-1.*
 
 */*/lua-5.*
   build_command make ansi && make INSTALL_TOP=`pwd`/install install
-  include_dirs install/include
+  exclude_paths test
 
 */*/perl-5.*
   build_command C_INCLUDE_PATH="" ./Configure -des -Dprefix=`pwd`/install && C_INCLUDE_PATH="" make && make install

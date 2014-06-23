@@ -158,7 +158,7 @@ HINT_NAMES = (
     'require_executables',
     'interesting_executables',
     'python_modules',
-    'include_dirs',  # TODO: if exists '/install', default '/install/include'
+    'include_dirs',  # defaults to '/install/include' if it exists
 )
 
 LINK_FARM_NAMES = ('bin', 'lib', 'include', 'pkgconfig', 'python', 'lua')
@@ -591,9 +591,10 @@ class Source(object):
         """Search this source for linkable files, and place them in
         the link farms.
 
-        TODO: refactor this to make it more efficient.
+        Requires that the current directory is self.dir.
 
         """
+        # TODO: refactor all this to make it more efficient.
         self.shelf.link_farms['bin'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
             for filename in self.linkable_files(
@@ -628,9 +629,15 @@ class Source(object):
 
         self.shelf.link_farms['include'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
-            include_dirs = self.hints.get('include_dirs')
+            include_dirs = self.hints.get('include_dirs', None)
+            if include_dirs is None:
+                if os.path.exists(os.path.join(self.dir, 'install', 'include')):
+                    include_dirs = 'install/include'
             if include_dirs is not None:
                 for dirname in include_dirs.split(' '):
+                    if not os.path.isdir(dirname):
+                        self.shelf.warn('No such directory: %s' % dirname)
+                        continue
                     for filename in os.listdir(dirname):
                         i_filename = os.path.join(dirname, filename)
                         self.shelf.link_farms['include'].create_link(i_filename)
