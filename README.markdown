@@ -30,12 +30,24 @@ Instead, it:
     (usually located in your home directory);
 *   builds executables, libraries, etc. as needed in these source directories;
 *   creates "link farms" of symlinks to these executables, libraries, etc.; and 
-*   manages your search paths to include these link farms.
+*   extends your search paths to include these link farms.
 
 The source distributions are typically version-controlled working directories
 (e.g. a local clone of a Git repository), but they can also be directory
 structures extracted from downloaded archives (so-called "tarballs" or
 "distfiles".)
+
+The primary application (after acquiring and building a source) is to get
+these executables from the source onto your `$PATH`, so that you can run them
+from anywhere.  The secondary application is to get shared components into
+their respective paths, so they can be used from any other project that needs
+them — this currently works with C, Python, and Lua, in many cases obviating
+the need for package managers like `pip` and LuaRocks.
+
+`toolshelf` is, in some sense, stateless.  It does not record a database of
+what has been docked (this information can mostly be gleaned from the
+filesystem) and there is no package metadata (beyond "cookies", over which
+you have control.)
 
 The current released version of `toolshelf` is **version 0.1**.  The current
 development version is **version 0.2-PRE**.  As indicated by the major version
