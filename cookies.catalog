@@ -34,6 +34,9 @@ pypi.python.org/*/grin-1.*
 pypi.python.org/*/mock-1.*
   python_modules mock.py
 
+github.com/django/django
+  python_modules django
+
 ### Infra
 
 */*/bison-2.*

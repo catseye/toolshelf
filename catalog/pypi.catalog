@@ -14,3 +14,7 @@ https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.7.2.tar.gz
 http://pypi.python.org/packages/source/M/Markdown/Markdown-2.4.tar.gz
 http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz
 https://pypi.python.org/packages/source/a/atomize/atomize-0.2.0.tar.gz
+
+# oh, what the heck, why not go all the way
+
+gh:django/django@1.6.4
