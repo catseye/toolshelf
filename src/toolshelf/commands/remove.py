@@ -7,3 +7,4 @@ def remove(shelf, args):
     shelf.foreach_specced_source(
         shelf.expand_docked_specs(args), remove_it
     )
+    shelf.relink(['all'])
