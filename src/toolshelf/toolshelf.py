@@ -1232,6 +1232,18 @@ class Toolshelf(object):
                 self.errors.setdefault(source.name, []).append(str(e))
 
     def run_command(self, subcommand, args):
+        # resolve @'s and @@'s which are given individually in the arglist
+        new_args = []
+        prefix = ''
+        for arg in args:
+            if prefix in ('@', '@@'):
+                new_args.append(prefix + arg)
+                prefix = ''
+            elif arg in ('@', '@@'):
+                prefix = arg
+            else:
+                new_args.append(arg)
+
         try:
             module = __import__("toolshelf.commands.%s" % subcommand,
                                 fromlist=["toolshelf.commands"])
@@ -1240,7 +1252,7 @@ class Toolshelf(object):
             cmd = getattr(self, subcommand, None)
         if cmd is not None:
             try:
-                cmd(args)
+                cmd(new_args)
             except Exception as e:
                 if self.options.break_on_error:
                     raise
