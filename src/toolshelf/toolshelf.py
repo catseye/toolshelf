@@ -113,11 +113,12 @@ __all__ = ['Toolshelf']
 UNINTERESTING_EXECUTABLES = (
     '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
     '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf|\.ttf|\.xpm)',
-    '.*?(\.so|\.pbxproj|\.c|\.cpp|\.h|\.java)',
-    '(make|build|compile|clean|install|mkdep)(-cygwin)?(\.sh|\.pl|\.py)?',
-    '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.pl|\.py)?',
-    '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.pl|\.py)?',
-    '(test(-driver)?|testme|runtests)(-cygwin)?(\.sh|\.pl|\.py)?',
+    '.*?(\.so|\.pbxproj|\.c|\.cpp|\.h|\.java|\.strings)',
+    '(make|build|compile|clean|install|uninstall)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    '(mkdep|makedep)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    '(test(-driver)?|testme|runtests)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     # autoconf and automake and libtool stuff
     'config\.status', 'config\.sub', 'config\.guess', 'config\.rpath',
     'missing', 'mkinstalldirs', 'install-sh',
@@ -127,6 +128,8 @@ UNINTERESTING_EXECUTABLES = (
     'regen',
     # seems to be a debian package thing
     'rules',
+    # django...
+    'manage.py',
     # "project files" that sometimes have the executable bit set
     '(README|INSTALL|COPYING|LICENSE|AUTHORS|authors|CHANGELOG)',
     'Makefile(\.am)?', '\.gitignore', '\.hgignore', 'Rakefile',
