@@ -409,7 +409,9 @@ class LinkFarm(object):
         if os.path.islink(linkname):
             # TODO only produce this message if the source link and
             # dest link are in different sources?
-            self.shelf.warn("Trampling existing link %s" % linkname)
+            self.shelf.warn("Trampling existing [%s] link %s" %
+                (os.path.basename(self.dirname), linkname)
+            )
             self.shelf.warn("  was: %s" % os.readlink(linkname))
             self.shelf.warn("  now: %s" % filename)
             os.unlink(linkname)
