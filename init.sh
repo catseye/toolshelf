@@ -29,11 +29,11 @@ export LUA_PATH="$TOOLSHELF/.lua/?.lua;$TOOLSHELF/.lib/?.so;$LUA_PATH"
 toolshelf() {
   if [ x$1 = xcd ]; then
     shift
-    DIR=`$TOOLSHELF/.toolshelf/bin/toolshelf pwd $*`
+    DIR=`$TOOLSHELF/.toolshelf/bin/toolshelf.py pwd $*`
     if [ ! -z $DIR ]; then
       cd $DIR
     fi
   else
-    $TOOLSHELF/.toolshelf/bin/toolshelf $*
+    $TOOLSHELF/.toolshelf/bin/toolshelf.py $*
   fi
 }
