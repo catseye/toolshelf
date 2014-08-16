@@ -886,7 +886,11 @@ class Toolshelf(object):
 
     def run(self, *args, **kwargs):
         self.note("Running `%s`..." % ' '.join(args))
-        subprocess.check_call(args, **kwargs)
+        if 'ignore_exit_code' in kwargs:
+            del kwargs['ignore_exit_code']
+            subprocess.call(args, **kwargs)
+        else:
+            subprocess.check_call(args, **kwargs)
 
     def get_it(self, command):
         self.note("Running `%s`..." % command)
