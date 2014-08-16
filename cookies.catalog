@@ -92,6 +92,7 @@ github.com/django/django
 
 */*/otp_src_R16B03-*
   build_command ./configure --prefix=`pwd` --without-termcap && make
+  exclude_paths erts/emulator/zlib
 
 */*/chicken-4.*
   build_command make PLATFORM=linux
@@ -128,6 +129,9 @@ github.com/*/Ophis
 
 */catseye/amiga-gondola
   exclude_paths dh0 workbench-cache
+
+*/catseye/amiga-archive
+  exclude_paths esodisk
 
 */digego/extempore
   build_command ./all.bash
