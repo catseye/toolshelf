@@ -4,7 +4,9 @@ gh:catseye/ncurses_programs
 gh:catseye/OpenZz
 gh:catseye/BLBasic
 gh:catseye/Ophis
-gh:catseye/tenyr
 gh:catseye/z80emu
 gh:catseye/zmakebas
+
+# these are not forks
 gh:catseye/realpath
+gh:catseye/The-Swallows
