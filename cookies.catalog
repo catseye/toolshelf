@@ -133,6 +133,12 @@ github.com/*/Ophis
 */catseye/amiga-archive
   exclude_paths esodisk
 
+*/catseye/funicular
+  exclude_paths eg
+
+*/catseye/lab
+  exclude_paths salvage
+
 */digego/extempore
   build_command ./all.bash
 

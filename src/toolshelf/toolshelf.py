@@ -739,6 +739,9 @@ class Source(object):
                 dirs.remove('.git')
             if '.hg' in dirs:
                 dirs.remove('.hg')
+            if not self.may_use_path(root):
+                self.shelf.debug("%s excluded from search path" % root)
+                dirs[:] = []
             remove_these = []
             for name in dirs:
                 dirname = os.path.join(self.dir, root, name)
@@ -1296,6 +1299,14 @@ class Toolshelf(object):
                 source.build()
                 source.relink()
         self.foreach_specced_source(args, dock_it)
+
+    def tether(self, args):
+        def tether_it(source):
+            if source.docked:
+                print "%s already docked." % source.name
+            else:
+                source.checkout()
+        self.foreach_specced_source(args, tether_it)
 
     def build(self, args):
         def build_it(source):
