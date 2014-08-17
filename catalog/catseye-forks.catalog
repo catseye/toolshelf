@@ -1,12 +1,15 @@
 gh:catseye/JaC64
-gh:catseye/minischeme
-gh:catseye/ncurses_programs
-gh:catseye/OpenZz
 gh:catseye/BLBasic
-gh:catseye/Ophis
 gh:catseye/z80emu
 gh:catseye/zmakebas
 
-# these are not forks
-gh:catseye/realpath
-gh:catseye/The-Swallows
+# forks on Github that have mirrors on Bitbucket
+
+bb:catseye/OpenZz
+bb:catseye/minischeme
+bb:catseye/Ophis
+
+# others' repos on Github that have mirrors on Bitbucket
+
+bb:catseye/cpressey-tree
+bb:catseye/ymattw-cdiff
