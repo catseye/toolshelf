@@ -31,8 +31,10 @@ http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.32
 # http://www.x.org/releases/X11R7.7/src/lib/libXt-1.1.3.tar.bz2
 # http://www.x.org/releases/X11R7.5/src/lib/libXaw-1.0.7.tar.gz
 
-# therefore SDL!  which works just fine.
-http://www.libsdl.org/release/SDL-1.2.15.tar.gz
+# therefore SDL!  which works just fine, if you don't mind having no GUI.
+# note, you should install SDL via system, not with toolshelf.
+# http://www.libsdl.org/release/SDL-1.2.15.tar.gz
+
 # If you want to try ALSA, here:  ... but it works with --with-sdlsound (I hope)
 # ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.0.28.tar.bz2
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
@@ -41,18 +43,19 @@ http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
 http://sourceforge.net/projects/bochs/files/bochs/2.6.5/bochs-2.6.5.tar.gz
 
 ### DOSBox, including SDL 1.2 libraries
-http://www.libsdl.org/release/SDL-1.2.15.tar.gz
+# note, you should install SDL via system, not with toolshelf.
+# http://www.libsdl.org/release/SDL-1.2.15.tar.gz
 ### not for DOSBox... not yet...
 # http://www.libsdl.org/release/SDL2-2.0.1.tar.gz
 ### there have been patches since 0.74 for building under gcc 4.x, but no
 ### official release incorporating them, yet.
 # http://sourceforge.net/projects/dosbox/files/dosbox/0.74/dosbox-0.74.tar.gz
 ### so we use this mirror on github instead:
+# (note, however, that it requires autotools)
 gh:Henne/dosbox-svn
 
 ### E-UAE
-### requires a bunch of Gnome/GTK stuff
-### doesn't work for me under toolshelf, yet
+### requires either a bunch of Gnome/GTK stuff... or good ol' SDL
 http://www.rcdrummond.net/uae/e-uae-0.8.29-WIP4/e-uae-0.8.29-WIP4.tar.bz2
 
 ### Stella
@@ -63,6 +66,15 @@ http://prdownloads.sourceforge.net/stella/stella-3.9.2-src.tar.gz
 # but doesn't honour fltk-config --includedir.  frustrating...
 http://fltk.org/pub/fltk/1.3.2/fltk-1.3.2-source.tar.gz
 http://sourceforge.net/projects/apple-emulator/files/apple-emulator/0.8/apple_emulator-0.8-src.tar.gz
+
+# linapple
+# seems to require libcurl and g++ for some ungodly reason. also libzip
+# http://curl.haxx.se/download/curl-7.37.1.tar.bz2
+# http://www.nih.at/libzip/libzip-0.11.2.tar.gz
+# http://downloads.sourceforge.net/project/linapple/linapple/linapple-2a/linapple-src_2a.tar.bz2
+# ...and it still doesn't build because it calls usleep() without having
+# included <unistd.h> or something equally brilliant like that.
+gh:timob/linapple
 
 ### miscellany
 
