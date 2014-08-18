@@ -1341,6 +1341,8 @@ class Toolshelf(object):
                     args, [s.dir for s in sources]
                 )
             )
+        if not os.path.isdir(sources[0].dir):
+            raise SourceSpecError("%s not docked" % sources[0].dir)
         print sources[0].dir
 
     def rectify(self, args):
