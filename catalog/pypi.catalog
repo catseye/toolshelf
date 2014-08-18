@@ -18,3 +18,4 @@ https://pypi.python.org/packages/source/a/atomize/atomize-0.2.0.tar.gz
 # oh, what the heck, why not go all the way
 
 gh:django/django@1.6.4
+gh:rthalley/dnspython@v1.11.1
