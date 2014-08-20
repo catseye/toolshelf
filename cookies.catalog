@@ -95,7 +95,7 @@ github.com/django/django
 
 */*/otp_src_R16B03-*
   build_command ./configure --prefix=`pwd` --without-termcap && make
-  exclude_paths erts/emulator/zlib
+  exclude_paths bootstrap erts make plt release system xcomp cygwin
 
 */*/chicken-4.*
   build_command make PLATFORM=linux

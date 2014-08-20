@@ -3,7 +3,6 @@ bb:catseye/amiga-gondola
 bb:catseye/animals
 bb:catseye/apple-befunge
 bb:catseye/arboretuum
-bb:catseye/atari-2600-skeleton
 bb:catseye/befos
 bb:catseye/befunge-93
 bb:catseye/beta-juliet
@@ -68,7 +67,6 @@ bb:catseye/quylthulg
 bb:catseye/realpath
 bb:catseye/redgreen
 bb:catseye/robin
-bb:catseye/rooibos
 bb:catseye/rube
 bb:catseye/rube-ii
 bb:catseye/sally
