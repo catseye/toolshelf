@@ -20,7 +20,8 @@
 pypi.python.org/*/atomize-0.*
   python_modules src2/atomize.py
 
-pypi.python.org/*/PyYAML-3.*
+# can come from pypi.python.org or pyyaml.org
+*/*/PyYAML-3.*
   python_modules lib/yaml
 
 # just running "make" will try to install stuff to /usr/local.  sigh
