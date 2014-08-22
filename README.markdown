@@ -86,9 +86,11 @@ Quick Start
     
 *   Run:
     
-        . ./bootstrap-toolshelf.sh
+        sh ./bootstrap-toolshelf.sh
     
 *   Follow the instructions given to you by the script.
+
+*   Start a new shell to start using `toolshelf`.
 
 [`bootstrap-toolshelf.sh`]: https://raw.github.com/catseye/toolshelf/master/bootstrap-toolshelf.sh
 

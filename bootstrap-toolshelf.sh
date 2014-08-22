@@ -24,8 +24,8 @@
 # first time, intended to be `source`d.
 
 # We structure this script as one big function (for now), so that we can
-# prematurely stop (we can't do this by calling `exit`, because this script
-# is being `source`d, and that would terminate the user's shell.)
+# prematurely stop (we can't do this by calling `exit`, because if this script
+# is being `source`d, that would terminate the user's shell.)
 
 # TODO: refactor this one function into smaller, more useful functions
 
@@ -58,12 +58,12 @@ bootstrap_toolshelf() {
         echo "***NOTE: You do not appear to have a shell profile file"
         echo "(couldn't find ~/.bashrc, nor ~/.bash_profile, nor ~/.profile.)"
         echo
-        echo "This script (and toolshelf generally) assumes you are"
-        echo "using a POSIX-shell-based shell, such as bash or dash,"
-        echo "as your current interactive shell."
+        echo "This script assumes you are using a POSIX-like"
+        echo "(Bourne-shell based) shell, such as bash or dash,"
+        echo "as your interactive shell.  Some feature of toolshelf"
+        echo "assume this too, so this is the recommended configuration."
         echo
-        echo "Please rectify this situation if you wish to use"
-        echo "toolshelf, then re-source this script."
+        echo "Please switch to such a shell if you wish to run this script."
         echo
         OK=0
     fi
@@ -172,11 +172,7 @@ bootstrap_toolshelf() {
         mv ${NEWFILE} ${SHELL_PROFILE}
         echo "Done."
         echo
-        echo "For your convenience, we'll also apply these startup commands"
-        echo "right now.  If you 'source'd this script like the instructions"
-        echo "told you to, you'll be able to start using toolshelf right"
-        echo "away.  If, instead, you started it using 'sh' or 'bash' or similar,"
-        echo "you'll have to start a new shell to start using toolshelf."
+        echo "You may now start a new shell to begin using toolshelf."
 
         . $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF
     else
