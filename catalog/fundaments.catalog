@@ -15,7 +15,8 @@ http://www.nano-editor.org/dist/v2.2/nano-2.2.6.tar.gz       #U
 
 http://ftp.gnu.org/gnu/make/make-3.81.tar.gz                 #U
 
-bb:catseye/tree
+gh:cpressey/tree
+gh:cpressey/head
 bb:catseye/realpath
 http://ftp.gnu.org/gnu/patch/patch-2.7.1.tar.gz              #U
 http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz
@@ -35,3 +36,7 @@ http://ftp.gnu.org/gnu/bison/bison-2.7.1.tar.gz
 
 # requires g++
 http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz
+
+# git repo requires autoconf, distfile doesn't
+# gh:fragglet/lhasa
+https://soulsphere.org/projects/lhasa/lhasa-0.2.0.tar.gz
