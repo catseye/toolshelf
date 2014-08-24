@@ -39,9 +39,6 @@ http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.32
 # ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.0.28.tar.bz2
 http://downloads.sourceforge.net/project/vice-emu/releases/vice-2.4.tar.gz
 
-### Bochs
-http://sourceforge.net/projects/bochs/files/bochs/2.6.5/bochs-2.6.5.tar.gz
-
 ### DOSBox, including SDL 1.2 libraries
 # note, you should install SDL via system, not with toolshelf.
 # http://www.libsdl.org/release/SDL-1.2.15.tar.gz

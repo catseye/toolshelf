@@ -119,8 +119,7 @@ github.com/*/Ophis
 */*/qemu-1.*
   build_command ./configure --target-list=i386-linux-user,i386-softmmu --with-system-pixman --enable-curses --prefix=`pwd`/install && make
 
-*/*/bochs-2.6.2
-  rectify_permissions yes
+*/*/bochs-2.6.*
   exclude_paths doc build bx_debug bios
 
 */*/vice-2.4
