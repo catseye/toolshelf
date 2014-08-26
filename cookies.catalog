@@ -44,8 +44,11 @@ github.com/django/django
 
 ### Lua
 
-github.com/moteus/lua-path
-  exclude_paths test
+github.com/stevedonovan/Penlight
+  lua_modules lua/pl
+
+github.com/keplerproject/xavante
+  exclude_paths examples
 
 ### Infra
 

@@ -119,6 +119,7 @@ UNINTERESTING_EXECUTABLES = (
     '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     '(test(-driver)?|testme|runtests)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    'bench(\.sh|\.csh)',
     # autoconf and automake and libtool stuff
     'config\.status', 'config\.sub', 'config\.guess', 'config\.rpath',
     'missing', 'mkinstalldirs', 'install-sh',
@@ -126,6 +127,8 @@ UNINTERESTING_EXECUTABLES = (
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
     # perl seems to like these
     'regen',
+    # lua projects do this often enough -- note, not actually executable :/
+    'test\.lua',
     # seems to be a debian package thing
     'rules',
     # django...
@@ -148,7 +151,7 @@ UNINTERESTING_EXECUTABLES = (
 )
 
 UNINTERESTING_PATHS = (
-    'tests', 'dep', 'deps'
+    'test', 'tests', 'dep', 'deps'
 )
 
 HINT_NAMES = (
@@ -161,6 +164,7 @@ HINT_NAMES = (
     'require_executables',
     'interesting_executables',
     'python_modules',
+    'lua_modules',
     'include_dirs',  # defaults to '/install/include' if it exists
 )
 
@@ -624,8 +628,15 @@ class Source(object):
 
         self.shelf.link_farms['lua'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
-            for filename in self.linkable_files(is_lua_module):
-                self.shelf.link_farms['lua'].create_link(filename)
+            lua_modules = self.hints.get('lua_modules')
+            if lua_modules is not None:
+                for filename in lua_modules.split(' '):
+                    self.shelf.link_farms['lua'].create_link(filename)
+            else:
+                for filename in self.linkable_files(is_lua_module):
+                    if not self.is_interesting(filename):
+                        continue
+                    self.shelf.link_farms['lua'].create_link(filename)
 
         self.shelf.link_farms['pkgconfig'].clean(prefix=self.dir)
         if self not in self.shelf.blacklist:
