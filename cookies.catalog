@@ -38,6 +38,15 @@ pypi.python.org/*/mock-1.*
 github.com/django/django
   python_modules django
 
+*/*/pypy-2.*
+  build_command make && ln -s ../../pypy-c rpython/bin/pypy
+  exclude_paths ctypes_configure dotviewer include lib_pypy lib-python py pypy _pytest site-packages testrunner
+
+### Lua
+
+github.com/moteus/lua-path
+  exclude_paths test
+
 ### Infra
 
 */*/bison-2.*

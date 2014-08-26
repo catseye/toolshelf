@@ -1,4 +1,5 @@
 # Some handy packages on PyPi that can be installed using toolshelf.
+# Some of these do not come from PyPi, and this should be refactored.
 
 #https://pypi.python.org/packages/source/i/ipython/ipython-2.1.0.tar.gz
 https://pypi.python.org/packages/source/g/grin/grin-1.2.1.tar.gz
@@ -19,3 +20,8 @@ https://pypi.python.org/packages/source/a/atomize/atomize-0.2.0.tar.gz
 
 gh:django/django@1.6.4
 gh:rthalley/dnspython@v1.11.1
+
+# mainly for RPython.  Well, only for RPython, really.
+# Will require (on Ubuntu) libssl-dev and libbz2-dev to build.
+
+https://bitbucket.org/pypy/pypy/downloads/pypy-2.3.1-src.tar.bz2
