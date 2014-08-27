@@ -72,9 +72,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Will also report any broken links and may, in the future, list any
         executables it shadows or is shadowed by.
 
-    pwd <docked-source-spec>
-        Emit the name of the directory of the docked source (or exit with an
-        error if there is no such source docked.)
+    resolve {<docked-source-spec>}
+        Emit the names of the directories of the docked sources.
 
     rectify {<docked-source-spec>}
         Traverses the file trees of the given docked source and modifies the
@@ -1062,9 +1061,12 @@ class Toolshelf(object):
     def expand_docked_specs(self, specs):
         """Convert a list of docked source specifiers into a list of
         expanded source specifiers.
-        
+
         If any single docked source specificer does not resolve to
         any expanded source specifiers, an error is raised.
+
+        If the option `unique` is given, an error is raised if the
+        specs do not resolve to exactly one source.
 
         """
         if not specs:
@@ -1079,6 +1081,12 @@ class Toolshelf(object):
             new_specs.extend(additional_specs)
 
         self.debug('Resolved source specs to %r' % new_specs)
+        if self.options.unique and len(new_specs) != 1:
+            raise SourceSpecError(
+                "Could not resolve %s to a single unique source (%s)" % (
+                    specs, new_specs
+                )
+            )
         return new_specs
 
     def make_source_from_spec(self, name):
@@ -1351,19 +1359,6 @@ class Toolshelf(object):
             source.status()
         self.foreach_specced_source(self.expand_docked_specs(args), status_it)
 
-    def pwd(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        if len(sources) != 1:
-            raise SourceSpecError(
-                "Could not resolve %s to a single unique source (%s)" % (
-                    args, [s.dir for s in sources]
-                )
-            )
-        if not os.path.isdir(sources[0].dir):
-            raise SourceSpecError("%s not docked" % sources[0].dir)
-        print sources[0].dir
-
     def rectify(self, args):
         def rectify_it(source):
             source.rectify_executable_permissions()
@@ -1433,6 +1428,10 @@ def main(args):
                       default=None, metavar='USERNAME',
                       help="username to login with when using the "
                            "Github or Bitbucket APIs")
+    parser.add_option("--unique", dest="unique",
+                      default=False, action="store_true",
+                      help="abort if given specs do not resolve to "
+                           "exactly one source")
     parser.add_option("-q", "--quiet", dest="quiet",
                       default=False, action="store_true",
                       help="suppress output of warning messages")
