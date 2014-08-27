@@ -72,9 +72,8 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
         Will also report any broken links and may, in the future, list any
         executables it shadows or is shadowed by.
 
-    pwd <docked-source-spec>
-        Emit the name of the directory of the docked source (or exit with an
-        error if there is no such source docked.)
+    resolve {<docked-source-spec>}
+        Emit the names of the directories of the docked sources.
 
     rectify {<docked-source-spec>}
         Traverses the file trees of the given docked source and modifies the
@@ -267,18 +266,19 @@ class Cookies(object):
                     continue
                 found_hint = False
                 for hint_name in HINT_NAMES:
-                    pattern = r'^%s\s+(.*?)\s*$' % hint_name
+                    pattern = r'^%s(@\w+)?\s+(.*?)\s*$' % hint_name
                     match = re.match(pattern, line)
                     if match:
                         if spec_key is None:
                             raise SourceSpecError(
                                 'Found hint %s before any spec' % hint_name
                             )
-                        hint_value = match.group(1)
+                        arch_hint_name = hint_name + (match.group(1) or '')
+                        hint_value = match.group(2)
                         self.shelf.debug("Adding hint '%s %s' to %s" %
-                            (hint_name, hint_value, spec_key)
+                            (arch_hint_name, hint_value, spec_key)
                         )
-                        hint_map[spec_key][hint_name] = hint_value
+                        hint_map[spec_key][arch_hint_name] = hint_value
                         if (hint_name == 'rectify_permissions' and
                             hint_value not in ('yes', 'no')):
                             raise ValueError(
@@ -552,7 +552,9 @@ class Source(object):
         self.shelf.note("Building %s..." % self.dir)
 
         self.shelf.chdir(self.dir)
-        build_command = self.hints.get('build_command', None)
+        build_command = self.hints.get('build_command@' + self.shelf.uname, None)
+        if not build_command:
+            build_command = self.hints.get('build_command', None)
         if build_command:
             self.shelf.run(build_command, shell=True)
         elif os.path.isfile('build.sh'):
@@ -849,8 +851,9 @@ class Source(object):
 
 
 class Toolshelf(object):
-    def __init__(self, directory=None, cwd=None, options=None, cookies=None,
-                       blacklist=None, link_farms=None, errors=None):
+    def __init__(self, directory=None, uname=None, cwd=None, options=None,
+                       cookies=None, blacklist=None, link_farms=None,
+                       errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -866,6 +869,10 @@ class Toolshelf(object):
                 build = True
             options = DefaultOptions()
         self.options = options
+
+        if uname is None:
+            uname = self.get_it('uname').strip()
+        self.uname = uname
 
         if link_farms is None:
             link_farms = {}
@@ -1054,9 +1061,12 @@ class Toolshelf(object):
     def expand_docked_specs(self, specs):
         """Convert a list of docked source specifiers into a list of
         expanded source specifiers.
-        
+
         If any single docked source specificer does not resolve to
         any expanded source specifiers, an error is raised.
+
+        If the option `unique` is given, an error is raised if the
+        specs do not resolve to exactly one source.
 
         """
         if not specs:
@@ -1071,6 +1081,12 @@ class Toolshelf(object):
             new_specs.extend(additional_specs)
 
         self.debug('Resolved source specs to %r' % new_specs)
+        if self.options.unique and len(new_specs) != 1:
+            raise SourceSpecError(
+                "Could not resolve %s to a single unique source (%s)" % (
+                    specs, new_specs
+                )
+            )
         return new_specs
 
     def make_source_from_spec(self, name):
@@ -1343,19 +1359,6 @@ class Toolshelf(object):
             source.status()
         self.foreach_specced_source(self.expand_docked_specs(args), status_it)
 
-    def pwd(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        if len(sources) != 1:
-            raise SourceSpecError(
-                "Could not resolve %s to a single unique source (%s)" % (
-                    args, [s.dir for s in sources]
-                )
-            )
-        if not os.path.isdir(sources[0].dir):
-            raise SourceSpecError("%s not docked" % sources[0].dir)
-        print sources[0].dir
-
     def rectify(self, args):
         def rectify_it(source):
             source.rectify_executable_permissions()
@@ -1425,6 +1428,10 @@ def main(args):
                       default=None, metavar='USERNAME',
                       help="username to login with when using the "
                            "Github or Bitbucket APIs")
+    parser.add_option("--unique", dest="unique",
+                      default=False, action="store_true",
+                      help="abort if given specs do not resolve to "
+                           "exactly one source")
     parser.add_option("-q", "--quiet", dest="quiet",
                       default=False, action="store_true",
                       help="suppress output of warning messages")
