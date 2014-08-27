@@ -1,6 +1,9 @@
 ### Frotz and Inform
 http://sourceforge.net/projects/frotz/files/frotz/2.43/frotz-2.43d.tar.gz
-http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.32.1.tar.gz
+gh:DavidGriffith/frotz
+
+http://www.ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.33.1-b2.tar.gz
+gh:DavidKinder/Inform6
 
 ### VICE
 
