@@ -140,9 +140,6 @@ github.com/*/Ophis
 */*/vice-2.4
   build_command ./configure --enable-sdlui --without-x --disable-gnomeui --with-sdlsound --prefix=`pwd` && make && make install && ln -s lib64 lib
 
-*/timob/linapple
-  build_command cd src && env CPLUS_INCLUDE_PATH=$C_INCLUDE_PATH make
-
 ### Experimental/Github stuff
 
 */kulp/tenyr

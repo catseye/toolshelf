@@ -193,7 +193,7 @@ def is_executable(filename):
 
 
 def is_shared_object(filename):
-    match = re.match('^.*?\.so$', filename)
+    match = re.match('^.*?\.so(\.\d+)?$', filename)
     return ((os.path.isfile(filename) or os.path.islink(filename)) and match)
 
 
