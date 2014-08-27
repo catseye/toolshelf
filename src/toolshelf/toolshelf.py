@@ -267,18 +267,19 @@ class Cookies(object):
                     continue
                 found_hint = False
                 for hint_name in HINT_NAMES:
-                    pattern = r'^%s\s+(.*?)\s*$' % hint_name
+                    pattern = r'^%s(@\w+)?\s+(.*?)\s*$' % hint_name
                     match = re.match(pattern, line)
                     if match:
                         if spec_key is None:
                             raise SourceSpecError(
                                 'Found hint %s before any spec' % hint_name
                             )
-                        hint_value = match.group(1)
+                        arch_hint_name = hint_name + (match.group(1) or '')
+                        hint_value = match.group(2)
                         self.shelf.debug("Adding hint '%s %s' to %s" %
-                            (hint_name, hint_value, spec_key)
+                            (arch_hint_name, hint_value, spec_key)
                         )
-                        hint_map[spec_key][hint_name] = hint_value
+                        hint_map[spec_key][arch_hint_name] = hint_value
                         if (hint_name == 'rectify_permissions' and
                             hint_value not in ('yes', 'no')):
                             raise ValueError(
@@ -552,7 +553,9 @@ class Source(object):
         self.shelf.note("Building %s..." % self.dir)
 
         self.shelf.chdir(self.dir)
-        build_command = self.hints.get('build_command', None)
+        build_command = self.hints.get('build_command@' + self.shelf.uname, None)
+        if not build_command:
+            build_command = self.hints.get('build_command', None)
         if build_command:
             self.shelf.run(build_command, shell=True)
         elif os.path.isfile('build.sh'):
@@ -849,8 +852,9 @@ class Source(object):
 
 
 class Toolshelf(object):
-    def __init__(self, directory=None, cwd=None, options=None, cookies=None,
-                       blacklist=None, link_farms=None, errors=None):
+    def __init__(self, directory=None, uname=None, cwd=None, options=None,
+                       cookies=None, blacklist=None, link_farms=None,
+                       errors=None):
         if directory is None:
             directory = os.environ.get('TOOLSHELF')
         self.dir = directory
@@ -866,6 +870,10 @@ class Toolshelf(object):
                 build = True
             options = DefaultOptions()
         self.options = options
+
+        if uname is None:
+            uname = self.get_it('uname').strip()
+        self.uname = uname
 
         if link_farms is None:
             link_farms = {}
