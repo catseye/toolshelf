@@ -200,13 +200,6 @@ Limitations of `toolshelf`
     in theory that prevents you from docking a tarball containing a pre-built
     executable.  But it's really designed for source distributions.)
 
-*   Support for docking the same source under multiple operating systems is
-    not so hot.  I'll rant about this sometime.  It usually falls under
-    writing the build system in a reasonable manner; requiring you to
-    run `make linux` on a Linux system but `make bsd` on a FreeBSD system,
-    is actually not entirely reasonable.  (I'm thinking of Lua and CHICKEN
-    Scheme here.)
-    
 *   Making software available to multiple users on the system *is* a valid
     use case for installing it to a common directory like `/usr/bin`.  So if
     you do want to expose the same software to multiple users, that may be

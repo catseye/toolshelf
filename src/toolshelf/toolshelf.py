@@ -110,7 +110,7 @@ __all__ = ['Toolshelf']
 ### Constants
 
 UNINTERESTING_EXECUTABLES = (
-    '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css)',
+    '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css|\.info)',
     '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf|\.ttf|\.xpm)',
     '.*?(\.so|\.pbxproj|\.c|\.cpp|\.h|\.java|\.strings)',
     '(make|build|compile|clean|install|uninstall)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
@@ -124,6 +124,7 @@ UNINTERESTING_EXECUTABLES = (
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
+    'bootstrap', 'mdate-sh',
     # perl seems to like these
     'regen',
     # lua projects do this often enough -- note, not actually executable :/
@@ -192,7 +193,7 @@ def is_executable(filename):
 
 
 def is_shared_object(filename):
-    match = re.match('^.*?\.so$', filename)
+    match = re.match('^.*?\.so(\.\d+)?$', filename)
     return ((os.path.isfile(filename) or os.path.islink(filename)) and match)
 
 

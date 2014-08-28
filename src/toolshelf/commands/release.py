@@ -1,39 +1,59 @@
 import os
 import re
 
+def match_tag(distro, tag):
+    match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
+    if match:
+        v_maj = match.group(1)
+        v_min = match.group(2)
+        r_maj = match.group(3)
+        r_min = match.group(4)
+        filename = '%s-%s.%s-%s.%s.zip' % (
+            distro, v_maj, v_min, r_maj, r_min
+        )
+        return (v_maj, v_min, r_maj, r_min, filename)
+
+    match = re.match(r'^rel_(\d+)_(\d+)$', tag)
+    if match:
+        v_maj = match.group(1)
+        v_min = match.group(2)
+        filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
+        return (v_maj, v_min, "0", "0", filename)
+
+    match = re.match(r'^v?(\d+)\.(\d+)\-(\d+)\.(\d+)$', tag)
+    if match:
+        v_maj = match.group(1)
+        v_min = match.group(2)
+        r_maj = match.group(3)
+        r_min = match.group(4)
+        filename = '%s-%s.%s-%s.%s.zip' % (
+            distro, v_maj, v_min, r_maj, r_min
+        )
+        return (v_maj, v_min, r_maj, r_min, filename)
+
+    match = re.match(r'^v?(\d+)\.(\d+)$', tag)
+    if match:
+        v_maj = match.group(1)
+        v_min = match.group(2)
+        filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
+        return (v_maj, v_min, "0", "0", filename)
+
+    raise ValueError("Not a release tag that I understand: %s" % tag)
+
+
 def release(shelf, args):
     """Create a distfile from the latest tag in a local version-controlled
     source tree.
     
     """
     def release_it(source):
-        distro = source.project
         tag = source.get_latest_release_tag()
         if not tag:
             raise SystemError("Repository not tagged")
         diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % tag)
         if diff and not shelf.options.force:
             raise SystemError("There are changes to mainline since latest tag")
-
-        match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
-        if match:
-            v_maj = match.group(1)
-            v_min = match.group(2)
-            r_maj = match.group(3)
-            r_min = match.group(4)
-            filename = '%s-%s.%s-%s.%s.zip' % (
-                distro, v_maj, v_min, r_maj, r_min
-            )
-        else:
-            match = re.match(r'^rel_(\d+)_(\d+)$', tag)
-            if match:
-                v_maj = match.group(1)
-                v_min = match.group(2)
-                r_maj = "0"
-                r_min = "0"
-                filename = '%s-%s.%s.zip' % (distro, v_maj, v_min)
-            else:
-                raise ValueError("Not a release tag that I understand: %s" % tag)
+        (v_maj, v_min, r_maj, r_min, filename) = match_tag(source.project, tag)
         print """\
   - version: "%s.%s"
     revision: "%s.%s"
