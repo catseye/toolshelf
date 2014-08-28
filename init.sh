@@ -25,7 +25,8 @@ export C_INCLUDE_PATH="$TOOLSHELF/.include:$C_INCLUDE_PATH"
 export CPLUS_INCLUDE_PATH="$TOOLSHELF/.include:$CPLUS_INCLUDE_PATH"
 export PYTHONPATH="$TOOLSHELF/.python:$PYTHONPATH"
 export PKG_CONFIG_PATH="$TOOLSHELF/.pkgconfig:$PKG_CONFIG_PATH"
-export LUA_PATH="$TOOLSHELF/.lua/?.lua;$TOOLSHELF/.lib/?.so;$LUA_PATH"
+export LUA_PATH="$TOOLSHELF/.lua/?.lua;$LUA_PATH"
+export LUA_CPATH="$TOOLSHELF/.lib/?.so;$LUA_CPATH"
 
 toolshelf() {
   if [ x$1 = xcd ]; then
