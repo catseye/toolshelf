@@ -20,8 +20,3 @@ https://pypi.python.org/packages/source/a/atomize/atomize-0.2.0.tar.gz
 
 gh:django/django@1.6.4
 gh:rthalley/dnspython@v1.11.1
-
-# mainly for RPython.  Well, only for RPython, really.
-# Will require (on Ubuntu) libssl-dev and libbz2-dev to build.
-
-https://bitbucket.org/pypy/pypy/downloads/pypy-2.3.1-src.tar.bz2
