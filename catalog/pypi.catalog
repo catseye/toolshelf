@@ -20,3 +20,7 @@ https://pypi.python.org/packages/source/a/atomize/atomize-0.2.0.tar.gz
 
 gh:django/django@1.6.4
 gh:rthalley/dnspython@v1.11.1
+
+# this one does not create the "console script" for you.  it would be nice if
+# toolshelf could parse the package's setup.py and do that.  hahaha.
+gh:mher/flower@v0.7.1

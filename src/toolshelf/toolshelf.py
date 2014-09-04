@@ -215,6 +215,9 @@ def is_pkgconfig_data(filename):
 
 
 def is_python_package(filename):
+    # maybe this first test should be Python-specific one day
+    if os.path.basename(filename) in UNINTERESTING_PATHS:
+        return False
     if not os.path.isdir(filename):
         return False
     if os.path.isfile(os.path.join(filename, '__init__.py')):
@@ -701,7 +704,7 @@ class Source(object):
             )
 
     def may_use_path(self, dirname):
-        exclude_paths = [p for p in UNINTERESTING_PATHS]        
+        exclude_paths = [p for p in UNINTERESTING_PATHS]
         exclude_paths_hint = self.hints.get('exclude_paths', None)
         if exclude_paths_hint:
             exclude_paths.extend(exclude_paths_hint.split(' '))
