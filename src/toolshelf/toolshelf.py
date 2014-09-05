@@ -1387,21 +1387,6 @@ class Toolshelf(object):
             self.blacklist.remove(source)
         self.relink(args)
 
-    def show(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        for source in sources:
-            # TODO: colourize the output for which are exes, which are dirs
-            for (link_farm_name, link_farm) in self.link_farms.iteritems():
-                for (linkname, filename) in link_farm.links():
-                    if filename.startswith(source.dir):
-                        showname = filename.replace(self.dir, '$TOOLSHELF')
-                        print "%s -> %s" % (os.path.basename(linkname), showname)
-                        if link_farm is self.link_farms['bin']:
-                            if (not os.path.isfile(filename) or
-                                not os.access(filename, os.X_OK)):
-                                print "BROKEN: %s is not an executable file" % filename
-
 
 def main(args):
     parser = optparse.OptionParser(__doc__)
