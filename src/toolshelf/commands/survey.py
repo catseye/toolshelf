@@ -8,11 +8,6 @@ def survey(shelf, args):
     def survey_it(source):
         print source.name
         dirty = shelf.get_it("hg st")
-        outgoing = ''
-        #if hg_outgoing:
-        #    outgoing = shelf.get_it("hg out")
-        #if 'no changes found' in outgoing:
-        #    outgoing = ''
         tags = {}
         latest_tag = source.get_latest_release_tag(tags)
         due = ''
@@ -29,7 +24,7 @@ def survey(shelf, args):
                      latest_tag, tags[latest_tag])
         repos[source.name] = {
             'dirty': dirty,
-            'outgoing': outgoing,
+            'outgoing': '',
             'tags': tags,
             'latest_tag': latest_tag,
             'due': due,
