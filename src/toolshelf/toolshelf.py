@@ -851,6 +851,29 @@ class Source(object):
                         break
 
 
+class Command(object):
+    """Base class for toolshelf commands.  Mostly abstract.
+
+    """
+    def setup(self):
+        """Called before any Sources have been processed."""
+        pass
+
+    def perform(self, source):
+        """Performs the command on the given Source.
+
+        Typically this will be called for all the sources to which the
+        given specs resolved.
+
+        This should be implemented by all concrete subclasses.
+        """
+        raise NotImplementedError
+
+    def teardown(self):
+        """Called after all Sources have been processed."""
+        pass
+
+
 ### Toolshelf object (Environment and intrinsic subcommands)
 
 
