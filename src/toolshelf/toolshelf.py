@@ -867,7 +867,7 @@ class BaseCommand(object):
         the command does not operate on Sources.
         
         """
-        specs = shelf.expand_docked_specs(specs)
+        specs = shelf.expand_docked_specs(args)
         sources = shelf.make_sources_from_specs(specs)
         return sources
 
@@ -1327,7 +1327,7 @@ class Toolshelf(object):
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
 
-    def _run_command_func(self, func, args):
+    def _run_command_func(self, subcommand, func, args):
         if func is not None:
             try:
                 func(args)
@@ -1374,45 +1374,9 @@ class Toolshelf(object):
                 cmd = lambda args: getattr(module, subcommand, None)(self, args)
         except ImportError:
             cmd = getattr(self, subcommand, None)
-        return self._run_command_func(cmd, new_args)
+        return self._run_command_func(subcommand, cmd, new_args)
 
     ### intrinsic subcommands ###
-
-    def dock(self, args):
-        def dock_it(source):
-            if source.docked:
-                print "%s already docked." % source.name
-            else:
-                require_executables = source.hints.get(
-                    'require_executables', None
-                )
-                if require_executables:
-                    p = Path()
-                    for executable in require_executables.split(' '):
-                        if not p.which(executable):
-                            raise DependencyError(
-                                '%s requires `%s` not found on search path' %
-                                (source.name, executable)
-                            )
-                source.checkout()
-                source.rectify_permissions_if_needed()
-                source.build()
-                source.relink()
-        self.foreach_specced_source(args, dock_it)
-
-    def tether(self, args):
-        def tether_it(source):
-            if source.docked:
-                print "%s already docked." % source.name
-            else:
-                source.checkout()
-        self.foreach_specced_source(args, tether_it)
-
-    def build(self, args):
-        def build_it(source):
-            source.build()
-            source.relink()
-        self.foreach_specced_source(self.expand_docked_specs(args), build_it)
 
     def update(self, args):
         def update_it(source):
@@ -1431,11 +1395,6 @@ class Toolshelf(object):
         def status_it(source):
             source.status()
         self.foreach_specced_source(self.expand_docked_specs(args), status_it)
-
-    def rectify(self, args):
-        def rectify_it(source):
-            source.rectify_executable_permissions()
-        self.foreach_specced_source(self.expand_docked_specs(args), rectify_it)
 
     def relink(self, args):
         def relink_it(source):
