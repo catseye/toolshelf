@@ -1,9 +1,7 @@
 import os
 
-def resolve(shelf, args):
-    def resolve_it(source):
-        print source.dir
+from toolshelf.toolshelf import BaseCommand
 
-    shelf.foreach_specced_source(
-        shelf.expand_docked_specs(args), resolve_it
-    )
+class Command(BaseCommand):
+    def perform(self, shelf, source):
+        print source.dir
