@@ -103,6 +103,12 @@ import re
 import subprocess
 import sys
 
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(x):
+        return x
+
 
 __all__ = ['Toolshelf']
 
@@ -855,6 +861,16 @@ class BaseCommand(object):
     """Base class for toolshelf commands.  Mostly abstract.
 
     """
+    def process_args(self, shelf, args):
+        """Called to convert command-line arguments to Sources.
+        Should return a list of Sources, which may be empty, if
+        the command does not operate on Sources.
+        
+        """
+        specs = shelf.expand_docked_specs(specs)
+        sources = shelf.make_sources_from_specs(specs)
+        return sources
+
     def setup(self, shelf):
         """Called before any Sources have been processed."""
         pass
@@ -874,15 +890,14 @@ class BaseCommand(object):
         """Called after all Sources have been processed."""
         pass
 
-    def execute(self, shelf, specs):
+    def execute(self, shelf, args):
         """This is just provisional.  We'll actually run more than one
         Command at once...
 
         """
+        sources = self.process_args(shelf, args)
         self.setup(shelf)
-        shelf.foreach_specced_source(
-            shelf.expand_docked_specs(specs), lambda s: self.perform(shelf, s)
-        )
+        shelf.foreach_source(sources, lambda s: self.perform(shelf, s))
         self.teardown(shelf)
 
 
@@ -1297,11 +1312,9 @@ class Toolshelf(object):
 
         """
         sources = self.make_sources_from_specs(specs)
-        try:
-            from tqdm import tqdm
-        except ImportError:
-            def tqdm(x):
-                return x
+        return self.foreach_source(sources, fun)
+
+    def foreach_source(self, sources, fun):
         for source in tqdm(sources):
             if os.path.isdir(source.dir):
                 self.chdir(source.dir)

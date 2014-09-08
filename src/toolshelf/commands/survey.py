@@ -1,13 +1,14 @@
-# FIXME convert
+from toolshelf.toolshelf import BaseCommand
 
-def survey(shelf, args):
+class Command(BaseCommand):
     """Generates a report summarizing various properties of the docked
     source trees.  Sort of a "deep status".
 
     """
-    repos = {}
+    def setup(self, shelf):
+        self.repos = {}
 
-    def survey_it(source):
+    def perform(self, shelf, source):
         print source.name
         dirty = shelf.get_it("hg st")
         tags = {}
@@ -24,7 +25,7 @@ def survey(shelf, args):
                 due = "%d changesets (tip=%d, %s=%d)" % \
                     ((tags['tip'] - tags[latest_tag]), tags['tip'],
                      latest_tag, tags[latest_tag])
-        repos[source.name] = {
+        self.repos[source.name] = {
             'dirty': dirty,
             'outgoing': '',
             'tags': tags,
@@ -33,20 +34,18 @@ def survey(shelf, args):
             'diff': diff,
         }
 
-    shelf.foreach_specced_source(
-        shelf.expand_docked_specs(args), survey_it
-    )
-
-    print '-----'
-    for repo in sorted(repos.keys()):
-        r = repos[repo]
-        if r['dirty'] or r['outgoing'] or r['due']:
-            print repo
-            if r['dirty']:
-                print r['dirty']
-            if r['outgoing']:
-                print r['outgoing']
-            if r['due']:
-                print "  DUE:", r['due']
-            print
-    print '-----'
+    def teardown(self, shelf):
+        repos = self.repos
+        print '-----'
+        for repo in sorted(repos.keys()):
+            r = repos[repo]
+            if r['dirty'] or r['outgoing'] or r['due']:
+                print repo
+                if r['dirty']:
+                    print r['dirty']
+                if r['outgoing']:
+                    print r['outgoing']
+                if r['due']:
+                    print "  DUE:", r['due']
+                print
+        print '-----'
