@@ -1,5 +1,7 @@
 import os
 
+# FIXME will require special handling in BaseCommand
+
 def cleanfarms(shelf, args):
     for (name, farm) in shelf.link_farms.iteritems():
         for (linkname, sourcename) in farm.links():

@@ -3,6 +3,8 @@ import getpass
 # pip install --user bitbucket-api
 from bitbucket.bitbucket import Bitbucket
 
+# FIXME will require special handling in BaseCommand
+
 def bbuser(shelf, args):
     # this only works for the logged-in user.  It would be great if...
     # yeah.

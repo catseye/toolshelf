@@ -1,5 +1,7 @@
 import os
 
+# FIXME will require special handling in BaseCommand
+
 def which(shelf, args):
     for farm in shelf.link_farms:
         for arg in args:

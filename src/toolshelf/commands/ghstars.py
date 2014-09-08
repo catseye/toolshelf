@@ -3,6 +3,8 @@ import re
 import getpass
 import requests
 
+# FIXME will require special handling in BaseCommand
+
 def ghstars(shelf, args):
     user = args[0]
     auth = None

@@ -1,6 +1,8 @@
 import os
 import re
 
+from toolshelf.toolshelf import BaseCommand
+
 def match_tag(distro, tag):
     match = re.match(r'^rel_(\d+)_(\d+)_(\d+)_(\d+)$', tag)
     if match:
@@ -41,12 +43,12 @@ def match_tag(distro, tag):
     raise ValueError("Not a release tag that I understand: %s" % tag)
 
 
-def release(shelf, args):
+class Command(BaseCommand):
     """Create a distfile from the latest tag in a local version-controlled
     source tree.
-    
+
     """
-    def release_it(source):
+    def perform(self, shelf, source):
         tag = source.get_latest_release_tag()
         if not tag:
             raise SystemError("Repository not tagged")
@@ -71,7 +73,3 @@ def release(shelf, args):
         command.append(full_filename)
         shelf.run(*command)
         shelf.run('unzip', '-v', full_filename)
-
-    shelf.foreach_specced_source(
-        shelf.expand_docked_specs(args), release_it
-    )

@@ -2,6 +2,8 @@ import os
 import subprocess
 import sys
 
+# FIXME convert
+
 def test(shelf, args):
     stats = {
         'sources': 0,

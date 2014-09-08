@@ -1,3 +1,5 @@
+# FIXME convert
+
 def survey(shelf, args):
     """Generates a report summarizing various properties of the docked
     source trees.  Sort of a "deep status".

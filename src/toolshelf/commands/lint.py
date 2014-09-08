@@ -1,29 +1,32 @@
 import os
 
-def lint(shelf, args):
+from toolshelf.toolshelf import BaseCommand
+
+OK_ROOT_FILES = (
+    'LICENSE', 'UNLICENSE',
+    'README.markdown', 'TODO.markdown', 'HISTORY.markdown',
+    'test.sh', 'clean.sh',
+    'make.sh', 'make-cygwin.sh', 'Makefile',
+    '.hgtags', '.hgignore', '.gitignore',
+)
+OK_ROOT_DIRS = (
+    'bin', 'contrib', 'demo', 'dialect',
+    'disk', 'doc', 'ebin', 'eg', 'images',
+    'impl', 'lib', 'priv', 'script',
+    'src', 'tests',
+    '.hg',
+)
+
+class Command(BaseCommand):
     """Check that the layouts of distributions conform to some
     distribution organization guidelines.  If these are not guidelines that
     you use, you can take this with a grain of salt.
 
     """
-    problems = {}
+    def setup(self, shelf):
+        self.problems = {}
 
-    OK_ROOT_FILES = (
-        'LICENSE', 'UNLICENSE',
-        'README.markdown', 'TODO.markdown', 'HISTORY.markdown',
-        'test.sh', 'clean.sh',
-        'make.sh', 'make-cygwin.sh', 'Makefile',
-        '.hgtags', '.hgignore', '.gitignore',
-    )
-    OK_ROOT_DIRS = (
-        'bin', 'contrib', 'demo', 'dialect',
-        'disk', 'doc', 'ebin', 'eg', 'images',
-        'impl', 'lib', 'priv', 'script',
-        'src', 'tests',
-        '.hg',
-    )
-
-    def lint_it(source):
+    def perform(self, shelf, source):
         prob = []
         if not os.path.exists('README.markdown'):
             prob.append("No README.markdown")
@@ -55,21 +58,18 @@ def lint(shelf, args):
                     )
         problems[source.dir] = prob
 
-    shelf.foreach_specced_source(
-        shelf.expand_docked_specs(args), lint_it
-    )
-
-    problematic_count = 0
-    for d in sorted(problems.keys()):
-        if not problems[d]:
-            continue
-        print d
-        print '-' * len(d)
-        print
-        for problem in problems[d]:
-            print "* %s" % problem
-        print
-        problematic_count += 1
+    def teardown(self, shelf):
+        problematic_count = 0
+        for d in sorted(self.problems.keys()):
+            if not problems[d]:
+                continue
+            print d
+            print '-' * len(d)
+            print
+            for problem in self.problems[d]:
+                print "* %s" % problem
+            print
+            problematic_count += 1
 
     #print "Linted %d clones, problems in %d of them." % (
     #    count, problematic_count
