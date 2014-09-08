@@ -851,27 +851,39 @@ class Source(object):
                         break
 
 
-class Command(object):
+class BaseCommand(object):
     """Base class for toolshelf commands.  Mostly abstract.
 
     """
-    def setup(self):
+    def setup(self, shelf):
         """Called before any Sources have been processed."""
         pass
 
-    def perform(self, source):
+    def perform(self, shelf, source):
         """Performs the command on the given Source.
 
         Typically this will be called for all the sources to which the
         given specs resolved.
 
         This should be implemented by all concrete subclasses.
+
         """
         raise NotImplementedError
 
-    def teardown(self):
+    def teardown(self, shelf):
         """Called after all Sources have been processed."""
         pass
+
+    def execute(self, shelf, specs):
+        """This is just provisional.  We'll actually run more than one
+        Command at once...
+
+        """
+        self.setup(shelf)
+        shelf.foreach_specced_source(
+            shelf.expand_docked_specs(specs), lambda s: self.perform(shelf, s)
+        )
+        self.teardown(shelf)
 
 
 ### Toolshelf object (Environment and intrinsic subcommands)
@@ -1285,7 +1297,12 @@ class Toolshelf(object):
 
         """
         sources = self.make_sources_from_specs(specs)
-        for source in sources:
+        try:
+            from tqdm import tqdm
+        except ImportError:
+            def tqdm(x):
+                return x
+        for source in tqdm(sources):
             if os.path.isdir(source.dir):
                 self.chdir(source.dir)
             else:
@@ -1296,6 +1313,30 @@ class Toolshelf(object):
                 if self.options.break_on_error:
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
+
+    def _run_command_func(self, func, args):
+        if func is not None:
+            try:
+                func(args)
+            except Exception as e:
+                if self.options.break_on_error:
+                    raise
+                self.errors.setdefault(subcommand, []).append(str(e))
+        else:
+            module = __import__("toolshelf.commands.%s" % subcommand,
+                                fromlist=["toolshelf.commands"])
+            sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
+            print "Usage: " + __doc__
+            sys.exit(2)
+
+    def _run_command_class(self, subcommand, class_, args):
+        try:
+            command = class_()
+            command.execute(self, args)
+        except Exception as e:
+            if self.options.break_on_error:
+                raise
+            self.errors.setdefault(subcommand, []).append(str(e))
 
     def run_command(self, subcommand, args):
         # resolve @'s and @@'s which are given individually in the arglist
@@ -1313,22 +1354,14 @@ class Toolshelf(object):
         try:
             module = __import__("toolshelf.commands.%s" % subcommand,
                                 fromlist=["toolshelf.commands"])
-            cmd = lambda args: getattr(module, subcommand, None)(self, args)
+            class_ = getattr(module, 'Command', None)
+            if class_:
+                return self._run_command_class(subcommand, class_, new_args)
+            else:
+                cmd = lambda args: getattr(module, subcommand, None)(self, args)
         except ImportError:
             cmd = getattr(self, subcommand, None)
-        if cmd is not None:
-            try:
-                cmd(new_args)
-            except Exception as e:
-                if self.options.break_on_error:
-                    raise
-                self.errors.setdefault(subcommand, []).append(str(e))
-        else:
-            module = __import__("toolshelf.commands.%s" % subcommand,
-                                fromlist=["toolshelf.commands"])
-            sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
-            print "Usage: " + __doc__
-            sys.exit(2)
+        return self._run_command_func(cmd, new_args)
 
     ### intrinsic subcommands ###
 

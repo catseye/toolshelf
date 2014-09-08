@@ -24,3 +24,5 @@ gh:rthalley/dnspython@v1.11.1
 # this one does not create the "console script" for you.  it would be nice if
 # toolshelf could parse the package's setup.py and do that.  hahaha.
 gh:mher/flower@v0.7.1
+
+gh:noamraph/tqdm

@@ -84,6 +84,9 @@ github.com/django/django
   build_command make && ln -s ../../pypy-c rpython/bin/pypy
   exclude_paths ctypes_configure dotviewer include lib_pypy lib-python py pypy _pytest site-packages testrunner
 
+github.com/noamraph/tqdm
+  python_modules tqdm.py
+
 #### Lua ####
 
 */*/lua-5.*

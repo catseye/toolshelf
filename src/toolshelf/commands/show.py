@@ -1,9 +1,9 @@
 import os
 
-def show(shelf, args):
-    specs = shelf.expand_docked_specs(args)
-    sources = shelf.make_sources_from_specs(specs)
-    for source in sources:
+from toolshelf.toolshelf import BaseCommand
+
+class Command(BaseCommand):
+    def perform(self, shelf, source):
         # TODO: colourize the output for which are exes, which are dirs
         for (link_farm_name, link_farm) in shelf.link_farms.iteritems():
             for (linkname, filename) in link_farm.links():
