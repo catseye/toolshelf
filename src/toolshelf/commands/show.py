@@ -3,6 +3,9 @@ import os
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
+    def show_progress(self):
+        return False
+
     def perform(self, shelf, source):
         # TODO: colourize the output for which are exes, which are dirs
         for (link_farm_name, link_farm) in shelf.link_farms.iteritems():

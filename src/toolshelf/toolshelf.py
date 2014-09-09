@@ -861,13 +861,14 @@ class BaseCommand(object):
     """Base class for toolshelf commands.  Mostly abstract.
 
     """
-    def process_args(self, shelf, args):
+    def process_args(self, shelf, specs):
         """Called to convert command-line arguments to Sources.
         Should return a list of Sources, which may be empty, if
         the command does not operate on Sources.
         
         """
-        specs = shelf.expand_docked_specs(args)
+        if not self.specs_are_external():
+            specs = shelf.expand_docked_specs(specs)
         sources = shelf.make_sources_from_specs(specs)
         return sources
 
@@ -893,6 +894,12 @@ class BaseCommand(object):
     def show_progress(self):
         return True
 
+    def trigger_relink(self, shelf):
+        return []
+
+    def specs_are_external(self):
+        return False
+
     def execute(self, shelf, args):
         """This is just provisional.  We'll actually run more than one
         Command at once...
@@ -907,9 +914,16 @@ class BaseCommand(object):
             sources, lambda s: self.perform(shelf, s), progress=progress
         )
         self.teardown(shelf)
+        relink_specs = self.trigger_relink(shelf)
+        if relink_specs:
+            specs = shelf.expand_docked_specs(relink_specs)
+            sources = shelf.make_sources_from_specs(specs)
+            # FIXME this should be handled better
+            for source in sources:
+                source.relink()
 
 
-### Toolshelf object (Environment and intrinsic subcommands)
+### Toolshelf object (Environment for Toolshelf operations)
 
 
 class Toolshelf(object):
@@ -1307,8 +1321,8 @@ class Toolshelf(object):
 
     ### processing sources ###
 
-    def foreach_specced_source(self, specs, fun):
-        """Call `fun` for each Source specified by the given specs.
+    def foreach_source(self, sources, fun, progress=tqdm):
+        """Call `fun` for each Source in the given iterable sources.
 
         The working directory is changed to that Source's directory
         before `fun` is called.  (It is not changed back afterwards.)
@@ -1319,10 +1333,6 @@ class Toolshelf(object):
         multiple Sources.
 
         """
-        sources = self.make_sources_from_specs(specs)
-        return self.foreach_source(sources, fun)
-
-    def foreach_source(self, sources, fun, progress=tqdm):
         for source in progress(sources):
             if os.path.isdir(source.dir):
                 self.chdir(source.dir)
@@ -1334,30 +1344,6 @@ class Toolshelf(object):
                 if self.options.break_on_error:
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
-
-    def _run_command_func(self, subcommand, func, args):
-        if func is not None:
-            try:
-                func(args)
-            except Exception as e:
-                if self.options.break_on_error:
-                    raise
-                self.errors.setdefault(subcommand, []).append(str(e))
-        else:
-            module = __import__("toolshelf.commands.%s" % subcommand,
-                                fromlist=["toolshelf.commands"])
-            sys.stderr.write("Unrecognized subcommand '%s'\n" % subcommand)
-            print "Usage: " + __doc__
-            sys.exit(2)
-
-    def _run_command_class(self, subcommand, class_, args):
-        try:
-            command = class_()
-            command.execute(self, args)
-        except Exception as e:
-            if self.options.break_on_error:
-                raise
-            self.errors.setdefault(subcommand, []).append(str(e))
 
     def run_command(self, subcommand, args):
         # resolve @'s and @@'s which are given individually in the arglist
@@ -1372,24 +1358,15 @@ class Toolshelf(object):
             else:
                 new_args.append(arg)
 
+        module = __import__("toolshelf.commands.%s" % subcommand,
+                            fromlist=["toolshelf.commands"])
+        command = module.Command()
         try:
-            module = __import__("toolshelf.commands.%s" % subcommand,
-                                fromlist=["toolshelf.commands"])
-            class_ = getattr(module, 'Command', None)
-            if class_:
-                return self._run_command_class(subcommand, class_, new_args)
-            else:
-                cmd = lambda args: getattr(module, subcommand, None)(self, args)
-        except ImportError:
-            cmd = getattr(self, subcommand, None)
-        return self._run_command_func(subcommand, cmd, new_args)
-
-    ### intrinsic subcommands ###
-
-    def relink(self, args):
-        def relink_it(source):
-            source.relink()
-        self.foreach_specced_source(self.expand_docked_specs(args), relink_it)
+            command.execute(self, args)
+        except Exception as e:
+            if self.options.break_on_error:
+                raise
+            self.errors.setdefault(subcommand, []).append(str(e))
 
 
 def main(args):

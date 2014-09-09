@@ -4,5 +4,5 @@ class Command(BaseCommand):
     def perform(self, shelf, source):
         self.blacklist.add(source)
 
-    def teardown(self, shelf):
-        shelf.relink(['all'])
+    def trigger_relink(self, shelf):
+        return ['all']
