@@ -1386,42 +1386,10 @@ class Toolshelf(object):
 
     ### intrinsic subcommands ###
 
-    def update(self, args):
-        def update_it(source):
-            was_changed = source.update()
-            if was_changed:
-                source.build()
-                source.relink()
-        self.foreach_specced_source(self.expand_docked_specs(args), update_it)
-
-    def resolve(self, args):
-        def dump_it(source):
-            print repr(source)
-        self.foreach_specced_source(self.expand_docked_specs(args), dump_it)
-
-    def status(self, args):
-        def status_it(source):
-            source.status()
-        self.foreach_specced_source(self.expand_docked_specs(args), status_it)
-
     def relink(self, args):
         def relink_it(source):
             source.relink()
         self.foreach_specced_source(self.expand_docked_specs(args), relink_it)
-
-    def disable(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        for source in sources:
-            self.blacklist.add(source)
-        self.relink(['all'])
-
-    def enable(self, args):
-        specs = self.expand_docked_specs(args)
-        sources = self.make_sources_from_specs(specs)
-        for source in sources:
-            self.blacklist.remove(source)
-        self.relink(args)
 
 
 def main(args):
