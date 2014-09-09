@@ -890,6 +890,9 @@ class BaseCommand(object):
         """Called after all Sources have been processed."""
         pass
 
+    def show_progress(self):
+        return True
+
     def execute(self, shelf, args):
         """This is just provisional.  We'll actually run more than one
         Command at once...
@@ -897,7 +900,12 @@ class BaseCommand(object):
         """
         sources = self.process_args(shelf, args)
         self.setup(shelf)
-        shelf.foreach_source(sources, lambda s: self.perform(shelf, s))
+        progress = lambda x: x
+        if self.show_progress():
+            progress = tqdm
+        shelf.foreach_source(
+            sources, lambda s: self.perform(shelf, s), progress=progress
+        )
         self.teardown(shelf)
 
 
@@ -1314,8 +1322,8 @@ class Toolshelf(object):
         sources = self.make_sources_from_specs(specs)
         return self.foreach_source(sources, fun)
 
-    def foreach_source(self, sources, fun):
-        for source in tqdm(sources):
+    def foreach_source(self, sources, fun, progress=tqdm):
+        for source in progress(sources):
             if os.path.isdir(source.dir):
                 self.chdir(source.dir)
             else:
