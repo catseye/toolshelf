@@ -55,6 +55,9 @@
 # */*/curl-7.*
 #   only_paths install
 
+*/*/meld-1.8.*
+  build_command echo "No need to build."
+
 ### Languages
 
 #### Python ####

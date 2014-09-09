@@ -40,3 +40,7 @@ http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz
 # git repo requires autoconf, distfile doesn't
 # gh:fragglet/lhasa
 https://soulsphere.org/projects/lhasa/lhasa-0.2.0.tar.gz
+
+# "You can run Meld without installing it," says http://meldmerge.org/,
+# as if this is some great technological feat
+http://ftp.gnome.org/pub/GNOME/sources/meld/1.8/meld-1.8.6.tar.xz
