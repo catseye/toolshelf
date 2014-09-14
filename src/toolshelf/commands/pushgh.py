@@ -7,6 +7,9 @@ class Command(BaseCommand):
     is case insensitive about project names.)
 
     """
+    def show_progress(self):
+        return False
+
     def perform(self, shelf, source):
         shelf.run('hg', 'bookmark', '-f', '-r', 'tip', 'master')
         url = "git+ssh://git@github.com/%s/%s.git" % (source.user, source.project)
