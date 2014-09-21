@@ -44,13 +44,13 @@ bootstrap_toolshelf() {
     OK=1
 
     SHELL_PROFILE=''
-    if [ -e $HOME/.profile ]; then
+    if [ -e "$HOME/.profile" ]; then
         SHELL_PROFILE="$HOME/.profile"
     fi
-    if [ -e $HOME/.bashrc ]; then
+    if [ -e "$HOME/.bashrc" ]; then
         SHELL_PROFILE="$HOME/.bashrc"
     fi
-    if [ -e $HOME/.bash_profile ]; then
+    if [ -e "$HOME/.bash_profile" ]; then
         SHELL_PROFILE="$HOME/.bash_profile"
     fi
 
@@ -66,15 +66,8 @@ bootstrap_toolshelf() {
         echo "Please switch to such a shell if you wish to run this script."
         echo
         OK=0
-    fi
-
-    if [ -z `which python` ]; then
-        echo "***NOTE: You do not appear to have Python installed."
-        echo "Please install Python (version 2.6 or later) using "
-        echo "your system's package manager (or by some other method),"
-        echo "then re-source this script."
-        echo
-        OK=0
+    else
+        echo "Your shell profile file appears to be '$SHELL_PROFILE'."
     fi
 
     # TODO: in the future, check for/allow hg too
@@ -85,14 +78,26 @@ bootstrap_toolshelf() {
         echo "then re-source this script."
         echo
         OK=0
+    else
+        echo "You appear to have 'git' installed."
+    fi
+
+    if [ -z `which python` ]; then
+        echo "***NOTE: You do not appear to have Python installed."
+        echo "Please install Python (version 2.6 or later) using "
+        echo "your system's package manager (or by some other method),"
+        echo "then re-source this script."
+        echo
+        OK=0
+    else
+        echo "You appear to have 'python' installed."
     fi
 
     if [ "$OK" = "0" ]; then
         return 1
     fi
 
-    echo "You appear to have both 'python' and 'git' installed."
-    echo "That's good.  We'll proceed."
+    echo "Everything seems good.  We'll proceed."
     echo
 
     DEFAULT_TOOLSHELF="$HOME/toolshelf"
