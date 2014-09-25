@@ -70,6 +70,7 @@ class Command(BaseCommand):
                   '.hgtags', '.hg_archival.txt'):
             command.append('-X')
             command.append(x)
+        # hg archive -t zip -r 1.0 -X .hgignore -X .gitignore -X .hgtags -X .hg_archival.txt foobar-1.0.zip
         command.append(full_filename)
         shelf.run(*command)
         shelf.run('unzip', '-v', full_filename)

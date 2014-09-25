@@ -6,15 +6,13 @@ from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
     def setup(self, shelf):
-        self.stats = {
-          'sources': 0,
-          'no_tests': [],
-          'passes': [],
-          'fails': []
-        }
+        self.sources = 0
+        self.no_tests = []
+        self.passes = []
+        self.fails = []
 
     def perform(self, shelf, source):
-        self.stats['sources'] += 1
+        self.sources += 1
         test_command = source.hints.get('test_command', None)
         if not test_command:
             if os.path.exists(os.path.join(source.dir, 'test.sh')):
@@ -29,21 +27,20 @@ class Command(BaseCommand):
                 sys.stdout.write(std_output)
                 sys.stdout.write(std_error)
             if process.returncode == 0:
-                self.stats['passes'].append(source)
+                self.passes.append(source)
             else:
-                self.stats['fails'].append(source)
+                self.fails.append(source)
         else:
-            self.stats['no_tests'].append(source)
+            self.no_tests.append(source)
 
     def teardown(self, shelf):
-        stats = self.stats
-        print "Total docked sources tested:   %s" % stats['sources']
-        print "Total without obvious tests:   %s" % len(stats['no_tests'])
+        print "Total docked sources tested:      %s" % self.sources
+        print "Total without discoverable tests: %s" % len(self.no_tests)
         if shelf.options.verbose:
-            print [s.name for s in stats['no_tests']]
-        print "Total passing:                 %s" % len(stats['passes'])
+            print '(%s)' % ' '.join([s.name for s in self.no_tests])
+        print "Total passing:                    %s" % len(self.passes)
         if shelf.options.verbose:
-            print [s.name for s in stats['passes']]
-        print "Total failures:                %s" % len(stats['fails'])
-        if shelf.options.verbose:
-            print [s.name for s in stats['fails']]
+            print '(%s)' % ' '.join([s.name for s in self.passes])
+        print "Total failures:                   %s" % len(self.fails)
+        if self.fails:
+            print '(%s)' % ' '.join([s.name for s in self.fails])
