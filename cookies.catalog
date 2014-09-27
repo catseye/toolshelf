@@ -83,8 +83,8 @@ pypi.python.org/*/mock-1.*
 github.com/django/django
   python_modules django
 
-*/*/pypy-2.*
-  build_command make && ln -s ../../pypy-c rpython/bin/pypy
+bitbucket.org/pypy/pypy
+  build_command echo "Not building, use 'python `which rpython`' to run rpython."
   exclude_paths ctypes_configure dotviewer include lib_pypy lib-python py pypy _pytest site-packages testrunner
 
 github.com/noamraph/tqdm

@@ -1,9 +1,3 @@
 # PyPy, but only for RPython.
-# Will require development headers and libraries for OpenSSL and bzip2.
-# Probably wiser to install these via the system to catch security fixes.
-# On Ubuntu, these are: libssl-dev and libbz2-dev
 
-# https://www.openssl.org/source/openssl-1.0.1i.tar.gz
-# http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-
-https://bitbucket.org/pypy/pypy/downloads/pypy-2.3.1-src.tar.bz2
+bb:pypy/pypy@release-2.3.1
