@@ -130,7 +130,7 @@ UNINTERESTING_EXECUTABLES = (
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
-    'bootstrap', 'mdate-sh',
+    'bootstrap', 'bootstrap\.sh', 'mdate-sh',
     # perl seems to like these
     'regen',
     # lua projects do this often enough -- note, not actually executable :/
@@ -435,6 +435,8 @@ class LinkFarm(object):
         for (linkname, sourcename) in self.links():
             if sourcename.startswith(prefix):
                 os.unlink(linkname)
+                if os.path.islink(linkname):
+                    raise IOError("could not unlink %s" % linkname)
 
 
 class Source(object):
@@ -663,6 +665,7 @@ class Source(object):
                     include_dirs = 'install/include'
             if include_dirs is not None:
                 for dirname in include_dirs.split(' '):
+                    dirname = os.path.join(self.dir, dirname)
                     if not os.path.isdir(dirname):
                         self.shelf.warn('No such directory: %s' % dirname)
                         continue
