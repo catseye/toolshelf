@@ -923,6 +923,8 @@ class BaseCommand(object):
             sources = shelf.make_sources_from_specs(specs)
             # FIXME this should be handled better
             for source in sources:
+                shelf.debug("Relinking %s" % source)
+                shelf.chdir(source.dir)  # needed for create_link, but probably shouldn't be
                 source.relink()
 
 
