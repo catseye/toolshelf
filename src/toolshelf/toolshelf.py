@@ -1464,6 +1464,16 @@ def main(args):
     }
 
     subcommand = ALIASES.get(args[0], args[0])
+
+    ### FIXME this should eventually be how the help system works, except
+    ### with docstrings and stuff.
+    if subcommand == 'help':
+        import pkgutil
+        p = os.path.join(os.path.dirname(__file__), 'commands')
+        for _, name, _ in pkgutil.iter_modules([p]):
+            print name
+        sys.exit(0)
+
     args = t.coalesce_catalog_args(args[1:])
     if '+' in subcommand:
         t.run_commands(subcommand, args)
