@@ -12,3 +12,4 @@ class Command(BaseCommand):
             print "%s already docked." % source.name
         else:
             source.checkout()
+            source.rectify_permissions_if_needed()

@@ -1457,7 +1457,13 @@ def main(args):
 
     t = Toolshelf(options=options)
 
-    subcommand = args[0]
+    ALIASES = {
+        'dock':   'tether+build+relink',
+        'update': 'pull+build+relink',
+        'make':   'build+relink',
+    }
+
+    subcommand = ALIASES.get(args[0], args[0])
     args = t.coalesce_catalog_args(args[1:])
     if '+' in subcommand:
         t.run_commands(subcommand, args)
