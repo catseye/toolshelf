@@ -928,9 +928,11 @@ class BaseCommand(object):
                 source.relink()
 
 
-def CommandSequence(list):
+class CommandSequence(list):
     def execute(self, shelf, args):
-        sources = self.process_args(shelf, args)
+        # XXX this is hacky.  different command process args in different
+        # ways; you ought to only be able to combine ones that do it the same
+        sources = self[0].process_args(shelf, args)
         for command in self:
             command.setup(shelf)
         def execute(s):
@@ -940,7 +942,7 @@ def CommandSequence(list):
         relink_specs = set()
         for command in self:
             command.teardown(shelf)
-            relink_specs.add(set(self.trigger_relink(shelf)))
+            relink_specs.update(set(command.trigger_relink(shelf)))
         if relink_specs:
             specs = shelf.expand_docked_specs(list(relink_specs))
             sources = shelf.make_sources_from_specs(specs)
