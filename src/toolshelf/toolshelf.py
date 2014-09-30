@@ -1455,12 +1455,12 @@ def main(args):
 
     t = Toolshelf(options=options)
 
-    args = t.coalesce_catalog_args(args[1:])
     subcommand = args[0]
+    args = t.coalesce_catalog_args(args[1:])
     if '+' in subcommand:
-        t.run_commands(args[0], args)
+        t.run_commands(subcommand, args)
     else:
-        t.run_command(args[0], args)
+        t.run_command(subcommand, args)
     if t.errors:
         sys.stderr.write('\nERRORS:\n\n')
         for name in sorted(t.errors.keys()):
