@@ -29,7 +29,7 @@
 
 # TODO: refactor this one function into smaller, more useful functions
 
-DEBUG=$1
+DEBUG="$1"
 
 bootstrap_toolshelf() {
     echo
@@ -54,7 +54,7 @@ bootstrap_toolshelf() {
         SHELL_PROFILE="$HOME/.bash_profile"
     fi
 
-    if [ -z $SHELL_PROFILE ]; then
+    if [ -z "$SHELL_PROFILE" ]; then
         echo "***NOTE: You do not appear to have a shell profile file"
         echo "(couldn't find ~/.bashrc, nor ~/.bash_profile, nor ~/.profile.)"
         echo
@@ -113,13 +113,13 @@ bootstrap_toolshelf() {
     echo
     echo -n "Directory? [${DEFAULT_TOOLSHELF}] "
     read TOOLSHELF
-    if [ -z $TOOLSHELF ]; then
+    if [ -z "$TOOLSHELF" ]; then
         TOOLSHELF=${DEFAULT_TOOLSHELF}
     fi
     echo
     echo "You selected: $TOOLSHELF"
 
-    if [ -e $TOOLSHELF ]; then
+    if [ -e "$TOOLSHELF" ]; then
         # TODO: actually loop here
         echo "Warning!  That directory already exists!"
         echo
@@ -134,22 +134,22 @@ bootstrap_toolshelf() {
         read CONFIRM
     fi
 
-    mkdir -p $TOOLSHELF
+    mkdir -p "$TOOLSHELF"
     # TODO: check if $TOOLSHELF/.toolshelf already exists
     # TODO: prompt for where to clone toolshelf from
     echo "Proceeding to clone the toolshelf repo from github..."
     ORIGDIR=`pwd`
-    cd $TOOLSHELF
+    cd "$TOOLSHELF"
     if [ "$DEBUG" = "DEBUG" ]; then
-        cp -Rp $HOME/checkout/toolshelf .toolshelf
+        cp -Rp "$HOME/checkout/toolshelf" .toolshelf
     else
         # TODO: check the return code of git here
         git clone https://github.com/catseye/toolshelf .toolshelf
     fi
 
-    cd $ORIGDIR
+    cd "$ORIGDIR"
 
-    LINE1="export TOOLSHELF=$TOOLSHELF && . "'$'"TOOLSHELF/.toolshelf/init.sh # added-by-bootstrap-toolshelf"
+    LINE1="export TOOLSHELF=\"$TOOLSHELF\" && . "'$'"TOOLSHELF/.toolshelf/init.sh # added-by-bootstrap-toolshelf"
 
     echo "Now we'd like to add the following line to your ${SHELL_PROFILE} file:"
     echo
@@ -165,21 +165,19 @@ bootstrap_toolshelf() {
     echo
     echo -n "Modify the file ${SHELL_PROFILE}? [y/N] "
     read RESPONSE
-    if [ -z $RESPONSE ]; then
+    if [ -z "$RESPONSE" ]; then
         RESPONSE=N
     fi
-    if [ $RESPONSE = 'y' -o $RESPONSE = 'Y' ]; then
+    if [ "$RESPONSE" = 'y' -o "$RESPONSE" = 'Y' ]; then
         echo "Backing up ${SHELL_PROFILE} and modifying it..."
-        cp -p ${SHELL_PROFILE} ${SHELL_PROFILE}.orig
+        cp -p "${SHELL_PROFILE}" "${SHELL_PROFILE}.orig"
         NEWFILE="$HOME/.tmp_new_profile_$$"
-        grep -v 'added-by-bootstrap-toolshelf' <${SHELL_PROFILE} > ${NEWFILE}
-        echo >>${NEWFILE} "$LINE1"
-        mv ${NEWFILE} ${SHELL_PROFILE}
+        grep -v 'added-by-bootstrap-toolshelf' <"${SHELL_PROFILE}" >"${NEWFILE}"
+        echo >>"${NEWFILE}" "$LINE1"
+        mv "${NEWFILE}" "${SHELL_PROFILE}"
         echo "Done."
         echo
         echo "You may now start a new shell to begin using toolshelf."
-
-        . $TOOLSHELF/.toolshelf/init.sh $TOOLSHELF
     else
         echo "That's totally fine; please make these changes yourself."
         echo "Then start a new bash shell to start using toolshelf."
