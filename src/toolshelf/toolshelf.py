@@ -928,6 +928,29 @@ class BaseCommand(object):
                 source.relink()
 
 
+def CommandSequence(list):
+    def execute(self, shelf, args):
+        sources = self.process_args(shelf, args)
+        for command in self:
+            command.setup(shelf)
+        def execute(s):
+            for command in self:
+                command.perform(shelf, s)
+        shelf.foreach_source(sources, execute)
+        relink_specs = set()
+        for command in self:
+            command.teardown(shelf)
+            relink_specs.add(set(self.trigger_relink(shelf)))
+        if relink_specs:
+            specs = shelf.expand_docked_specs(list(relink_specs))
+            sources = shelf.make_sources_from_specs(specs)
+            # FIXME this should be handled better
+            for source in sources:
+                shelf.debug("Relinking %s" % source)
+                shelf.chdir(source.dir)  # needed for create_link, but probably shouldn't be
+                source.relink()
+
+
 ### Toolshelf object (Environment for Toolshelf operations)
 
 
@@ -1350,7 +1373,7 @@ class Toolshelf(object):
                     raise
                 self.errors.setdefault(source.name, []).append(str(e))
 
-    def run_command(self, subcommand, args):
+    def coalesce_catalog_args(self, args):
         # resolve @'s and @@'s which are given individually in the arglist
         new_args = []
         prefix = ''
@@ -1362,7 +1385,9 @@ class Toolshelf(object):
                 prefix = arg
             else:
                 new_args.append(arg)
-
+        return new_args
+ 
+    def run_command(self, subcommand, args):
         module = __import__("toolshelf.commands.%s" % subcommand,
                             fromlist=["toolshelf.commands"])
         command = module.Command()
@@ -1372,6 +1397,15 @@ class Toolshelf(object):
             if self.options.break_on_error:
                 raise
             self.errors.setdefault(subcommand, []).append(str(e))
+
+    def run_commands(self, subcommands, args):
+        commands = CommandSequence()
+        for subcommand in subcommands.split('+'):
+            module = __import__("toolshelf.commands.%s" % subcommand,
+                                fromlist=["toolshelf.commands"])
+            commands.append(module.Command())
+
+        commands.execute(self, args)
 
 
 def main(args):
@@ -1421,7 +1455,12 @@ def main(args):
 
     t = Toolshelf(options=options)
 
-    t.run_command(args[0], args[1:])
+    args = t.coalesce_catalog_args(args[1:])
+    subcommand = args[0]
+    if '+' in subcommand:
+        t.run_commands(args[0], args)
+    else:
+        t.run_command(args[0], args)
     if t.errors:
         sys.stderr.write('\nERRORS:\n\n')
         for name in sorted(t.errors.keys()):
