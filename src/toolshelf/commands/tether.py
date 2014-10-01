@@ -1,8 +1,7 @@
 """
-tether {<external-source-spec>}
+Obtain external source trees (repos or distfiles, from internet or filesystem).
 
-Obtain source trees from external sources (internet-hoested or local files
-and/or repositories.)
+{<external-source-spec>}
 """
 
 from toolshelf.toolshelf import BaseCommand

@@ -1,7 +1,7 @@
 """
-resolve {<docked-source-spec>}
-
 Emit the names of the directories of the docked sources.
+
+resolve {<docked-source-spec>}
 """
 
 import os

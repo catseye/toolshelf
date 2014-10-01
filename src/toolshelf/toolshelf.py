@@ -1360,14 +1360,23 @@ class Toolshelf(object):
 
 
 def available_commands():
-    command_modules = [
-        __import__(
-            "toolshelf.commands.%s" % name, fromlist=["toolshelf.commands"]
-        ) for name in COMMANDS
-    ]
+    fromlist = ["toolshelf.commands"]
+    command_modules = dict([
+        (name, __import__("toolshelf.commands.%s" % name, fromlist=fromlist))
+        for name in COMMANDS
+    ])
+
+    def short_desc(command):
+        doc = command_modules[command].__doc__
+        if not doc:
+            return "(no description available)"
+        return doc.strip().split('\n')[0]
+
     text = "Available commands are:"
     for command in COMMANDS:
-        text += "\n  " + command
+        text += "\n  %s: %s" % (command, short_desc(command))
+    for alias in sorted(ALIASES.keys()):
+        text += "\n  %s: alias for %s" % (alias, ALIASES[alias])
     return text
 
 
@@ -1418,6 +1427,7 @@ def main(args):
 
     if subcommand not in ALIASES and subcommand not in COMMANDS:
         print "Unknown command '%s'." % subcommand
+        print
         print "Usage: " + __doc__ + available_commands()
         sys.exit(2)
         

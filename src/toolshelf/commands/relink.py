@@ -1,8 +1,7 @@
 """
-relink {<docked-source-spec>}
+Update link farms to contain links to executables and libraries in sources.
 
-Update your link farms to contain links to available executables and
-libraries inside the specified docked sources.
+{<docked-source-spec>}
 """
 
 from toolshelf.toolshelf import BaseCommand
