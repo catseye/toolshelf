@@ -1,24 +1,24 @@
 """
-    ghuser [--login <login>] <username>
-        Create (on standard output) a catalog for all of the given Github user's
-        repositories.  If the --login option is given, the Github API will be
-        logged into using the login username (not necessarily the same as the
-        target username).  A password will be prompted for the login username.
-        If --login is not given, the Github API will be used anonymously, with
-        all the caveats that implies.  Note that this command is experimental.
+ghuser [--login <login>] <username>
+
+Create (on standard output) a catalog for all of the given Github user's
+repositories.  If the --login option is given, the Github API will be
+logged into using the login username (not necessarily the same as the
+target username).  A password will be prompted for the login username.
+If --login is not given, the Github API will be used anonymously, with
+all the caveats that implies.  Note that this command is experimental.
 """
 
-import re
-
 import getpass
-import requests
-
 import os
+import re
 
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
     def process_args(self, shelf, args):
+        import requests
+
         user = args[0]
         auth = None
         if shelf.options.login is not None:
