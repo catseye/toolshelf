@@ -31,6 +31,7 @@
 toolshelf {options} <command>{+<command>} <arguments...>
 
 Manage sources and links maintained by the toolshelf environment.
+
 Each <command> has its own syntax, but <commands> which take the
 same parameters may be combined and executed aggregatively.
 
@@ -40,6 +41,7 @@ import errno
 import fnmatch
 import os
 import optparse
+import pkgutil
 import re
 import subprocess
 import sys
@@ -1349,7 +1351,12 @@ class Toolshelf(object):
 
 
 def main(args):
-    parser = optparse.OptionParser(__doc__)
+    commands_path = os.path.join(os.path.dirname(__file__), 'commands')
+    commands = [name for _, name, _ in pkgutil.iter_modules([commands_path])]
+
+    usage = __doc__ + "Available commands are:\n  %s" % ' '.join(commands)
+
+    parser = optparse.OptionParser(usage)
 
     parser.add_option("--debug", dest="debug",
                       default=False, action="store_true",
@@ -1386,7 +1393,7 @@ def main(args):
 
     (options, args) = parser.parse_args(args)
     if len(args) == 0:
-        print "Usage: " + __doc__
+        print "Usage: " + usage
         sys.exit(2)
 
     t = Toolshelf(options=options)
@@ -1399,15 +1406,6 @@ def main(args):
     }
 
     subcommand = ALIASES.get(args[0], args[0])
-
-    ### FIXME this should eventually be how the help system works, except
-    ### with docstrings and stuff.
-    if subcommand == 'help':
-        import pkgutil
-        p = os.path.join(os.path.dirname(__file__), 'commands')
-        for _, name, _ in pkgutil.iter_modules([p]):
-            print name
-        sys.exit(0)
 
     args = t.coalesce_catalog_args(args[1:])
     if '+' in subcommand:
