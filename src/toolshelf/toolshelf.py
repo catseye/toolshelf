@@ -1354,9 +1354,11 @@ def main(args):
     commands_path = os.path.join(os.path.dirname(__file__), 'commands')
     commands = [name for _, name, _ in pkgutil.iter_modules([commands_path])]
 
-    usage = __doc__ + "Available commands are:\n  %s" % ' '.join(commands)
+    available_commands = "Available commands are:" + (
+        ''.join(map(lambda s: '\n  ' + s, commands))
+    )
 
-    parser = optparse.OptionParser(usage)
+    parser = optparse.OptionParser(__doc__)
 
     parser.add_option("--debug", dest="debug",
                       default=False, action="store_true",
@@ -1393,7 +1395,7 @@ def main(args):
 
     (options, args) = parser.parse_args(args)
     if len(args) == 0:
-        print "Usage: " + usage
+        print "Usage: " + __doc__ + available_commands
         sys.exit(2)
 
     t = Toolshelf(options=options)
@@ -1405,7 +1407,14 @@ def main(args):
         'pwd':    'resolve',
     }
 
-    subcommand = ALIASES.get(args[0], args[0])
+    subcommand = args[0]
+
+    if subcommand not in ALIASES and subcommand not in commands:
+        print "Unknown command '%s'." % subcommand
+        print "Usage: " + __doc__ + available_commands
+        sys.exit(2)
+        
+    subcommand = ALIASES.get(subcommand, subcommand)
 
     args = t.coalesce_catalog_args(args[1:])
     if '+' in subcommand:
