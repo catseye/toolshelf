@@ -36,8 +36,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     dock {<external-source-spec>}
         Obtain source trees from a remote source, build executables for
         them as needed, and make links to those executables in a link
-        farm which is on your executable search path.  Implies `build`
-        unless the --no-build option is given.
+        farm which is on your executable search path.
 
     build {<docked-source-spec>}
         Build (or re-build) the executables for the given docked sources.
@@ -45,8 +44,7 @@ Each <subcommand> has its own syntax.  <subcommand> is one of:
     update {<docked-source-spec>}
         Pull the latest revision of the given docked sources from each's
         upstream repository (which is always the external source from which
-        it was originally docked.)  Implies `build` unless the --no-build
-        option is given.
+        it was originally docked.)
 
     status {<docked-source-spec>}
         Show the `hg status` or `git status`, as appropriate, in their
@@ -558,9 +556,6 @@ class Source(object):
             self.shelf.warn("Can't update to %s -- not version-controlled" % tag)
 
     def build(self):
-        if not self.shelf.options.build:
-            self.shelf.note("SKIPPING build of %s" % self.name)
-            return
         self.shelf.note("Building %s..." % self.dir)
 
         self.shelf.chdir(self.dir)
@@ -1413,10 +1408,6 @@ class Toolshelf(object):
 def main(args):
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option("-B", "--no-build", dest="build",
-                      default=True, action="store_false",
-                      help="don't try to build sources during docking "
-                           "and updating")
     parser.add_option("--debug", dest="debug",
                       default=False, action="store_true",
                       help="display messages to assist in troublshooting. "
