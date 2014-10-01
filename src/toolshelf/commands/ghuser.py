@@ -1,4 +1,6 @@
 """
+Dump a catalog for all of a Github user's repositories.
+
 ghuser [--login <login>] <username>
 
 Create (on standard output) a catalog for all of the given Github user's

@@ -1,8 +1,10 @@
 """
+Restore any previously disabled links for the given sources.
+
 enable {<docked-source-spec>}
 
-Restore links to executables for the given docked projects, previously
-disabled.
+The sources will be removed from the persistent blacklist.
+
 """
 
 from toolshelf.toolshelf import BaseCommand

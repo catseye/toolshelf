@@ -1,3 +1,7 @@
+"""
+Update config of Mercurial sources to include username.
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand

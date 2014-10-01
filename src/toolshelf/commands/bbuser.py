@@ -1,4 +1,6 @@
 """
+Dump a catalog for all of a Bitbucket user's repositories.
+
 bbuser --login <login> <username>
 
 Like ghuser, but for the Bitbucket API.  The --login option is required

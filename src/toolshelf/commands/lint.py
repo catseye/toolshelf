@@ -1,3 +1,11 @@
+"""Check that the layouts of given sources conform to some guidelines.
+
+The guidelines in question are Cat's Eye Technologies' distribution
+organization guidelines.  If these are not guidelines that you use, you can
+take this with a grain of salt.
+
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand
@@ -18,11 +26,6 @@ OK_ROOT_DIRS = (
 )
 
 class Command(BaseCommand):
-    """Check that the layouts of distributions conform to some
-    distribution organization guidelines.  If these are not guidelines that
-    you use, you can take this with a grain of salt.
-
-    """
     def setup(self, shelf):
         self.problems = {}
 

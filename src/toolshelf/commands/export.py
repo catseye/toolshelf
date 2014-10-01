@@ -1,12 +1,12 @@
+"""
+Clones a copy of each of the docked sources to the output directory.
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
-    """Reports which docked source trees have changes that are not in the
-    upstream repo.  Quite crude.
-
-    """
     def perform(self, shelf, source):
         dest_dir = os.path.join(shelf.options.output_dir, source.name)
         if os.path.isdir(dest_dir):

@@ -1,3 +1,7 @@
+"""
+Dump a catalog for all of a Github user's starred repositories.
+"""
+
 import re
 
 import getpass

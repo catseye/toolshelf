@@ -1,7 +1,7 @@
 """
-build {<docked-source-spec>}
-
 Build (or re-build) the executables for the specified docked sources.
+
+build {<docked-source-spec>}
 """
 
 from toolshelf.toolshelf import BaseCommand
