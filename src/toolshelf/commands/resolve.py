@@ -1,3 +1,9 @@
+"""
+resolve {<docked-source-spec>}
+
+Emit the names of the directories of the docked sources.
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand

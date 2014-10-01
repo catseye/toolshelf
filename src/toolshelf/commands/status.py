@@ -1,4 +1,10 @@
-import os
+"""
+status {<docked-source-spec>}
+
+Show the `hg status` or `git status`, as appropriate, in their
+naive format, for the given docked sources.  Does not work for
+distfile-based sources.
+"""
 
 from toolshelf.toolshelf import BaseCommand
 

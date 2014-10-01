@@ -1,3 +1,10 @@
+"""
+tether {<external-source-spec>}
+
+Obtain source trees from external sources (internet-hoested or local files
+and/or repositories.)
+"""
+
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):

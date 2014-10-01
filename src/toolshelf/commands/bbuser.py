@@ -1,3 +1,19 @@
+"""
+    ghuser [--login <login>] <username>
+        Create (on standard output) a catalog for all of the given Github user's
+        repositories.  If the --login option is given, the Github API will be
+        logged into using the login username (not necessarily the same as the
+        target username).  A password will be prompted for the login username.
+        If --login is not given, the Github API will be used anonymously, with
+        all the caveats that implies.  Note that this command is experimental.
+
+    bbuser --login <login> <username>
+        Like ghuser, but for the Bitbucket API.  The --login option is required
+        and the login username must be the same as the target username.  (This
+        appears to be a limitation of the Bitbucket API.)  Note that this
+        command is experimental.
+"""
+
 import getpass
 
 # pip install --user bitbucket-api

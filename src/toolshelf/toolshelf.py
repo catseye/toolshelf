@@ -28,69 +28,12 @@
 # Still largely under construction.
 
 """\
-toolshelf {options} <subcommand>
+toolshelf {options} <command>{+<command>} <arguments...>
 
 Manage sources and links maintained by the toolshelf environment.
-Each <subcommand> has its own syntax.  <subcommand> is one of:
+Each <command> has its own syntax, but <commands> which take the
+same parameters may be combined and executed aggregatively.
 
-    dock {<external-source-spec>}
-        Obtain source trees from a remote source, build executables for
-        them as needed, and make links to those executables in a link
-        farm which is on your executable search path.
-
-    build {<docked-source-spec>}
-        Build (or re-build) the executables for the given docked sources.
-
-    update {<docked-source-spec>}
-        Pull the latest revision of the given docked sources from each's
-        upstream repository (which is always the external source from which
-        it was originally docked.)
-
-    status {<docked-source-spec>}
-        Show the `hg status` or `git status`, as appropriate, in their
-        naive format, for the given docked sources.
-
-    relink {<docked-source-spec>}
-        Update your link farms to contain links to the executables for the given
-        docked sources.  Use `relink all` to rebuild the farms from scratch.
-
-    disable {<docked-source-spec>}
-        Temporarily remove the links to executables in the given docked projects
-        from your link farm.  A subsequent `enable` will restore them.  Note
-        that this implies a `relink all` to make sure any previously-shadowed
-        links now show up with these sources disabled.
-
-    enable {<docked-source-spec>}
-        Restore links to executables for the given docked projects, previously
-        disabled.
-
-    show {<docked-source-spec>}
-        Display the links that have been put on your linked farm for the
-        given docked sources.  Also show the executables those links point to.
-        Will also report any broken links and may, in the future, list any
-        executables it shadows or is shadowed by.
-
-    resolve {<docked-source-spec>}
-        Emit the names of the directories of the docked sources.
-
-    rectify {<docked-source-spec>}
-        Traverses the file trees of the given docked source and modifies the
-        permissions of files, removing or adding the executable bit based on
-        whether toolshelf thinks the file should really be executable or not.
-
-    ghuser [--login <login>] <username>
-        Create (on standard output) a catalog for all of the given Github user's
-        repositories.  If the --login option is given, the Github API will be
-        logged into using the login username (not necessarily the same as the
-        target username).  A password will be prompted for the login username.
-        If --login is not given, the Github API will be used anonymously, with
-        all the caveats that implies.  Note that this command is experimental.
-
-    bbuser --login <login> <username>
-        Like ghuser, but for the Bitbucket API.  The --login option is required
-        and the login username must be the same as the target username.  (This
-        appears to be a limitation of the Bitbucket API.)  Note that this
-        command is experimental.
 """
 
 import errno
@@ -1452,6 +1395,7 @@ def main(args):
         'dock':   'tether+build+relink',
         'update': 'pull+build+relink',
         'make':   'build+relink',
+        'pwd':    'resolve',
     }
 
     subcommand = ALIASES.get(args[0], args[0])

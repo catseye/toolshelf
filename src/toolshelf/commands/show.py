@@ -1,3 +1,12 @@
+"""
+show {<docked-source-spec>}
+
+Display the links that have been put on your linked farm for the
+given docked sources.  Also show the executables those links point to.
+Will also report any broken links and may, in the future, list any
+executables it shadows or is shadowed by.
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand
