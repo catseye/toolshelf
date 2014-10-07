@@ -1,10 +1,13 @@
+"""
+Generate report summarizing various properties of the specified sources.
+
+Sort of a "deep status".
+
+"""
+
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
-    """Generates a report summarizing various properties of the docked
-    source trees.  Sort of a "deep status".
-
-    """
     def setup(self, shelf):
         self.repos = {}
 

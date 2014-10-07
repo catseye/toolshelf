@@ -1,10 +1,11 @@
 """
-show {<docked-source-spec>}
+Display links made in links farms from the specified sources.
 
-Display the links that have been put on your linked farm for the
-given docked sources.  Also show the executables those links point to.
+Also shows the executables or libraries those links point to.
 Will also report any broken links and may, in the future, list any
 executables it shadows or is shadowed by.
+
+show {<docked-source-spec>}
 """
 
 import os

@@ -1,3 +1,7 @@
+"""
+Remove broken links from link farms.
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand

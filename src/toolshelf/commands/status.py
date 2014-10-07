@@ -1,9 +1,10 @@
 """
+Show `hg st` or `git status` as appropriate for specified sources.
+
 status {<docked-source-spec>}
 
-Show the `hg status` or `git status`, as appropriate, in their
-naive format, for the given docked sources.  Does not work for
-distfile-based sources.
+Does not work fordistfile-based sources.
+
 """
 
 from toolshelf.toolshelf import BaseCommand

@@ -1,15 +1,17 @@
-import codecs
+"""
+Find documentation files and write out Yaml file summarizing them.
 
-import yaml
+Looks for documentation in local repository clones and writes out
+a file that can be used to update the Documentation nodes in the
+Chrysoberyl data.
+
+"""
+
+import codecs
 
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
-    """Looks for documentation in local repository clones and writes out
-    a files that can be used to update the Documentation nodes in the
-    Chrysoberyl data.
-
-    """
     def setup(self, shelf):
         self.docdict = {}
 
@@ -18,6 +20,8 @@ class Command(BaseCommand):
             self.docdict.setdefault(source.name, []).append(path)
 
     def teardown(self, shelf):
+        import yaml
+
         output_filename = 'docs.yaml'
         with codecs.open(output_filename, 'w', 'utf-8') as file:
             file.write('# encoding: UTF-8\n')

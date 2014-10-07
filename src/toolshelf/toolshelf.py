@@ -58,6 +58,15 @@ __all__ = ['Toolshelf']
 
 ### Constants
 
+COMMANDS_PATH = os.path.join(os.path.dirname(__file__), 'commands')
+COMMANDS = [name for _, name, _ in pkgutil.iter_modules([COMMANDS_PATH])]
+ALIASES = {
+    'dock':   'tether+build+relink',
+    'update': 'pull+build+relink',
+    'make':   'build+relink',
+    'pwd':    'resolve',
+}
+
 UNINTERESTING_EXECUTABLES = (
     '.*?(\.txt|\.TXT|\.doc|\.rtf|\.markdown|\.md|\.html|\.css|\.info)',
     '.*?(\.png|\.jpg|\.bmp|\.gif|\.svg|\.swf|\.ttf|\.xpm)',
@@ -1350,14 +1359,28 @@ class Toolshelf(object):
         commands.execute(self, args)
 
 
+def available_commands():
+    fromlist = ["toolshelf.commands"]
+    command_modules = dict([
+        (name, __import__("toolshelf.commands.%s" % name, fromlist=fromlist))
+        for name in COMMANDS
+    ])
+
+    def short_desc(command):
+        doc = command_modules[command].__doc__
+        if not doc:
+            return "(no description available)"
+        return doc.strip().split('\n')[0]
+
+    text = "Available commands are:"
+    for command in COMMANDS:
+        text += "\n  %s: %s" % (command, short_desc(command))
+    for alias in sorted(ALIASES.keys()):
+        text += "\n  %s: alias for %s" % (alias, ALIASES[alias])
+    return text
+
+
 def main(args):
-    commands_path = os.path.join(os.path.dirname(__file__), 'commands')
-    commands = [name for _, name, _ in pkgutil.iter_modules([commands_path])]
-
-    available_commands = "Available commands are:" + (
-        ''.join(map(lambda s: '\n  ' + s, commands))
-    )
-
     parser = optparse.OptionParser(__doc__)
 
     parser.add_option("--debug", dest="debug",
@@ -1395,23 +1418,17 @@ def main(args):
 
     (options, args) = parser.parse_args(args)
     if len(args) == 0:
-        print "Usage: " + __doc__ + available_commands
+        print "Usage: " + __doc__ + available_commands()
         sys.exit(2)
 
     t = Toolshelf(options=options)
 
-    ALIASES = {
-        'dock':   'tether+build+relink',
-        'update': 'pull+build+relink',
-        'make':   'build+relink',
-        'pwd':    'resolve',
-    }
-
     subcommand = args[0]
 
-    if subcommand not in ALIASES and subcommand not in commands:
+    if subcommand not in ALIASES and subcommand not in COMMANDS:
         print "Unknown command '%s'." % subcommand
-        print "Usage: " + __doc__ + available_commands
+        print
+        print "Usage: " + __doc__ + available_commands()
         sys.exit(2)
         
     subcommand = ALIASES.get(subcommand, subcommand)

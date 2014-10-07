@@ -1,9 +1,7 @@
 """
-rectify {<docked-source-spec>}
+Traverse sources and set executable permissions 'reasonably' on all files.
 
-Traverses the file trees of the given docked source and modifies the
-permissions of files, removing or adding the executable bit based on
-whether toolshelf thinks the file should really be executable or not.
+rectify {<docked-source-spec>}
 """
 
 from toolshelf.toolshelf import BaseCommand

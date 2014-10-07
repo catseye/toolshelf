@@ -1,10 +1,14 @@
 """
-disable {<docked-source-spec>}
+Temporarily remove links to executables and libraries in specified sources.
 
-Temporarily remove the links to executables in the given docked projects
-from your link farm.  A subsequent `enable` will restore them.  Note
+The sources will be recorded in the persistent blacklist.
+
+A subsequent `enable` will restore them.  Note
 that this implies a `relink all` to make sure any previously-shadowed
 links now show up with these sources disabled.
+
+disable {<docked-source-spec>}
+
 """
 
 from toolshelf.toolshelf import BaseCommand

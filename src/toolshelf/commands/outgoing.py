@@ -1,10 +1,11 @@
+"""
+Crudely reports docked sources that have changes not in the upstream repo.
+
+"""
+
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
-    """Reports which docked source trees have changes that are not in the
-    upstream repo.  Quite crude.
-
-    """
     def perform(self, shelf, source):
         print source.name
         shelf.run('hg', 'out')

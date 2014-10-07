@@ -1,3 +1,7 @@
+"""
+Create a release distfile from the latest tag in a docked source.
+"""
+
 import os
 import re
 

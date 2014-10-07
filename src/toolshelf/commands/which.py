@@ -1,3 +1,8 @@
+"""
+Display locations within sources where executable or library is found.
+
+"""
+
 import os
 
 from toolshelf.toolshelf import BaseCommand

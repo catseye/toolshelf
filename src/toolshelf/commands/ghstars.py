@@ -1,12 +1,17 @@
+"""
+Dump a catalog for all of a Github user's starred repositories.
+"""
+
 import re
 
 import getpass
-import requests
 
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
     def process_args(self, shelf, args):
+        import requests
+
         user = args[0]
         auth = None
         if shelf.options.login is not None:

@@ -1,3 +1,7 @@
+"""
+Look for test suites in docked sources and run them.
+"""
+
 import os
 import subprocess
 import sys

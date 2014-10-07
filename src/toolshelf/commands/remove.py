@@ -1,3 +1,7 @@
+"""
+Delete the specified source trees and relink all remaining docked sources.
+"""
+
 from toolshelf.toolshelf import BaseCommand
 
 class Command(BaseCommand):
