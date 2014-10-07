@@ -66,7 +66,7 @@ UNINTERESTING_EXECUTABLES = (
     '(mkdep|makedep)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     '(configure|Configure|autogen|make-bindist)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     '(run|runme|buildme|doit|setup|__init__)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
-    '(test(-driver)?|testme|runtests)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
+    '(test(-driver)?|testme|runtests?)(-cygwin)?(\.sh|\.csh|\.pl|\.py)?',
     'bench(\.sh|\.csh)',
     # autoconf and automake and libtool stuff
     'config\.status', 'config\.sub', 'config\.guess', 'config\.rpath',
