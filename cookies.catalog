@@ -23,6 +23,7 @@
 # Unintelligently, ncurses' build system assumes you want the C++ bindings,
 # and therefore, that you have a C++ compiler.  Shouldn't it at least check?
 # (If I don't have a C++ compiler, I probably don't want the C++ bindings, eh?)
+# TODO: possibly link libcurses.so to libncurses.so as part of build, too
 */*/ncurses-5.*
   build_command ./configure --with-shared --without-cxx --without-cxx-binding --prefix=`pwd`/install && make && make install
   include_dirs install/include install/include/ncurses
@@ -153,6 +154,9 @@ github.com/*/Ophis
 
 */catseye/funicular
   exclude_paths eg
+
+*/catseye/the-platform
+  exclude_paths distrepos
 
 */digego/extempore
   build_command ./all.bash
