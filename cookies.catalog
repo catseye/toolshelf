@@ -133,6 +133,10 @@ github.com/*/Ophis
   exclude_paths src/scripts vendor
   test_command python ./tests/test_ophis.py
 
+# you probably don't want *any* of Skulpt's custom packages getting on your path
+github.com/*/skulpt
+  python_modules skulpt.py
+
 ### Emulators
 
 # Using the bundled pixman also requires you have autconf installed, sheesh
