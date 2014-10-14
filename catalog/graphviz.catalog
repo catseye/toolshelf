@@ -1,0 +1,4 @@
+# might be missing some dependencies.
+# it probably enables some formats based on what's available (e.g. jpeg) too?
+# but it compiled out-of-the-box for me.
+http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz
