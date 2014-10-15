@@ -83,6 +83,8 @@ UNINTERESTING_EXECUTABLES = (
     'ltmain\.sh', 'depcomp', 'libtool',
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
     'bootstrap', 'bootstrap\.sh', 'mdate-sh',
+    # automake sometimes includes this yacc wrapper script
+    'ylwrap',
     # perl seems to like these
     'regen',
     # lua projects do this often enough -- note, not actually executable :/

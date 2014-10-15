@@ -1,0 +1,3 @@
+# PyPy.  Note that docking this under toolshelf is TOTALLY NOT SUPPORTED.
+
+bb:pypy/pypy@release-2.4.0

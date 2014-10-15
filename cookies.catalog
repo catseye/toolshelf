@@ -88,6 +88,9 @@ bitbucket.org/pypy/pypy
   build_command echo "Not building, use 'python `which rpython`' to run rpython."
   exclude_paths ctypes_configure dotviewer include lib_pypy lib-python py pypy _pytest site-packages testrunner
 
+github.com/kennethreitz/requests
+  build_command echo "No need to build."
+
 github.com/noamraph/tqdm
   python_modules tqdm.py
 

@@ -1,3 +1,0 @@
-# PyPy, but only for RPython.
-
-bb:pypy/pypy@release-2.3.1

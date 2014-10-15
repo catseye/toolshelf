@@ -6,7 +6,7 @@ https://pypi.python.org/packages/source/g/grin/grin-1.2.1.tar.gz
 https://pypi.python.org/packages/source/m/mock/mock-1.0.1.tar.gz
 https://pypi.python.org/packages/source/p/pyflakes/pyflakes-0.8.1.tar.gz
 https://pypi.python.org/packages/source/p/pika/pika-0.9.13.tar.gz
-https://pypi.python.org/packages/source/r/requests/requests-2.3.0.tar.gz
+gh:kennethreitz/requests@v2.4.3
 
 # For Chrysoberyl:
 
