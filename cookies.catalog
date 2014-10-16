@@ -107,6 +107,9 @@ github.com/stevedonovan/Penlight
 github.com/keplerproject/xavante
   exclude_paths examples
 
+*/*/bigloo4.*
+  exclude_paths autoconf
+
 #### Other ####
 
 */*/perl-5.*
