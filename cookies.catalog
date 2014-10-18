@@ -69,6 +69,7 @@ pypi.python.org/*/atomize-0.*
 # can come from pypi.python.org or pyyaml.org
 */*/PyYAML-3.*
   python_modules lib/yaml
+  build_command python setup.py --with-libyaml build
 
 # just running "make" will try to install stuff to /usr/local.  sigh
 pypi.python.org/*/Markdown-2.*
