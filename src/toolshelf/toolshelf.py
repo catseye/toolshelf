@@ -930,6 +930,8 @@ class Toolshelf(object):
         if uname is None:
             uname = self.get_it('uname').strip()
         self.uname = uname
+        if self.uname.upper().startswith('CYGWIN'):
+            self.uname = 'Cygwin'
 
         if link_farms is None:
             link_farms = {}

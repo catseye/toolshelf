@@ -128,6 +128,7 @@ github.com/keplerproject/xavante
 */*/chicken-4.*
   build_command@Linux make PLATFORM=linux
   build_command@NetBSD make PLATFORM=bsd
+  build_command@Cygwin make PLATFORM=cygwin
   build_command make PLATFORM=bsd
 
 factorcode.org/git/factor
