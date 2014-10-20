@@ -1,5 +1,4 @@
 bb:catseye/alpaca
-bb:catseye/amiga-gondola
 bb:catseye/animals
 bb:catseye/apple-befunge
 bb:catseye/arboretuum
@@ -34,8 +33,8 @@ bb:catseye/falderal
 bb:catseye/fbbi
 bb:catseye/flip
 bb:catseye/flobnar
-bb:catseye/freedos-gondola
 bb:catseye/funge-98
+bb:catseye/funicular
 bb:catseye/gemooy
 bb:catseye/granola-m
 bb:catseye/hev
@@ -54,7 +53,6 @@ bb:catseye/mascarpone
 bb:catseye/muriel
 bb:catseye/mzstorkipiwanbotbotbot
 bb:catseye/n-dcnc
-bb:catseye/netbsd-gondola
 bb:catseye/netusb
 bb:catseye/nhohnhehr
 bb:catseye/noit-o-mnain-worb
@@ -82,6 +80,7 @@ bb:catseye/strelnokoff
 bb:catseye/super-wumpus-land
 bb:catseye/tamsin
 bb:catseye/the-swallows
+bb:catseye/the-platform
 bb:catseye/thue
 bb:catseye/toolshelf
 bb:catseye/tpis
