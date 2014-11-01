@@ -185,3 +185,9 @@ github.com/okfn/gutenizer
 */*/python-constraint-1.2
   exclude_paths examples
   python_modules constraint.py
+
+github.com/julian3833/eliza
+  python_modules eliza.py
+
+github.com/hugovk/chroniclingamerica.py
+  python_modules chroniclingamerica.py
