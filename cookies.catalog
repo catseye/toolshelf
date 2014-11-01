@@ -181,3 +181,7 @@ github.com/okfn/gutenizer
 
 */poeschko/Mathics
   exclude_paths mathics/web/media
+
+*/*/python-constraint-1.2
+  exclude_paths examples
+  python_modules constraint.py
