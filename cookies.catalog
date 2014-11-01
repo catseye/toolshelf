@@ -161,9 +161,6 @@ github.com/*/skulpt
 
 ### Experimental/Github stuff
 
-*/kulp/tenyr
-  exclude_paths bench ui hw scripts
-
 */catseye/funicular
   exclude_paths eg
 
@@ -172,6 +169,12 @@ github.com/*/skulpt
 
 */digego/extempore
   build_command ./all.bash
+
+*/kulp/tenyr
+  exclude_paths bench ui hw scripts
+
+github.com/okfn/gutenizer
+  python_modules gutenberg.py
 
 */paulhodge/circa
   exclude_paths platform
