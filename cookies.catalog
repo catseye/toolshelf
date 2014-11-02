@@ -95,6 +95,9 @@ github.com/kennethreitz/requests
 github.com/noamraph/tqdm
   python_modules tqdm.py
 
+github.com/python-pillow/Pillow
+  build_command python setup.py build
+
 #### Lua ####
 
 */*/lua-5.*
