@@ -108,8 +108,13 @@ github.com/stevedonovan/Penlight
 github.com/keplerproject/xavante
   exclude_paths examples
 
+#### Schemes ####
+
 */*/bigloo4.*
-  exclude_paths autoconf
+  exclude_paths autoconf gc
+
+github.com/shirok/Gauche
+  exclude_paths gc
 
 #### Other ####
 
@@ -173,9 +178,6 @@ github.com/*/skulpt
 */kulp/tenyr
   exclude_paths bench ui hw scripts
 
-github.com/okfn/gutenizer
-  python_modules gutenberg.py
-
 */paulhodge/circa
   exclude_paths platform
 
@@ -185,6 +187,19 @@ github.com/okfn/gutenizer
 */*/python-constraint-1.2
   exclude_paths examples
   python_modules constraint.py
+
+### TextGen ###
+
+# Note that we could really use a heuristic like "if there's *.py files,
+# but no Python packages, assume the Python files are standalone modules"
+
+# We could also have a build rule that does
+# `python setup.py install --prefix=.` if it sees a `setup.py`
+# except that the consistency of `setup.py` files across projects is
+# essentially NIL
+
+github.com/okfn/gutenizer
+  python_modules gutenberg.py
 
 github.com/julian3833/eliza
   python_modules eliza.py
