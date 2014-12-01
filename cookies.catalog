@@ -209,3 +209,6 @@ github.com/julian3833/eliza
 
 github.com/hugovk/chroniclingamerica.py
   python_modules chroniclingamerica.py
+
+github.com/nltk/nltk
+  build_command python setup.py install --prefix=. && python nltk/downloader.py all
