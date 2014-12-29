@@ -120,6 +120,13 @@ github.com/keplerproject/xavante
 github.com/shirok/Gauche
   exclude_paths gc
 
+# here's hoping that most 'weirdo' platforms are sufficiently like *BSD...
+*/*/chicken-4.*
+  build_command@Linux mkdir -p chicken && make PLATFORM=linux PREFIX=`pwd` VARDIR=`pwd` install
+  build_command@NetBSD mkdir -p chicken && make PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
+  build_command@Cygwin mkdir -p chicken && make PLATFORM=cygwin PREFIX=`pwd` VARDIR=`pwd` install
+  build_command make mkdir -p chicken && PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
+
 #### Other ####
 
 */*/perl-5.*
@@ -134,12 +141,8 @@ github.com/shirok/Gauche
   build_command ./configure --prefix=`pwd` --without-termcap && make
   exclude_paths bootstrap erts make plt release system xcomp cygwin
 
-# here's hoping that most 'weirdo' platforms are sufficiently like *BSD...
-*/*/chicken-4.*
-  build_command@Linux mkdir -p chicken && make PLATFORM=linux PREFIX=`pwd` VARDIR=`pwd` install
-  build_command@NetBSD mkdir -p chicken && make PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
-  build_command@Cygwin mkdir -p chicken && make PLATFORM=cygwin PREFIX=`pwd` VARDIR=`pwd` install
-  build_command make mkdir -p chicken && PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
+nodejs.org/distfile/node-v0.10.*
+  build_requires g++
 
 factorcode.org/git/factor
   exclude_paths basis extra unmaintained
@@ -169,6 +172,9 @@ github.com/*/skulpt
 */*/vice-2.4
   build_command ./configure --enable-sdlui --without-x --disable-gnomeui --with-sdlsound --prefix=`pwd` && make && make install && ln -s lib64 lib
 
+*/*/linapple
+  build_requires g++
+
 ### Experimental/Github stuff
 
 */catseye/funicular
@@ -176,6 +182,7 @@ github.com/*/skulpt
 
 */catseye/the-platform
   exclude_paths distrepos
+  build_requires funicular
 
 */digego/extempore
   build_command ./all.bash

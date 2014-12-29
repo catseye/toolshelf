@@ -1,4 +1,3 @@
-# requires g++ too
 @@libzip
 @@curl
 gh:timob/linapple
