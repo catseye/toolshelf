@@ -98,6 +98,10 @@ github.com/noamraph/tqdm
 github.com/python-pillow/Pillow
   build_command python setup.py build
 
+*/*/py-editdist-0.3
+  build_command python setup.py build && python setup.py install --root install
+  python_modules install/usr/local/lib/python2.7/dist-packages/editdist.so
+
 #### Lua ####
 
 */*/lua-5.*
@@ -134,10 +138,10 @@ github.com/shirok/Gauche
 
 # here's hoping that most 'weirdo' platforms are sufficiently like *BSD...
 */*/chicken-4.*
-  build_command@Linux make PLATFORM=linux
-  build_command@NetBSD make PLATFORM=bsd
-  build_command@Cygwin make PLATFORM=cygwin
-  build_command make PLATFORM=bsd
+  build_command@Linux mkdir -p chicken && make PLATFORM=linux PREFIX=`pwd` VARDIR=`pwd` install
+  build_command@NetBSD mkdir -p chicken && make PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
+  build_command@Cygwin mkdir -p chicken && make PLATFORM=cygwin PREFIX=`pwd` VARDIR=`pwd` install
+  build_command make mkdir -p chicken && PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
 
 factorcode.org/git/factor
   exclude_paths basis extra unmaintained
