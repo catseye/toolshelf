@@ -21,11 +21,10 @@ http://www.sudo.ws/sudo/dist/sudo-1.8.8.tar.gz               #U -- not good buil
 @@lhasa
 @@meld
 @@dos2unix
+@@screen
+@@git
 
 gh:cpressey/tree
 gh:cpressey/head
 bb:catseye/realpath
-
-http://ftp.gnu.org/gnu/screen/screen-4.0.3.tar.gz
 gh:ymattw/cdiff
-https://github.com/git/git/archive/v1.8.4.3.zip
