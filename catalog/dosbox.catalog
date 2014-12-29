@@ -1,0 +1,12 @@
+### DOSBox, including SDL 1.2 libraries
+# note, you should install SDL via system, not with toolshelf.
+# http://www.libsdl.org/release/SDL-1.2.15.tar.gz
+### not for DOSBox... not yet...
+# http://www.libsdl.org/release/SDL2-2.0.1.tar.gz
+### there have been patches since 0.74 for building under gcc 4.x, but no
+### official release incorporating them, yet.
+# http://sourceforge.net/projects/dosbox/files/dosbox/0.74/dosbox-0.74.tar.gz
+### so we use this mirror on github instead:
+# (note, however, that it requires autotools)
+
+gh:Henne/dosbox-svn
