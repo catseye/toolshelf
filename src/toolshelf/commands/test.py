@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-from toolshelf.toolshelf import BaseCommand
+from toolshelf.toolshelf import BaseCommand, Path
 
 class Command(BaseCommand):
     def setup(self, shelf):
@@ -17,6 +17,16 @@ class Command(BaseCommand):
 
     def perform(self, shelf, source):
         self.sources += 1
+
+        test_requires = source.hints.get('test_requires', '')
+        if test_requires:
+            search_path = Path()
+            for executable in test_requires.strip().split(' '):
+                if not search_path.which(executable):
+                    shelf.warn("Requires %s to test, not found on search path" % executable)
+                    self.no_tests.append(source)
+                    return
+
         test_command = source.hints.get('test_command', None)
         if not test_command:
             if os.path.exists(os.path.join(source.dir, 'test.sh')):

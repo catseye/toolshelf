@@ -119,7 +119,8 @@ HINT_NAMES = (
     'test_command',
     'exclude_paths',  # TODO: need an include_paths, or interesting_paths, now, too
     'only_paths',
-    #'prerequisites',
+    'build_requires',
+    'test_requires',
     'rectify_permissions',
     'require_executables',
     'interesting_executables',
@@ -513,6 +514,14 @@ class Source(object):
 
     def build(self):
         self.shelf.note("Building %s..." % self.dir)
+
+        build_requires = self.hints.get('build_requires', '')
+        if build_requires:
+            search_path = Path()
+            for executable in build_requires.strip().split(' '):
+                if not search_path.which(executable):
+                    self.shelf.warn("Requires %s to build, not found on search path" % executable)
+                    return
 
         self.shelf.chdir(self.dir)
         build_command = self.hints.get('build_command@' + self.shelf.uname, None)

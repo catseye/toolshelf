@@ -130,6 +130,7 @@ github.com/shirok/Gauche
   exclude_paths bootstrap erts make plt release system xcomp cygwin
 
 */*/otp_src_R16B03-*
+  build_command@NetBSD rm -rf lib/cos* && touch lib/asn1/SKIP lib/eldap/SKIP lib/gs/SKIP lib/hipe/SKIP lib/inets/SKIP lib/jinterface/SKIP lib/megaco/SKIP lib/orber/SKIP lib/odbc/SKIP lib/erlang && ./configure --prefix=`pwd` --disable-threads --disable-hipe --without-ssl && make
   build_command ./configure --prefix=`pwd` --without-termcap && make
   exclude_paths bootstrap erts make plt release system xcomp cygwin
 
@@ -213,3 +214,18 @@ github.com/hugovk/chroniclingamerica.py
 
 github.com/nltk/nltk
   build_command python setup.py install --prefix=. && python nltk/downloader.py all
+
+### catseye
+
+*/catseye/dungeons-of-ekileugor
+  build_requires petcat
+
+*/catseye/etcha
+  build_requires javac
+  test_requires javac
+
+*/catseye/whothm
+  build_requires javac
+
+*/catseye/yoob
+  build_requires javac
