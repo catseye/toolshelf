@@ -33,7 +33,7 @@
 
 ### Tools
 
-*/*/make-3.81
+*/*/make-3.*
   interesting_executables make
 
 # eesh
@@ -122,10 +122,10 @@ github.com/shirok/Gauche
 
 # here's hoping that most 'weirdo' platforms are sufficiently like *BSD...
 */*/chicken-4.*
-  build_command@Linux mkdir -p chicken && make PLATFORM=linux PREFIX=`pwd` VARDIR=`pwd` install
-  build_command@NetBSD mkdir -p chicken && make PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
-  build_command@Cygwin mkdir -p chicken && make PLATFORM=cygwin PREFIX=`pwd` VARDIR=`pwd` install
-  build_command make mkdir -p chicken && PLATFORM=bsd PREFIX=`pwd` VARDIR=`pwd` install
+  build_command@Linux mkdir -p install && make PLATFORM=linux PREFIX=`pwd`/install VARDIR=`pwd`/install install
+  build_command@NetBSD mkdir -p install && make PLATFORM=bsd PREFIX=`pwd`/install VARDIR=`pwd`/install install
+  build_command@Cygwin mkdir -p install && make PLATFORM=cygwin PREFIX=`pwd`/install VARDIR=`pwd`/install install
+  build_command make mkdir -p install && PLATFORM=bsd PREFIX=`pwd`/install VARDIR=`pwd`/install install
 
 #### Other ####
 
