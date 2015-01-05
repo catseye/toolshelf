@@ -1,5 +1,6 @@
-gh:keplerproject/luafilesystem
-gh:diegonehab/luasocket
+@@luafilesystem
+@@luasocket
+
 # gh:keplerproject/copas
 gh:keplerproject/rings
 gh:keplerproject/md5
