@@ -55,7 +55,6 @@ http://sourceforge.net/projects/tinyscheme/files/tinyscheme/tinyscheme-1.41/tiny
 http://people.bath.ac.uk/masrjb/Sources/euscheme361.tgz
 gh:larcenists/larceny
 gh:feeley/gambit
-ftp://ftp-sop.inria.fr/indes/fp/Bigloo/bigloo4.1a-2.tar.gz
 gh:shirok/Gauche
 
 # Other implementations of existing languages:

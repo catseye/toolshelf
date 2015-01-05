@@ -2,9 +2,9 @@
 # note: needs libsdl installed via the system.  probably.
 # sudo apt-get install libsdl1.2-dev
 
-http://zlib.net/zlib-1.2.8.tar.gz
+@@zlib
 ftp://invisible-island.net/ncurses/ncurses-5.9.tar.gz
-ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz
+@libffi
 http://ftp.gnome.org/pub/gnome/sources/glib/2.40/glib-2.40.0.tar.xz
 http://cairographics.org/releases/pixman-0.32.4.tar.gz
 # http://www.libsdl.org/release/SDL-1.2.15.tar.gz
