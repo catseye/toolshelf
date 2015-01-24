@@ -15,7 +15,10 @@ class Command(BaseCommand):
 
     def perform(self, shelf, source):
         if source.docked:
-            print "%s already docked." % source.name
+            if source.tag:
+                source.update_to_tag(source.tag)
+            else:
+                print "%s already docked." % source.name
         else:
             source.checkout()
             source.rectify_permissions_if_needed()
