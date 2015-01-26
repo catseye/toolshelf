@@ -53,18 +53,12 @@ class Command(BaseCommand):
 
     """
     def perform(self, shelf, source):
-        tag = source.get_latest_release_tag()
+        tag = source.tag
+        if not tag:
+            tag = source.get_latest_release_tag()
         if not tag:
             raise SystemError("Repository not tagged")
-        diff = shelf.get_it('hg diff -r %s -r tip -X .hgtags' % tag)
-        if diff and not shelf.options.force:
-            raise SystemError("There are changes to mainline since latest tag")
         (v_maj, v_min, r_maj, r_min, filename) = match_tag(source.project, tag)
-        print """\
-  - version: "%s.%s"
-    revision: "%s.%s"
-    url: http://catseye.tc/distfiles/%s
-""" % (v_maj, v_min, r_maj, r_min, filename)
         full_filename = os.path.join(shelf.options.output_dir, filename)
         if os.path.exists(full_filename):
             shelf.run('unzip', '-v', full_filename)
@@ -78,3 +72,9 @@ class Command(BaseCommand):
         command.append(full_filename)
         shelf.run(*command)
         shelf.run('unzip', '-v', full_filename)
+        # Chrysoberyl entry
+        print """\
+  - version: "%s.%s"
+    revision: "%s.%s"
+    url: http://catseye.tc/distfiles/%s
+""" % (v_maj, v_min, r_maj, r_min, filename)

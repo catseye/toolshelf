@@ -1052,7 +1052,10 @@ class Toolshelf(object):
                             continue
                         new_specs.append('%s/%s/%s' % (host, user, project))
             return new_specs
-        elif name == '.':  # case 8
+        elif name == '.' or name.startswith('.@'):  # case 8
+            tag = None
+            if '@' in name:
+                (name, tag) = name.split('@')
             path = self.cwd
             tsdir = os.path.join(
                 path, '..', '..', '..', '.toolshelf'
@@ -1061,7 +1064,10 @@ class Toolshelf(object):
                 path, project = os.path.split(path)
                 path, user = os.path.split(path)
                 path, host = os.path.split(path)
-                new_specs.append('%s/%s/%s' % (host, user, project))
+                new_spec = '%s/%s/%s' % (host, user, project)
+                if tag:
+                    new_spec += '@' + tag
+                new_specs.append(new_spec)
             # else complain with an error!
         elif name.startswith('@'):
             new_specs.append(name)
@@ -1400,10 +1406,6 @@ def main(args):
                       default=False, action="store_true",
                       help="display messages to assist in troublshooting. "
                            "does not imply --verbose")
-    parser.add_option("-f", "--force",
-                      default=False, action="store_true",
-                      help="subvert any safety mechanisms and just do "
-                           "the thing regardless of the consequences")
     parser.add_option("--output-dir",
                       dest="output_dir", metavar='DIR',
                       default=os.path.realpath(os.path.abspath('.')),
