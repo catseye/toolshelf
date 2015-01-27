@@ -41,7 +41,7 @@
   build_command make "OBJS=tree.o unix.o html.o xml.o hash.o color.o strverscmp.o" "CFLAGS=-O2 -Wall"
 
 */*/nmap-6.40
-  build_command ./configure --with-liblua=`toolshelf pwd lua-5.1.5` --prefix=`pwd` && make && make install
+  build_command ./configure --with-liblua=`toolshelf.py pwd lua-5.1.5` --prefix=`pwd` && make && make install
 
 # needs libreadline-dev
 */*/rlwrap-0.37
@@ -55,6 +55,11 @@
 
 */*/meld-1.8.*
   build_command echo "No need to build."
+
+# I'll be damned if this is actually paying attention to the --with-ncurses setting.
+# falls back to `tputs` which is b0rked for me.
+*/*/irssi-0.*
+  build_command ./configure --with-ncurses=`toolshelf.py pwd ncurses-5.9`/install --prefix=`pwd` && make && make install
 
 ### Languages
 
