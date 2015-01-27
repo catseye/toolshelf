@@ -1201,12 +1201,12 @@ class Toolshelf(object):
         if match:
             user = match.group(1)
             project = match.group(2)
-            name = shelf.options.gh_prefix_template % (user, project)
+            name = self.options.gh_prefix_template % (user, project)
         match = re.match(r'^bb:(.*?)\/(.*?)$', name)
         if match:
             user = match.group(1)
             project = match.group(2)
-            name = shelf.options.bb_prefix_template % (user, project)
+            name = self.options.bb_prefix_template % (user, project)
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
