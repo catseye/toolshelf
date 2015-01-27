@@ -1197,17 +1197,16 @@ class Toolshelf(object):
             tag = match.group(2)
 
         # resolve name shorthands
-        # TODO: make these configurable
         match = re.match(r'^gh:(.*?)\/(.*?)$', name)
         if match:
-            name = 'https://github.com/%s/%s.git' % (
-                match.group(1), match.group(2)
-            )
+            user = match.group(1)
+            project = match.group(2)
+            name = shelf.options.gh_prefix_template % (user, project)
         match = re.match(r'^bb:(.*?)\/(.*?)$', name)
         if match:
-            name = 'https://bitbucket.org/%s/%s' % (
-                match.group(1), match.group(2)
-            )
+            user = match.group(1)
+            project = match.group(2)
+            name = shelf.options.bb_prefix_template % (user, project)
 
         match = re.match(r'^git:\/\/(.*?)/(.*?)/(.*?)\.git$', name)
         if match:
@@ -1402,6 +1401,14 @@ def available_commands():
 def main(args):
     parser = optparse.OptionParser(__doc__)
 
+    parser.add_option("--bb-prefix-template",
+                      default='https://bitbucket.org/%s/%s',
+                      help="template to expand 'bb:' prefix to "
+                           "(default: %default)")
+    parser.add_option("--gh-prefix-template",
+                      default='https://bitbucket.org/%s/%s',
+                      help="template to expand 'gh:' prefix to "
+                           "(default: %default)")
     parser.add_option("--debug", dest="debug",
                       default=False, action="store_true",
                       help="display messages to assist in troublshooting. "
