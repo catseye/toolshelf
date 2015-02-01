@@ -1406,7 +1406,7 @@ def main(args):
                       help="template to expand 'bb:' prefix to "
                            "(default: %default)")
     parser.add_option("--gh-prefix-template",
-                      default='https://bitbucket.org/%s/%s',
+                      default='https://github.com/%s/%s',
                       help="template to expand 'gh:' prefix to "
                            "(default: %default)")
     parser.add_option("--debug", dest="debug",
