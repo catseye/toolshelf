@@ -810,7 +810,7 @@ class Source(object):
             r'^.*?\.lhs$',
         )
         for root, dirnames, filenames in os.walk('.'):
-            if root.endswith(".hg"):
+            if root.endswith((".hg", "bin", "fixture", "distrepos")):
                 del dirnames[:]
                 continue
             for filename in filenames:
