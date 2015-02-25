@@ -553,16 +553,22 @@ class Source(object):
                 self.shelf.chdir('src')
                 self.shelf.run('make')
 
-    def update(self):
+    def update(self, upstream=None):
         """Returns True if there were changes, False if there were none.
 
         """
         self.shelf.chdir(self.dir)
         old_head_ref = self.head_ref()
         if os.path.isdir('.git'):
-            self.shelf.run('git', 'pull')
+            if upstream is None:
+                self.shelf.run('git', 'pull')
+            else:
+                self.shelf.run('git', 'pull', upstream)
         elif os.path.isdir('.hg'):
-            self.shelf.run('hg', 'pull', '-u')
+            if upstream is None:
+                self.shelf.run('hg', 'pull', '-u')
+            else:
+                self.shelf.run('hg', 'pull', '-u', upstream)                
         else:
             raise NotImplementedError(
                 "Can't update a non-version-controlled Source"
