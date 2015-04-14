@@ -568,7 +568,7 @@ class Source(object):
             if upstream is None:
                 self.shelf.run('hg', 'pull', '-u')
             else:
-                self.shelf.run('hg', 'pull', '-u', upstream)                
+                self.shelf.run('hg', 'pull', '-u', upstream)
         else:
             raise NotImplementedError(
                 "Can't update a non-version-controlled Source"
