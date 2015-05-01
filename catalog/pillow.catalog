@@ -1,2 +1,5 @@
-bb:pypa/setuptools@6.1
-gh:python-pillow/Pillow@2.6.1
+# @@libjpeg
+# would be nice, but pillow doesn't actually twig to the fact that this
+# library is available.  might need pkgconfig file for it or something.
+
+gh:python-pillow/Pillow@2.8.1
