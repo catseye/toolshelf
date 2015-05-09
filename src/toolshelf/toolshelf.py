@@ -1375,7 +1375,7 @@ class Toolshelf(object):
 
     def run_commands(self, subcommands, args):
         commands = CommandSequence()
-        for subcommand in subcommands.split('+'):
+        for subcommand in subcommands:
             module = __import__("toolshelf.commands.%s" % subcommand,
                                 fromlist=["toolshelf.commands"])
             commands.append(module.Command())
@@ -1451,21 +1451,19 @@ def main(args):
 
     t = Toolshelf(options=options)
 
-    subcommand = args[0]
-
-    if subcommand not in ALIASES and subcommand not in COMMANDS:
-        print "Unknown command '%s'." % subcommand
-        print
-        print "Usage: " + __doc__ + available_commands()
-        sys.exit(2)
-        
-    subcommand = ALIASES.get(subcommand, subcommand)
+    subcommands = ALIASES.get(args[0], args[0]).split('+')
+    for subcommand in subcommands:
+        if subcommand not in COMMANDS:
+            print "Unknown command '%s'." % subcommand
+            print
+            print "Usage: " + __doc__ + available_commands()
+            sys.exit(2)
 
     args = t.coalesce_catalog_args(args[1:])
-    if '+' in subcommand:
-        t.run_commands(subcommand, args)
+    if len(subcommands) > 1:
+        t.run_commands(subcommands, args)
     else:
-        t.run_command(subcommand, args)
+        t.run_command(subcommands[0], args)
     if t.errors:
         sys.stderr.write('\nERRORS:\n\n')
         for name in sorted(t.errors.keys()):
