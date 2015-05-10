@@ -31,6 +31,12 @@
 */*/libzip-0.*
   include_dirs install/include install/lib/libzip/include
 
+*/*/jpegsrc.v*
+  build_command mkdir -p install/bin install/man/man1 && ./configure --prefix=`pwd`/install&& make && make install
+
+*/taglib/taglib
+  build_command cmake -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCMAKE_BUILD_TYPE=Release . && make && make install
+
 ### Tools
 
 */*/make-3.*
@@ -60,6 +66,9 @@
 # falls back to `tputs` which is b0rked for me.
 */*/irssi-0.*
   build_command ./configure --with-ncurses=`toolshelf.py pwd ncurses-5.9`/install --prefix=`pwd` && make && make install
+
+*/distfile/cmake-3.*
+  build_command ./bootstrap && make      
 
 ### Languages
 
