@@ -59,12 +59,12 @@ class Command(BaseCommand):
                     prob.append(
                         "Junk dirs in root: %s" % root_dirs
                     )
-        problems[source.dir] = prob
+        self.problems[source.dir] = prob
 
     def teardown(self, shelf):
         problematic_count = 0
         for d in sorted(self.problems.keys()):
-            if not problems[d]:
+            if not self.problems[d]:
                 continue
             print d
             print '-' * len(d)
