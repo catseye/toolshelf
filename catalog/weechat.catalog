@@ -1,3 +1,3 @@
-# needs autoreconf to build :(
 @@ncurses
+@@autoconf
 https://weechat.org/files/src/weechat-1.1.1.tar.bz2
