@@ -20,10 +20,14 @@ class Command(BaseCommand):
         assert alt_toolshelf is not None
         upstream = os.path.join(alt_toolshelf, source.name)
 
-        shelf.chdir(source.dir)
         if os.path.isdir('.git'):
-            shelf.run('git', 'push', upstream)
+            # can't push directly to another git repo in the filesystem, b/c
+            # "updating the current branch in a non-bare repository is denied",
+            # so we cd there and pull from the main one instead.
+            shelf.chdir(upstream)
+            shelf.run('git', 'pull', source.dir, 'master')
         elif os.path.isdir('.hg'):
+            shelf.chdir(source.dir)
             shelf.run('hg', 'push', upstream)                
         else:
             raise NotImplementedError(
