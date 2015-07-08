@@ -2,7 +2,7 @@
 
 https://pypi.python.org/packages/source/d/dulwich/dulwich-0.9.5.tar.gz
 
-bb:durin42/hg-git@0.6.0
+bb:durin42/hg-git@0.8.1
 
 # then, once that's docked, edit your $HOME/.hgrc to include:
     
