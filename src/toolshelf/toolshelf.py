@@ -82,7 +82,7 @@ UNINTERESTING_EXECUTABLES = (
     'missing', 'mkinstalldirs', 'install-sh',
     'ltmain\.sh', 'depcomp', 'libtool',
     'configure\.in', 'configure\.gnu', 'configure\.lineno',
-    'bootstrap', 'bootstrap\.sh', 'mdate-sh',
+    'bootstrap', 'bootstrap\.sh', 'mdate-sh', 'mk-ca-bundle\.pl', 'start\.sh',
     # automake sometimes includes this yacc wrapper script
     'ylwrap',
     # perl seems to like these
