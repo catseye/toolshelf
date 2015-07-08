@@ -5,7 +5,7 @@
 
 ### Mercurial
 
-*/*/mercurial-1.9.3
+*/*/mercurial-*
   build_command make local
   interesting_executables hg
 
