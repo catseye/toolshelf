@@ -1,5 +1,5 @@
 @@dulwich
-bb:durin42/hg-git@0.8.1
+bb:durin42/hg-git@0.6.1
 
 # then, once that's docked, edit your $HOME/.hgrc to include:
     
