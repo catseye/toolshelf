@@ -9,7 +9,7 @@
   build_command make local
   interesting_executables hg
 
-*/*/dulwich-0.9.5
+*/*/dulwich-0.9.*
   exclude_paths dulwich/tests
 
 */durin42/hg-git
