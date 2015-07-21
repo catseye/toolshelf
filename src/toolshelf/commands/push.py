@@ -21,7 +21,9 @@ class Command(BaseCommand):
         if os.path.isdir('.git'):
             shelf.run('git', 'push', 'origin')
         elif os.path.isdir('.hg'):
-            shelf.run('hg', 'push')
+            shelf.run('hg', 'push', '-r', 'tip')
+            # TODO: if the output contains 'no changes found',
+            # a failure-exit code is to be expected
         else:
             raise NotImplementedError(
                 "Can't push a non-version-controlled Source"
