@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c)2012-2014 Chris Pressey, Cat's Eye Technologies
+# Copyright (c)2012-2015 Chris Pressey, Cat's Eye Technologies
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -787,21 +787,25 @@ class Source(object):
         if rectify_permissions == 'yes':
             self.rectify_executable_permissions()
 
+    def each_tag(self):
+        self.shelf.chdir(self.dir)
+        output = self.shelf.get_it('hg tags')
+        for line in output.split('\n'):
+            match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
+            # account for recent hg weirdness
+            if match and match.group(1) not in ('default/master',):
+                yield match.group(1), int(match.group(2))
+
     def get_latest_release_tag(self, tags={}):
         """Return the tag most recently applied to this repository.
         (hg only for now.)
 
         """
-        self.shelf.chdir(self.dir)
-
         latest_tag = None
-        for line in self.shelf.get_it("hg tags").split('\n'):
-            match = re.match(r'^\s*(\S+)\s+(\d+):(.*?)\s*$', line)
-            if match:
-                tag = match.group(1)
-                tags[tag] = int(match.group(2))
-                if tag != 'tip' and latest_tag is None:
-                    latest_tag = tag
+        for tag, revision in self.each_tag():
+            tags[tag] = revision
+            if tag != 'tip' and latest_tag is None:
+                latest_tag = tag
 
         return latest_tag
 
@@ -939,6 +943,7 @@ class Toolshelf(object):
                 break_on_error = True
                 verbose = False
                 build = True
+                debug = False
             options = DefaultOptions()
         self.options = options
 
