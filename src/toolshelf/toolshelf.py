@@ -801,12 +801,14 @@ class Source(object):
         (hg only for now.)
 
         """
+        cwd = os.getcwd()
         latest_tag = None
         for tag, revision in self.each_tag():
             tags[tag] = revision
             if tag != 'tip' and latest_tag is None:
                 latest_tag = tag
 
+        self.shelf.chdir(cwd)
         return latest_tag
 
     def find_likely_documents(self):
