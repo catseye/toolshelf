@@ -238,12 +238,12 @@ github.com/nltk/nltk
 
 ### catseye
 
-*/catseye/dungeons-of-ekileugor
-  build_requires petcat
-
 */catseye/etcha
   build_requires javac
   test_requires javac
+
+*/catseye/lexeduct
+  test_requires node
 
 */catseye/whothm
   build_requires javac
