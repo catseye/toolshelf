@@ -1,6 +1,18 @@
 toolshelf
 =========
 
+- - - -
+
+**NOTE**
+
+As of 0.1-2016.0315, toolshelf is officially *DEPRECATED*.
+
+Development will continue on Cat's Eye Technologies' `shelf` instead: https://github.com/catseye/shelf
+
+This repository is retained for historical purposes only.
+
+- - - -
+
 First, the metaphor:
 
 Certain bulky technologies in your home — such as your washing machine and your
