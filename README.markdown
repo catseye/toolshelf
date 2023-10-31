@@ -7,7 +7,7 @@ toolshelf
 
 As of 0.1-2016.0315, toolshelf is officially *DEPRECATED*.
 
-Development will continue on Cat's Eye Technologies' `shelf` instead: https://github.com/catseye/shelf
+Development will continue on Cat's Eye Technologies' `shelf` instead: [https://codeberg.org/catseye/shelf](https://codeberg.org/catseye/shelf)
 
 This repository is retained for historical purposes only.
 
